@@ -1,0 +1,1162 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  body { margin: 0; background: #F2F0EE; }
+  * { box-sizing: border-box; }
+  textarea, input { font-family: 'Poppins', system-ui, sans-serif; }
+  textarea::placeholder, input::placeholder { color: #1A1A1A55; }
+  a { color: #C49BC9; }
+  a:hover { color: #2E6273; }
+</style>
+</helmet>
+<div style="min-height: 100vh; display: flex; justify-content: center; background: #F2F0EE; font-family: 'Poppins', system-ui, sans-serif;">
+  <div style="width: 100%; max-width: 430px; min-height: 100vh; background: #FFFFFF; display: flex; flex-direction: column; position: relative; box-shadow: 0 0 50px #1A1A1A1a;">
+
+    <sc-if value="{{ isStart }}" hint-placeholder-val="{{ true }}">
+      <div data-screen-label="Inicio de los 90 días" style="flex: 1; min-height: 100vh; background: #1A1A1A; display: flex; flex-direction: column; justify-content: space-between; padding: 64px 26px 40px;">
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <div style="width: 10px; height: 10px; border-radius: 50%; background: #C49BC9;"></div>
+          <span style="font-size: 11px; font-weight: 600; letter-spacing: 0.18em; text-transform: uppercase; color: #FFFFFF99;">Valentía en Movimiento</span>
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 22px;">
+          <h1 style="margin: 0; font-size: 38px; font-weight: 700; line-height: 1.12; letter-spacing: -0.02em; color: #FFFFFF; text-wrap: pretty;">Tu sueño ya tiene un lugar.</h1>
+          <p style="margin: 0; font-size: 18px; font-weight: 300; line-height: 1.55; color: #FFFFFFcc;">Hoy empieza tu Proyecto de Valentía.</p>
+          <div style="display: flex; flex-direction: column; gap: 10px; padding-top: 10px;">
+            <div style="display: flex; align-items: baseline; gap: 8px;">
+              <span style="font-size: 46px; font-weight: 700; line-height: 1; color: #D6DE2B;">Día 1</span>
+              <span style="font-size: 16px; font-weight: 400; color: #FFFFFF99;">de 90</span>
+            </div>
+            <div style="height: 5px; border-radius: 999px; background: #FFFFFF1f; overflow: hidden;">
+              <div style="width: 1.2%; height: 100%; background: #D6DE2B;"></div>
+            </div>
+          </div>
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 14px;">
+          <button onClick="{{ goHome }}" style="width: 100%; padding: 17px 20px; border: none; border-radius: 999px; background: #C49BC9; color: #FFFFFF; font-family: 'Poppins', sans-serif; font-size: 16px; font-weight: 600; cursor: pointer;" style-hover="filter: brightness(0.94);">Entrar a mi proyecto</button>
+          <span style="text-align: center; font-size: 12px; font-weight: 300; color: #FFFFFF80;">No hay una clase por día. Hay un método y noventa días para sostenerlo.</span>
+        </div>
+      </div>
+    </sc-if>
+
+    <sc-if value="{{ isApp }}" hint-placeholder-val="{{ false }}">
+      <div style="display: flex; flex-direction: column; min-height: 100vh;">
+
+        <div style="position: sticky; top: 0; z-index: 6; background: #FFFFFF; padding: 18px 22px 12px; display: flex; align-items: center; gap: 12px; border-bottom: 1px solid #1A1A1A0f;">
+          <sc-if value="{{ showBack }}" hint-placeholder-val="{{ false }}">
+            <button onClick="{{ goBack }}" style="flex: 0 0 auto; width: 34px; height: 34px; border-radius: 50%; border: 1px solid #1A1A1A1f; background: #FFFFFF; color: #1A1A1A; font-size: 15px; line-height: 1; cursor: pointer;" style-hover="border-color: #1A1A1A;">←</button>
+          </sc-if>
+          <span style="flex: 1; font-size: 13px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: #1A1A1A;">{{ screenTitle }}</span>
+          <span style="font-size: 12px; font-weight: 500; color: #2E6273;">{{ dayLabel }}</span>
+        </div>
+
+        <div style="flex: 1; padding: 20px 22px 120px; display: flex; flex-direction: column;">
+
+          <sc-if value="{{ isHomeFree }}" hint-placeholder-val="{{ false }}">
+            <div data-screen-label="Home gratuita" style="display: flex; flex-direction: column; gap: 22px;">
+              <div style="display: flex; flex-direction: column; gap: 6px;">
+                <h1 style="margin: 0; font-size: 26px; font-weight: 700; line-height: 1.2; letter-spacing: -0.015em; color: #1A1A1A;">Hola, Meli</h1>
+                <p style="margin: 0; font-size: 14px; font-weight: 300; line-height: 1.6; color: #1A1A1Acc;">Tu sueño ya está escrito. Esto es lo que podés hacer con él esta semana.</p>
+              </div>
+
+              <div style="background: #F5F2F6; border-radius: 20px; padding: 18px; display: flex; flex-direction: column; gap: 6px;">
+                <span style="font-size: 10px; font-weight: 600; letter-spacing: 0.16em; text-transform: uppercase; color: #2E6273;">Tu sueño</span>
+                <p style="margin: 0; font-size: 19px; font-weight: 600; line-height: 1.35; color: #1A1A1A; text-wrap: pretty;">Abrir mi consultorio propio</p>
+                <span style="font-size: 12px; font-weight: 300; color: #1A1A1A99;">Declarado hace 3 días</span>
+              </div>
+
+              <div style="background: #1A1A1A; border-radius: 22px; padding: 22px 20px; display: flex; flex-direction: column; gap: 16px;">
+                <span style="font-size: 10px; font-weight: 600; letter-spacing: 0.16em; text-transform: uppercase; color: #D6DE2B;">El próximo paso</span>
+                <h2 style="margin: 0; font-size: 24px; font-weight: 700; line-height: 1.22; color: #FFFFFF; text-wrap: pretty;">Ya elegiste el sueño. Ahora convertilo en un Proyecto de Valentía.</h2>
+                <p style="margin: 0; font-size: 14px; font-weight: 300; line-height: 1.55; color: #FFFFFFb3;">Noventa días con método, ruta completa, hitos y revisiones. Con acompañamiento de Melisa y la comunidad.</p>
+                <button onClick="{{ goMembresia }}" style="width: 100%; padding: 15px 20px; border: none; border-radius: 999px; background: #C49BC9; color: #FFFFFF; font-family: 'Poppins', sans-serif; font-size: 15px; font-weight: 600; cursor: pointer;" style-hover="filter: brightness(0.94);">Empezar mis 90 días</button>
+              </div>
+
+              <div style="border: 1px solid #1A1A1A14; border-radius: 20px; padding: 18px; display: flex; flex-direction: column; gap: 14px;">
+                <div style="display: flex; align-items: center; justify-content: space-between; gap: 10px;">
+                  <span style="font-size: 10px; font-weight: 600; letter-spacing: 0.16em; text-transform: uppercase; color: #1A1A1A99;">Tu recorrido gratuito</span>
+                  <span style="font-size: 10px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: #1A1A1A; background: #D6DE2B; border-radius: 999px; padding: 4px 9px;">Gratis</span>
+                </div>
+                <div style="display: flex; flex-direction: column; gap: 4px;">
+                  <p style="margin: 0; font-size: 18px; font-weight: 600; line-height: 1.35; color: #1A1A1A;">Tomate tus sueños en serio</p>
+                  <span style="font-size: 12px; font-weight: 300; color: #1A1A1A99;">Clase 2 de 3 · te faltan 14 min</span>
+                </div>
+                <div style="display: flex; gap: 6px;">
+                  <div style="flex: 1; height: 6px; border-radius: 999px; background: #1A1A1A;"></div>
+                  <div style="flex: 1; height: 6px; border-radius: 999px; background: #C49BC9;"></div>
+                  <div style="flex: 1; height: 6px; border-radius: 999px; background: #1A1A1A14;"></div>
+                </div>
+                <button onClick="{{ goExperiencia }}" style="align-self: flex-start; padding: 10px 16px; border-radius: 999px; border: 1px solid #1A1A1A26; background: #FFFFFF; font-family: 'Poppins', sans-serif; font-size: 13px; font-weight: 500; color: #1A1A1A; cursor: pointer;" style-hover="border-color: #1A1A1A;">Seguir la clase 2</button>
+              </div>
+
+              <div style="border: 1px solid #1A1A1A14; border-radius: 20px; padding: 18px; display: flex; flex-direction: column; gap: 12px;">
+                <span style="font-size: 10px; font-weight: 600; letter-spacing: 0.16em; text-transform: uppercase; color: #1A1A1A99;">Tu movimiento de esta semana</span>
+                <textarea value="{{ movimiento }}" onChange="{{ onMovimiento }}" rows="3" placeholder="Un paso chico y concreto para esta semana." style="width: 100%; resize: none; background: #FFFFFF; border: 1px solid #1A1A1A1f; border-radius: 14px; padding: 13px; font-size: 15px; font-weight: 300; line-height: 1.6; color: #1A1A1A; outline: none;" style-focus="border-color: #C49BC9;"></textarea>
+                <span style="font-size: 12px; font-weight: 300; color: #1A1A1A99;">El viernes te recordamos registrar qué pasó.</span>
+              </div>
+
+              <div onClick="{{ goComunidad }}" style="background: #FBE3E8; border-radius: 20px; padding: 18px; display: flex; flex-direction: column; gap: 10px; cursor: pointer;">
+                <span style="font-size: 10px; font-weight: 600; letter-spacing: 0.16em; text-transform: uppercase; color: #2E6273;">Comunidad abierta</span>
+                <p style="margin: 0; font-size: 15px; font-weight: 500; line-height: 1.45; color: #1A1A1A;">Presentaciones, preguntas y evidencias de la semana.</p>
+                <span style="font-size: 12px; font-weight: 300; color: #1A1A1Acc;">3 conversaciones nuevas hoy</span>
+              </div>
+
+              <div onClick="{{ goBiblioteca }}" style="display: flex; align-items: center; gap: 12px; padding: 16px 18px; border-radius: 20px; background: #F7F6F4; cursor: pointer;">
+                <div style="flex: 1; display: flex; flex-direction: column; gap: 3px;">
+                  <span style="font-size: 15px; font-weight: 600; color: #1A1A1A;">Contenidos y eventos gratuitos</span>
+                  <span style="font-size: 12px; font-weight: 300; color: #1A1A1A99;">Meditación semanal y taller en vivo del jueves</span>
+                </div>
+                <span style="font-size: 14px; color: #1A1A1A66;">→</span>
+              </div>
+            </div>
+          </sc-if>
+
+          <sc-if value="{{ isMembresia }}" hint-placeholder-val="{{ false }}">
+            <div data-screen-label="Membresía" style="display: flex; flex-direction: column; gap: 22px;">
+              <div style="display: flex; flex-direction: column; gap: 10px;">
+                <span style="font-size: 10px; font-weight: 600; letter-spacing: 0.16em; text-transform: uppercase; color: #2E6273;">Membresía</span>
+                <h1 style="margin: 0; font-size: 28px; font-weight: 700; line-height: 1.16; letter-spacing: -0.015em; color: #1A1A1A; text-wrap: pretty;">Tu Proyecto de Valentía de 90 días</h1>
+                <p style="margin: 0; font-size: 15px; font-weight: 300; line-height: 1.6; color: #1A1A1Acc;">El método completo, con fechas, revisiones y un lugar donde queda todo lo que vas decidiendo.</p>
+              </div>
+              <div style="display: flex; flex-direction: column; gap: 10px;">
+                <sc-for list="{{ membresiaItems }}" as="m" hint-placeholder-count="5">
+                  <div style="display: flex; gap: 12px; padding: 15px 16px; border: 1px solid #1A1A1A14; border-radius: 16px;">
+                    <div style="width: 8px; height: 8px; border-radius: 50%; background: #C49BC9; margin-top: 7px;"></div>
+                    <div style="flex: 1; display: flex; flex-direction: column; gap: 2px;">
+                      <span style="font-size: 15px; font-weight: 500; line-height: 1.45; color: #1A1A1A;">{{ m.title }}</span>
+                      <span style="font-size: 12px; font-weight: 300; line-height: 1.5; color: #1A1A1A99;">{{ m.meta }}</span>
+                    </div>
+                  </div>
+                </sc-for>
+              </div>
+              <div style="background: #1A1A1A; border-radius: 22px; padding: 22px 20px; display: flex; flex-direction: column; gap: 14px;">
+                <div style="display: flex; align-items: baseline; gap: 8px;">
+                  <span style="font-size: 30px; font-weight: 700; color: #FFFFFF;">$22.000</span>
+                  <span style="font-size: 14px; font-weight: 300; color: #FFFFFF99;">por mes</span>
+                </div>
+                <span style="font-size: 13px; font-weight: 300; line-height: 1.55; color: #FFFFFFb3;">Podés cancelar cuando quieras. Los 90 días empiezan el día que entrás.</span>
+                <button onClick="{{ goStart }}" style="width: 100%; padding: 16px 20px; border: none; border-radius: 999px; background: #C49BC9; color: #FFFFFF; font-family: 'Poppins', sans-serif; font-size: 15px; font-weight: 600; cursor: pointer;" style-hover="filter: brightness(0.94);">Quiero sumarme</button>
+              </div>
+            </div>
+          </sc-if>
+
+          <sc-if value="{{ isBiblioteca }}" hint-placeholder-val="{{ false }}">
+            <div data-screen-label="Biblioteca" style="display: flex; flex-direction: column; gap: 26px;">
+              <div style="display: flex; flex-direction: column; gap: 8px;">
+                <h1 style="margin: 0; font-size: 28px; font-weight: 700; line-height: 1.16; letter-spacing: -0.015em; color: #1A1A1A;">Biblioteca</h1>
+                <p style="margin: 0; font-size: 14px; font-weight: 300; line-height: 1.6; color: #1A1A1Acc;">Contenido para consultar cuando lo necesitás. Tu ruta sigue siendo el camino.</p>
+              </div>
+
+              <div style="display: flex; flex-direction: column; gap: 12px;">
+                <div style="display: flex; align-items: center; justify-content: space-between; gap: 10px;">
+                  <span style="font-size: 10px; font-weight: 600; letter-spacing: 0.16em; text-transform: uppercase; color: #2E6273;">Para vos ahora</span>
+                  <span style="font-size: 11px; font-weight: 400; color: #1A1A1A99;">{{ etapaActual }}</span>
+                </div>
+                <sc-for list="{{ paraVos }}" as="p" hint-placeholder-count="2">
+                  <div style="background: #F5F2F6; border-radius: 20px; padding: 18px; display: flex; flex-direction: column; gap: 8px; cursor: pointer;">
+                    <div style="display: flex; align-items: center; justify-content: space-between; gap: 10px;">
+                      <span style="font-size: 10px; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; color: #1A1A1A99;">{{ p.tipo }}</span>
+                      <span style="{{ p.accesoStyle }}">{{ p.acceso }}</span>
+                    </div>
+                    <span style="font-size: 18px; font-weight: 600; line-height: 1.35; color: #1A1A1A; text-wrap: pretty;">{{ p.name }}</span>
+                    <span style="font-size: 13px; font-weight: 300; line-height: 1.5; color: #1A1A1Acc; text-wrap: pretty;">{{ p.motivo }}</span>
+                  </div>
+                </sc-for>
+              </div>
+
+              <div style="display: flex; flex-direction: column; gap: 2px;">
+                <span style="font-size: 10px; font-weight: 600; letter-spacing: 0.16em; text-transform: uppercase; color: #1A1A1A99; padding-bottom: 10px;">Cursos</span>
+                <sc-for list="{{ cursos }}" as="c" hint-placeholder-count="3">
+                  <div style="display: flex; align-items: center; gap: 12px; padding: 16px 0; border-top: 1px solid #1A1A1A12; cursor: pointer;">
+                    <div style="flex: 1; display: flex; flex-direction: column; gap: 3px;">
+                      <span style="{{ c.nameStyle }}">{{ c.name }}</span>
+                      <span style="font-size: 12px; font-weight: 300; color: #1A1A1A99;">{{ c.meta }}</span>
+                    </div>
+                    <span style="{{ c.accesoStyle }}">{{ c.acceso }}</span>
+                  </div>
+                </sc-for>
+              </div>
+
+              <div style="display: flex; flex-direction: column; gap: 2px;">
+                <span style="font-size: 10px; font-weight: 600; letter-spacing: 0.16em; text-transform: uppercase; color: #1A1A1A99; padding-bottom: 10px;">Meditaciones</span>
+                <sc-for list="{{ meditaciones }}" as="c" hint-placeholder-count="3">
+                  <div style="display: flex; align-items: center; gap: 12px; padding: 16px 0; border-top: 1px solid #1A1A1A12; cursor: pointer;">
+                    <div style="flex: 1; display: flex; flex-direction: column; gap: 3px;">
+                      <span style="{{ c.nameStyle }}">{{ c.name }}</span>
+                      <span style="font-size: 12px; font-weight: 300; color: #1A1A1A99;">{{ c.meta }}</span>
+                    </div>
+                    <span style="{{ c.accesoStyle }}">{{ c.acceso }}</span>
+                  </div>
+                </sc-for>
+              </div>
+
+              <div style="display: flex; flex-direction: column; gap: 2px;">
+                <span style="font-size: 10px; font-weight: 600; letter-spacing: 0.16em; text-transform: uppercase; color: #1A1A1A99; padding-bottom: 10px;">Talleres grabados</span>
+                <sc-for list="{{ talleres }}" as="c" hint-placeholder-count="3">
+                  <div style="display: flex; align-items: center; gap: 12px; padding: 16px 0; border-top: 1px solid #1A1A1A12; cursor: pointer;">
+                    <div style="flex: 1; display: flex; flex-direction: column; gap: 3px;">
+                      <span style="{{ c.nameStyle }}">{{ c.name }}</span>
+                      <span style="font-size: 12px; font-weight: 300; color: #1A1A1A99;">{{ c.meta }}</span>
+                    </div>
+                    <span style="{{ c.accesoStyle }}">{{ c.acceso }}</span>
+                  </div>
+                </sc-for>
+              </div>
+
+              <div style="display: flex; flex-direction: column; gap: 2px;">
+                <span style="font-size: 10px; font-weight: 600; letter-spacing: 0.16em; text-transform: uppercase; color: #1A1A1A99; padding-bottom: 10px;">Recursos</span>
+                <sc-for list="{{ recursosBiblio }}" as="c" hint-placeholder-count="3">
+                  <div style="display: flex; align-items: center; gap: 12px; padding: 16px 0; border-top: 1px solid #1A1A1A12; cursor: pointer;">
+                    <div style="flex: 1; display: flex; flex-direction: column; gap: 3px;">
+                      <span style="{{ c.nameStyle }}">{{ c.name }}</span>
+                      <span style="font-size: 12px; font-weight: 300; color: #1A1A1A99;">{{ c.meta }}</span>
+                    </div>
+                    <span style="{{ c.accesoStyle }}">{{ c.acceso }}</span>
+                  </div>
+                </sc-for>
+              </div>
+
+              <sc-if value="{{ isFree }}" hint-placeholder-val="{{ false }}">
+                <div style="background: #F5F2F6; border-radius: 20px; padding: 18px; display: flex; flex-direction: column; gap: 10px;">
+                  <span style="font-size: 15px; font-weight: 600; line-height: 1.4; color: #1A1A1A;">Lo marcado como Membresía se abre con tu Proyecto de 90 días.</span>
+                  <button onClick="{{ goMembresia }}" style="align-self: flex-start; padding: 11px 18px; border: none; border-radius: 999px; background: #C49BC9; color: #FFFFFF; font-family: 'Poppins', sans-serif; font-size: 13px; font-weight: 600; cursor: pointer;" style-hover="filter: brightness(0.94);">Ver la membresía</button>
+                </div>
+              </sc-if>
+            </div>
+          </sc-if>
+
+          <sc-if value="{{ isHome }}" hint-placeholder-val="{{ false }}">
+            <div data-screen-label="Home" style="display: flex; flex-direction: column; gap: 22px;">
+              <div style="display: flex; flex-direction: column; gap: 12px;">
+                <h1 style="margin: 0; font-size: 26px; font-weight: 700; line-height: 1.2; letter-spacing: -0.015em; color: #1A1A1A;">Hola, Meli</h1>
+                <div style="display: flex; flex-direction: column; gap: 8px;">
+                  <div style="display: flex; align-items: baseline; justify-content: space-between;">
+                    <span style="font-size: 13px; font-weight: 500; color: #1A1A1A;">Día 12 de 90</span>
+                    <span style="font-size: 12px; font-weight: 300; color: #1A1A1A99;">78 días por delante</span>
+                  </div>
+                  <div style="height: 5px; border-radius: 999px; background: #1A1A1A12; overflow: hidden;">
+                    <div style="width: 13.3%; height: 100%; background: #1A1A1A;"></div>
+                  </div>
+                </div>
+              </div>
+
+              <div style="background: #F5F2F6; border-radius: 20px; padding: 18px 18px 20px; display: flex; flex-direction: column; gap: 6px;">
+                <span style="font-size: 10px; font-weight: 600; letter-spacing: 0.16em; text-transform: uppercase; color: #2E6273;">Tu sueño</span>
+                <p style="margin: 0; font-size: 19px; font-weight: 600; line-height: 1.35; color: #1A1A1A; text-wrap: pretty;">Abrir mi consultorio propio</p>
+                <button onClick="{{ goProyecto }}" style="align-self: flex-start; margin-top: 6px; padding: 8px 14px; border-radius: 999px; border: 1px solid #1A1A1A26; background: #FFFFFF; font-family: 'Poppins', sans-serif; font-size: 12px; font-weight: 500; color: #1A1A1A; cursor: pointer;" style-hover="border-color: #1A1A1A;">Ver mi proyecto</button>
+              </div>
+
+              <div style="background: #1A1A1A; border-radius: 22px; padding: 22px 20px; display: flex; flex-direction: column; gap: 16px;">
+                <div style="display: flex; align-items: center; justify-content: space-between; gap: 10px;">
+                  <span style="font-size: 10px; font-weight: 600; letter-spacing: 0.16em; text-transform: uppercase; color: #D6DE2B;">Lo próximo</span>
+                  <span style="font-size: 11px; font-weight: 400; color: #FFFFFF8c;">Etapa 2 · Construíte</span>
+                </div>
+                <div style="display: flex; flex-direction: column; gap: 8px;">
+                  <h2 style="margin: 0; font-size: 24px; font-weight: 700; line-height: 1.22; color: #FFFFFF; text-wrap: pretty;">Automático vs intencional</h2>
+                  <p style="margin: 0; font-size: 14px; font-weight: 300; line-height: 1.55; color: #FFFFFFb3;">Video de 9 min y tres preguntas. Lo que respondas entra directo a tu proyecto.</p>
+                </div>
+                <button onClick="{{ goExperiencia }}" style="width: 100%; padding: 15px 20px; border: none; border-radius: 999px; background: #C49BC9; color: #FFFFFF; font-family: 'Poppins', sans-serif; font-size: 15px; font-weight: 600; cursor: pointer;" style-hover="filter: brightness(0.94);">Empezar la experiencia</button>
+              </div>
+
+              <div style="display: flex; flex-direction: column; gap: 10px;">
+                <div style="display: flex; align-items: center; justify-content: space-between;">
+                  <span style="font-size: 10px; font-weight: 600; letter-spacing: 0.16em; text-transform: uppercase; color: #1A1A1A99;">Tu ruta</span>
+                  <button onClick="{{ goRuta }}" style="padding: 0; border: none; background: transparent; font-family: 'Poppins', sans-serif; font-size: 12px; font-weight: 500; color: #2E6273; cursor: pointer;" style-hover="color: #1A1A1A;">Ver las 5 etapas →</button>
+                </div>
+                <div style="display: flex; gap: 6px;">
+                  <sc-for list="{{ etapaBars }}" as="bar" hint-placeholder-count="5">
+                    <div style="{{ bar.style }}"></div>
+                  </sc-for>
+                </div>
+                <span style="font-size: 12px; font-weight: 300; color: #1A1A1A99;">Definí completada · Construíte en curso</span>
+              </div>
+
+              <div style="border: 1px solid #1A1A1A14; border-radius: 20px; padding: 18px; display: flex; flex-direction: column; gap: 12px;">
+                <div style="display: flex; align-items: center; justify-content: space-between; gap: 10px;">
+                  <span style="font-size: 10px; font-weight: 600; letter-spacing: 0.16em; text-transform: uppercase; color: #1A1A1A99;">Movimiento de esta semana</span>
+                  <span style="font-size: 10px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: #1A1A1A; background: #D6DE2B; border-radius: 999px; padding: 4px 9px;">En curso</span>
+                </div>
+                <p style="margin: 0; font-size: 16px; font-weight: 500; line-height: 1.45; color: #1A1A1A; text-wrap: pretty;">Escribirle a tres colegas para preguntar cómo alquilaron su espacio.</p>
+                <div style="display: flex; align-items: center; justify-content: space-between; gap: 10px; padding-top: 12px; border-top: 1px solid #1A1A1A0f;">
+                  <span style="font-size: 12px; font-weight: 300; color: #1A1A1A99;">Viernes registrás tu evidencia</span>
+                  <button onClick="{{ goRitual }}" style="padding: 9px 14px; border-radius: 999px; border: 1px solid #1A1A1A26; background: #FFFFFF; font-family: 'Poppins', sans-serif; font-size: 12px; font-weight: 500; color: #1A1A1A; cursor: pointer;" style-hover="border-color: #1A1A1A;">Ritual semanal</button>
+                </div>
+              </div>
+
+              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                <div onClick="{{ goHito }}" style="background: #B9DCE5; border-radius: 20px; padding: 16px; display: flex; flex-direction: column; gap: 6px; cursor: pointer;">
+                  <span style="font-size: 10px; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; color: #2E6273;">Próximo hito</span>
+                  <span style="font-size: 20px; font-weight: 700; color: #1A1A1A;">Día 30</span>
+                  <span style="font-size: 12px; font-weight: 300; color: #1A1A1Ab3;">Revisión en 18 días</span>
+                </div>
+                <div onClick="{{ goProyecto }}" style="background: #FBE3E8; border-radius: 20px; padding: 16px; display: flex; flex-direction: column; gap: 6px; cursor: pointer;">
+                  <span style="font-size: 10px; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; color: #2E6273;">Evidencias</span>
+                  <span style="font-size: 20px; font-weight: 700; color: #1A1A1A;">7</span>
+                  <span style="font-size: 12px; font-weight: 300; color: #1A1A1Ab3;">registradas hasta hoy</span>
+                </div>
+              </div>
+
+              <div onClick="{{ goComunidad }}" style="display: flex; align-items: center; gap: 12px; padding: 14px 16px; border-radius: 999px; background: #F7F6F4; cursor: pointer;">
+                <div style="display: flex;">
+                  <div style="width: 26px; height: 26px; border-radius: 50%; background: #C49BC9; border: 2px solid #FFFFFF;"></div>
+                  <div style="width: 26px; height: 26px; border-radius: 50%; background: #D6DE2B; border: 2px solid #FFFFFF; margin-left: -9px;"></div>
+                  <div style="width: 26px; height: 26px; border-radius: 50%; background: #B9DCE5; border: 2px solid #FFFFFF; margin-left: -9px;"></div>
+                </div>
+                <span style="flex: 1; font-size: 13px; font-weight: 300; line-height: 1.4; color: #1A1A1A;">Carla registró su evidencia hace 2 h</span>
+                <span style="font-size: 14px; color: #1A1A1A66;">→</span>
+              </div>
+            </div>
+          </sc-if>
+
+          <sc-if value="{{ isRutaFree }}" hint-placeholder-val="{{ false }}">
+            <div data-screen-label="Mi ruta gratuita" style="display: flex; flex-direction: column; gap: 24px;">
+              <div style="display: flex; flex-direction: column; gap: 8px;">
+                <h1 style="margin: 0; font-size: 28px; font-weight: 700; line-height: 1.18; letter-spacing: -0.015em; color: #1A1A1A;">Mi ruta</h1>
+                <p style="margin: 0; font-size: 14px; font-weight: 300; line-height: 1.6; color: #1A1A1Acc;">Hoy estás haciendo el recorrido de entrada. Es corto y es tuyo.</p>
+              </div>
+
+              <div style="background: #F5F2F6; border-radius: 22px; padding: 22px 20px; display: flex; flex-direction: column; gap: 12px;">
+                <div style="display: flex; align-items: center; justify-content: space-between; gap: 10px;">
+                  <span style="font-size: 10px; font-weight: 600; letter-spacing: 0.16em; text-transform: uppercase; color: #2E6273;">Recorrido de entrada</span>
+                  <span style="font-size: 10px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: #1A1A1A; background: #D6DE2B; border-radius: 999px; padding: 4px 9px;">Gratis</span>
+                </div>
+                <h2 style="margin: 0; font-size: 22px; font-weight: 700; line-height: 1.25; color: #1A1A1A;">Tomate tus sueños en serio</h2>
+                <div style="display: flex; align-items: center; gap: 10px;">
+                  <div style="flex: 1; height: 5px; border-radius: 999px; background: #1A1A1A14; overflow: hidden;">
+                    <div style="width: 50%; height: 100%; background: #C49BC9;"></div>
+                  </div>
+                  <span style="font-size: 12px; font-weight: 500; color: #1A1A1A;">1 de 3</span>
+                </div>
+              </div>
+
+              <div style="display: flex; flex-direction: column; gap: 10px;">
+                <sc-for list="{{ miniRuta }}" as="m" hint-placeholder-count="3">
+                  <div onClick="{{ m.onClick }}" style="{{ m.cardStyle }}">
+                    <div style="{{ m.markStyle }}"></div>
+                    <div style="flex: 1; display: flex; flex-direction: column; gap: 3px;">
+                      <span style="{{ m.nameStyle }}">{{ m.name }}</span>
+                      <span style="font-size: 12px; font-weight: 300; color: #1A1A1A99;">{{ m.meta }}</span>
+                    </div>
+                    <span style="{{ m.badgeStyle }}">{{ m.badge }}</span>
+                  </div>
+                </sc-for>
+              </div>
+
+              <div style="background: #1A1A1A; border-radius: 22px; padding: 22px 20px; display: flex; flex-direction: column; gap: 14px;">
+                <span style="font-size: 10px; font-weight: 600; letter-spacing: 0.16em; text-transform: uppercase; color: #D6DE2B;">Después de esto</span>
+                <h2 style="margin: 0; font-size: 22px; font-weight: 700; line-height: 1.25; color: #FFFFFF; text-wrap: pretty;">La ruta completa del método son cinco etapas y 90 días.</h2>
+                <p style="margin: 0; font-size: 14px; font-weight: 300; line-height: 1.55; color: #FFFFFFb3;">Definí, Construíte, Diseñá, Movete y Sostené: se abren cuando empezás tu Proyecto de Valentía.</p>
+                <button onClick="{{ goMembresia }}" style="width: 100%; padding: 15px 20px; border: none; border-radius: 999px; background: #C49BC9; color: #FFFFFF; font-family: 'Poppins', sans-serif; font-size: 15px; font-weight: 600; cursor: pointer;" style-hover="filter: brightness(0.94);">Empezar mis 90 días</button>
+              </div>
+            </div>
+          </sc-if>
+
+          <sc-if value="{{ isRuta }}" hint-placeholder-val="{{ false }}">
+            <div data-screen-label="Mi ruta" style="display: flex; flex-direction: column; gap: 24px;">
+              <div style="display: flex; flex-direction: column; gap: 8px;">
+                <h1 style="margin: 0; font-size: 28px; font-weight: 700; line-height: 1.18; letter-spacing: -0.015em; color: #1A1A1A;">Mi ruta</h1>
+                <p style="margin: 0; font-size: 14px; font-weight: 300; line-height: 1.6; color: #1A1A1Acc;">Cinco etapas. Avanzás cuando terminás cada experiencia, no cuando pasa el tiempo.</p>
+              </div>
+
+              <div style="display: flex; flex-direction: column; gap: 10px;">
+                <sc-for list="{{ etapas }}" as="e" hint-placeholder-count="5">
+                  <div onClick="{{ e.onClick }}" style="{{ e.cardStyle }}">
+                    <div style="display: flex; align-items: center; gap: 12px;">
+                      <div style="{{ e.dotStyle }}">{{ e.num }}</div>
+                      <div style="flex: 1; display: flex; flex-direction: column; gap: 3px;">
+                        <span style="{{ e.nameStyle }}">{{ e.name }}</span>
+                        <span style="font-size: 12px; font-weight: 300; color: #1A1A1A99;">{{ e.meta }}</span>
+                      </div>
+                      <span style="{{ e.badgeStyle }}">{{ e.badge }}</span>
+                    </div>
+                  </div>
+                </sc-for>
+              </div>
+
+              <div style="display: flex; flex-direction: column; gap: 10px;">
+                <span style="font-size: 10px; font-weight: 600; letter-spacing: 0.16em; text-transform: uppercase; color: #1A1A1A99;">Recursos opcionales</span>
+                <p style="margin: 0 0 4px; font-size: 13px; font-weight: 300; line-height: 1.55; color: #1A1A1A99;">Fuera de la ruta. Los abrís cuando los necesitás.</p>
+                <sc-for list="{{ recursos }}" as="r" hint-placeholder-count="3">
+                  <div style="display: flex; align-items: center; gap: 12px; padding: 14px 16px; border: 1px dashed #1A1A1A26; border-radius: 16px; cursor: pointer;">
+                    <div style="width: 8px; height: 8px; border-radius: 50%; background: #B9DCE5;"></div>
+                    <span style="flex: 1; font-size: 14px; font-weight: 500; color: #1A1A1A;">{{ r.name }}</span>
+                    <span style="font-size: 11px; font-weight: 300; color: #1A1A1A99;">{{ r.meta }}</span>
+                  </div>
+                </sc-for>
+              </div>
+            </div>
+          </sc-if>
+
+          <sc-if value="{{ isEtapa }}" hint-placeholder-val="{{ false }}">
+            <div data-screen-label="Etapa Construíte" style="display: flex; flex-direction: column; gap: 22px;">
+              <div style="background: #F5F2F6; border-radius: 22px; padding: 22px 20px; display: flex; flex-direction: column; gap: 10px;">
+                <span style="font-size: 10px; font-weight: 600; letter-spacing: 0.16em; text-transform: uppercase; color: #2E6273;">Etapa 2 de 5 · En curso</span>
+                <h1 style="margin: 0; font-size: 30px; font-weight: 700; line-height: 1.1; letter-spacing: -0.02em; color: #1A1A1A;">CONSTRUÍTE</h1>
+                <p style="margin: 0; font-size: 14px; font-weight: 300; line-height: 1.6; color: #1A1A1Acc;">Antes de diseñar el plan, mirás quién lo va a sostener: tus automatismos, tu techo y la identidad que necesitás practicar.</p>
+                <div style="display: flex; align-items: center; gap: 10px; padding-top: 6px;">
+                  <div style="flex: 1; height: 5px; border-radius: 999px; background: #1A1A1A14; overflow: hidden;">
+                    <div style="width: 50%; height: 100%; background: #C49BC9;"></div>
+                  </div>
+                  <span style="font-size: 12px; font-weight: 500; color: #1A1A1A;">2 de 4</span>
+                </div>
+              </div>
+
+              <div style="display: flex; flex-direction: column; gap: 10px;">
+                <span style="font-size: 10px; font-weight: 600; letter-spacing: 0.16em; text-transform: uppercase; color: #1A1A1A99;">Experiencias</span>
+                <sc-for list="{{ experiencias }}" as="x" hint-placeholder-count="4">
+                  <div onClick="{{ x.onClick }}" style="{{ x.cardStyle }}">
+                    <div style="{{ x.markStyle }}"></div>
+                    <div style="flex: 1; display: flex; flex-direction: column; gap: 3px;">
+                      <span style="{{ x.nameStyle }}">{{ x.name }}</span>
+                      <span style="font-size: 12px; font-weight: 300; color: #1A1A1A99;">{{ x.meta }}</span>
+                    </div>
+                    <span style="{{ x.badgeStyle }}">{{ x.badge }}</span>
+                  </div>
+                </sc-for>
+              </div>
+
+              <div style="display: flex; flex-direction: column; gap: 10px;">
+                <span style="font-size: 10px; font-weight: 600; letter-spacing: 0.16em; text-transform: uppercase; color: #1A1A1A99;">Recursos opcionales de esta etapa</span>
+                <sc-for list="{{ recursosEtapa }}" as="r" hint-placeholder-count="2">
+                  <div style="display: flex; align-items: center; gap: 12px; padding: 14px 16px; border: 1px dashed #1A1A1A26; border-radius: 16px; cursor: pointer;">
+                    <div style="width: 8px; height: 8px; border-radius: 50%; background: #B9DCE5;"></div>
+                    <span style="flex: 1; font-size: 14px; font-weight: 500; color: #1A1A1A;">{{ r.name }}</span>
+                    <span style="font-size: 11px; font-weight: 300; color: #1A1A1A99;">{{ r.meta }}</span>
+                  </div>
+                </sc-for>
+              </div>
+            </div>
+          </sc-if>
+
+          <sc-if value="{{ isExperiencia }}" hint-placeholder-val="{{ false }}">
+            <div data-screen-label="Experiencia" style="display: flex; flex-direction: column; gap: 22px;">
+              <sc-if value="{{ isPremium }}" hint-placeholder-val="{{ true }}">
+                <div style="display: flex; flex-direction: column; gap: 10px;">
+                  <span style="font-size: 11px; font-weight: 600; letter-spacing: 0.16em; text-transform: uppercase; color: #2E6273;">Construíte · Experiencia 4</span>
+                  <h1 style="margin: 0; font-size: 28px; font-weight: 700; line-height: 1.18; letter-spacing: -0.015em; color: #1A1A1A; text-wrap: pretty;">Diseño de tu nueva identidad</h1>
+                </div>
+              </sc-if>
+              <sc-if value="{{ isFree }}" hint-placeholder-val="{{ false }}">
+                <div style="display: flex; flex-direction: column; gap: 10px;">
+                  <span style="font-size: 11px; font-weight: 600; letter-spacing: 0.16em; text-transform: uppercase; color: #2E6273;">Tomate tus sueños en serio · Clase 2</span>
+                  <h1 style="margin: 0; font-size: 28px; font-weight: 700; line-height: 1.18; letter-spacing: -0.015em; color: #1A1A1A; text-wrap: pretty;">La valentía se entrena</h1>
+                </div>
+              </sc-if>
+
+              <div style="border-radius: 20px; overflow: hidden; background: #1A1A1A;">
+                <div style="width: 100%; aspect-ratio: 16 / 10; background: repeating-linear-gradient(135deg, #24242C 0 12px, #2C2C35 12px 24px); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px; cursor: pointer;">
+                  <div style="width: 60px; height: 60px; border-radius: 50%; background: #C49BC9; display: flex; align-items: center; justify-content: center;">
+                    <div style="width: 0; height: 0; border-left: 17px solid #FFFFFF; border-top: 11px solid transparent; border-bottom: 11px solid transparent; margin-left: 5px;"></div>
+                  </div>
+                  <span style="font-family: ui-monospace, monospace; font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: #FFFFFFaa;">Video · Melisa · 11 min</span>
+                </div>
+              </div>
+
+              <div style="display: flex; flex-direction: column; gap: 14px;">
+                <div style="display: flex; align-items: center; gap: 10px; font-size: 12px; font-weight: 500; color: #2E6273;">
+                  <div style="width: 18px; height: 2px; background: #D6DE2B; border-radius: 2px;"></div>
+                  La explicación
+                </div>
+                <sc-if value="{{ isPremium }}" hint-placeholder-val="{{ true }}">
+                  <div style="display: flex; flex-direction: column; gap: 14px;">
+                    <p style="margin: 0; font-size: 16px; font-weight: 300; line-height: 1.68; color: #1A1A1A; text-wrap: pretty;">Un sueño nuevo no lo sostiene la persona que fuiste hasta hoy. Lo sostiene una versión tuya que todavía estás estrenando: la que responde distinto cuando aparece el miedo, la incomodidad o la posibilidad de quedar mal.</p>
+                    <p style="margin: 0; font-size: 16px; font-weight: 300; line-height: 1.68; color: #1A1A1A; text-wrap: pretty;">Diseñar tu identidad no es inventarte otra. Es decidir, con nombre y apellido, qué vas a practicar estos noventa días hasta que deje de sentirse actuado.</p>
+                    <p style="margin: 0; font-size: 19px; font-weight: 600; line-height: 1.45; color: #1A1A1A; text-wrap: pretty;">No se trata de ser otra. Se trata de practicar ser la que ya decidió.</p>
+                  </div>
+                </sc-if>
+                <sc-if value="{{ isFree }}" hint-placeholder-val="{{ false }}">
+                  <div style="display: flex; flex-direction: column; gap: 14px;">
+                    <p style="margin: 0; font-size: 16px; font-weight: 300; line-height: 1.68; color: #1A1A1A; text-wrap: pretty;">La valentía no es la ausencia de miedo ni un rasgo de personalidad que algunas tienen y otras no. Es una serie de decisiones chicas, repetidas, en presencia del miedo.</p>
+                    <p style="margin: 0; font-size: 16px; font-weight: 300; line-height: 1.68; color: #1A1A1A; text-wrap: pretty;">Por eso acá no vas a esperar a sentirte lista. Vas a moverte primero y dejar que la confianza llegue después, como consecuencia.</p>
+                    <p style="margin: 0; font-size: 19px; font-weight: 600; line-height: 1.45; color: #1A1A1A; text-wrap: pretty;">Primero el movimiento. La certeza viene atrás.</p>
+                  </div>
+                </sc-if>
+              </div>
+
+              <div style="background: #FBE3E8; border-radius: 22px; padding: 22px 20px; display: flex; flex-direction: column; gap: 20px;">
+                <div style="display: flex; align-items: center; justify-content: space-between; gap: 10px;">
+                  <span style="font-size: 12px; font-weight: 600; letter-spacing: 0.14em; text-transform: uppercase; color: #2E6273;">Tus respuestas</span>
+                  <span style="font-size: 11px; font-weight: 400; color: #1A1A1A99;">{{ respuestasDestino }}</span>
+                </div>
+                <sc-for list="{{ preguntas }}" as="p" hint-placeholder-count="3">
+                  <div style="display: flex; flex-direction: column; gap: 8px;">
+                    <div style="display: flex; align-items: baseline; gap: 8px;">
+                      <span style="font-size: 12px; font-weight: 700; color: #C49BC9;">{{ p.num }}</span>
+                      <h3 style="margin: 0; font-size: 16px; font-weight: 600; line-height: 1.4; color: #1A1A1A; text-wrap: pretty;">{{ p.q }}</h3>
+                    </div>
+                    <textarea value="{{ p.value }}" onChange="{{ p.onChange }}" rows="3" placeholder="{{ p.placeholder }}" style="width: 100%; resize: none; background: #FFFFFF; border: 1px solid #1A1A1A14; border-radius: 14px; padding: 13px; font-size: 15px; font-weight: 300; line-height: 1.6; color: #1A1A1A; outline: none;" style-focus="border-color: #C49BC9;"></textarea>
+                    <span style="font-size: 11px; font-weight: 300; color: #1A1A1A8c;">{{ p.destino }}</span>
+                  </div>
+                </sc-for>
+              </div>
+
+              <div style="border: 1px solid #1A1A1A1f; border-radius: 22px; padding: 20px; display: flex; flex-direction: column; gap: 10px;">
+                <span style="font-size: 12px; font-weight: 600; letter-spacing: 0.14em; text-transform: uppercase; color: #1A1A1A;">Tu decisión</span>
+                <p style="margin: 0; font-size: 14px; font-weight: 300; line-height: 1.55; color: #1A1A1Acc;">{{ decisionPrompt }}</p>
+                <textarea value="{{ decision }}" onChange="{{ onDecision }}" rows="3" placeholder="Ej: mandar la propuesta sin pedir permiso a nadie." style="width: 100%; resize: none; background: #FFFFFF; border: 1px solid #1A1A1A1f; border-radius: 14px; padding: 13px; font-size: 15px; font-weight: 300; line-height: 1.6; color: #1A1A1A; outline: none;" style-focus="border-color: #C49BC9;"></textarea>
+              </div>
+
+              <button onClick="{{ guardar }}" style="{{ guardarStyle }}" style-hover="filter: brightness(0.94);">{{ guardarLabel }}</button>
+            </div>
+          </sc-if>
+
+          <sc-if value="{{ isGuardado }}" hint-placeholder-val="{{ false }}">
+            <div data-screen-label="Guardado" style="flex: 1; display: flex; flex-direction: column; justify-content: center; gap: 26px; padding: 40px 0;">
+              <div style="width: 64px; height: 64px; border-radius: 50%; background: #D6DE2B; display: flex; align-items: center; justify-content: center; font-size: 26px; font-weight: 700; color: #1A1A1A;">✓</div>
+              <sc-if value="{{ isPremium }}" hint-placeholder-val="{{ true }}">
+                <div style="display: flex; flex-direction: column; gap: 22px;">
+                  <div style="display: flex; flex-direction: column; gap: 12px;">
+                    <h1 style="margin: 0; font-size: 30px; font-weight: 700; line-height: 1.16; letter-spacing: -0.015em; color: #1A1A1A; text-wrap: pretty;">Esto ya forma parte de tu Proyecto de Valentía</h1>
+                    <p style="margin: 0; font-size: 15px; font-weight: 300; line-height: 1.6; color: #1A1A1Acc;">Tus respuestas se sumaron a "Identidad que estoy practicando" y tu decisión quedó como movimiento propuesto para esta semana.</p>
+                  </div>
+                  <div style="background: #F5F2F6; border-radius: 20px; padding: 18px; display: flex; flex-direction: column; gap: 10px;">
+                    <span style="font-size: 10px; font-weight: 600; letter-spacing: 0.16em; text-transform: uppercase; color: #2E6273;">Se actualizó</span>
+                    <span style="font-size: 14px; font-weight: 500; color: #1A1A1A;">Identidad que estoy practicando</span>
+                    <span style="font-size: 14px; font-weight: 500; color: #1A1A1A;">Estándares y decisiones</span>
+                  </div>
+                </div>
+              </sc-if>
+              <sc-if value="{{ isFree }}" hint-placeholder-val="{{ false }}">
+                <div style="display: flex; flex-direction: column; gap: 22px;">
+                  <div style="display: flex; flex-direction: column; gap: 12px;">
+                    <h1 style="margin: 0; font-size: 30px; font-weight: 700; line-height: 1.16; letter-spacing: -0.015em; color: #1A1A1A; text-wrap: pretty;">Guardado en tus respuestas</h1>
+                    <p style="margin: 0; font-size: 15px; font-weight: 300; line-height: 1.6; color: #1A1A1Acc;">Te queda una clase del recorrido de entrada. Cuando empieces tus 90 días, todo esto pasa a tu Proyecto de Valentía.</p>
+                  </div>
+                  <div style="background: #F5F2F6; border-radius: 20px; padding: 18px; display: flex; flex-direction: column; gap: 10px;">
+                    <span style="font-size: 10px; font-weight: 600; letter-spacing: 0.16em; text-transform: uppercase; color: #2E6273;">Tu recorrido</span>
+                    <span style="font-size: 14px; font-weight: 500; color: #1A1A1A;">Clase 2 de 3 completada</span>
+                  </div>
+                </div>
+              </sc-if>
+              <div style="display: flex; flex-direction: column; gap: 10px;">
+                <button onClick="{{ goProyecto }}" style="width: 100%; padding: 16px 20px; border: none; border-radius: 999px; background: #C49BC9; color: #FFFFFF; font-family: 'Poppins', sans-serif; font-size: 15px; font-weight: 600; cursor: pointer;" style-hover="filter: brightness(0.94);">{{ verProyectoLabel }}</button>
+                <button onClick="{{ goHome }}" style="width: 100%; padding: 15px 20px; border: 1px solid #1A1A1A26; border-radius: 999px; background: #FFFFFF; color: #1A1A1A; font-family: 'Poppins', sans-serif; font-size: 14px; font-weight: 500; cursor: pointer;" style-hover="border-color: #1A1A1A;">Volver al inicio</button>
+              </div>
+            </div>
+          </sc-if>
+
+          <sc-if value="{{ isProyecto }}" hint-placeholder-val="{{ false }}">
+            <div data-screen-label="Mi proyecto" style="display: flex; flex-direction: column; gap: 20px;">
+              <div style="display: flex; flex-direction: column; gap: 8px;">
+                <span style="font-size: 10px; font-weight: 600; letter-spacing: 0.16em; text-transform: uppercase; color: #2E6273;">Documento vivo · Día 12</span>
+                <h1 style="margin: 0; font-size: 28px; font-weight: 700; line-height: 1.16; letter-spacing: -0.015em; color: #1A1A1A;">Mi Proyecto de Valentía</h1>
+                <p style="margin: 0; font-size: 14px; font-weight: 300; line-height: 1.6; color: #1A1A1Acc;">Se escribe solo, con lo que respondés en cada experiencia.</p>
+              </div>
+
+              <div style="background: #1A1A1A; border-radius: 22px; padding: 22px 20px; display: flex; flex-direction: column; gap: 16px;">
+                <div style="display: flex; flex-direction: column; gap: 6px;">
+                  <span style="font-size: 10px; font-weight: 600; letter-spacing: 0.16em; text-transform: uppercase; color: #D6DE2B;">Mi sueño</span>
+                  <p style="margin: 0; font-size: 22px; font-weight: 700; line-height: 1.3; color: #FFFFFF; text-wrap: pretty;">Abrir mi consultorio propio</p>
+                </div>
+                <div style="display: flex; flex-direction: column; gap: 6px; padding-top: 14px; border-top: 1px solid #FFFFFF1f;">
+                  <span style="font-size: 10px; font-weight: 600; letter-spacing: 0.16em; text-transform: uppercase; color: #FFFFFF8c;">Mi para qué</span>
+                  <p style="margin: 0; font-size: 15px; font-weight: 300; line-height: 1.6; color: #FFFFFFe6; text-wrap: pretty;">Quiero trabajar a mi manera y dejar de pedir permiso para el tipo de atención que creo justa.</p>
+                </div>
+                <div style="display: flex; flex-direction: column; gap: 6px; padding-top: 14px; border-top: 1px solid #FFFFFF1f;">
+                  <span style="font-size: 10px; font-weight: 600; letter-spacing: 0.16em; text-transform: uppercase; color: #FFFFFF8c;">Resultado a los 90 días</span>
+                  <p style="margin: 0; font-size: 15px; font-weight: 300; line-height: 1.6; color: #FFFFFFe6; text-wrap: pretty;">Consultorio alquilado, agenda abierta y las tres primeras pacientes confirmadas.</p>
+                </div>
+              </div>
+
+              <div style="background: #F5F2F6; border-radius: 22px; padding: 20px; display: flex; flex-direction: column; gap: 12px;">
+                <div style="display: flex; align-items: center; justify-content: space-between; gap: 10px;">
+                  <span style="font-size: 10px; font-weight: 600; letter-spacing: 0.16em; text-transform: uppercase; color: #2E6273;">Identidad que estoy practicando</span>
+                  <span style="font-size: 10px; font-weight: 400; color: #1A1A1A8c;">Construíte</span>
+                </div>
+                <p style="margin: 0; font-size: 17px; font-weight: 600; line-height: 1.45; color: #1A1A1A; text-wrap: pretty;">Una profesional que cobra lo que vale y no se explica de más.</p>
+                <p style="margin: 0; font-size: 14px; font-weight: 300; line-height: 1.6; color: #1A1A1Acc; text-wrap: pretty;">Mi versión anterior no mandaría un presupuesto sin descuento antes de que se lo pidan.</p>
+              </div>
+
+              <div style="display: flex; flex-direction: column; gap: 10px;">
+                <span style="font-size: 10px; font-weight: 600; letter-spacing: 0.16em; text-transform: uppercase; color: #1A1A1A99;">Estándares y decisiones</span>
+                <sc-for list="{{ estandares }}" as="s" hint-placeholder-count="3">
+                  <div style="display: flex; gap: 12px; padding: 14px 16px; border: 1px solid #1A1A1A14; border-radius: 16px;">
+                    <div style="width: 8px; height: 8px; border-radius: 50%; background: #C49BC9; margin-top: 7px;"></div>
+                    <div style="flex: 1; display: flex; flex-direction: column; gap: 3px;">
+                      <span style="font-size: 15px; font-weight: 500; line-height: 1.45; color: #1A1A1A;">{{ s.text }}</span>
+                      <span style="font-size: 11px; font-weight: 300; color: #1A1A1A8c;">{{ s.origen }}</span>
+                    </div>
+                  </div>
+                </sc-for>
+              </div>
+
+              <div style="display: flex; flex-direction: column; gap: 10px;">
+                <span style="font-size: 10px; font-weight: 600; letter-spacing: 0.16em; text-transform: uppercase; color: #1A1A1A99;">Hitos</span>
+                <sc-for list="{{ hitos }}" as="h" hint-placeholder-count="3">
+                  <div style="display: flex; align-items: center; gap: 12px; padding: 14px 16px; border-radius: 16px; background: #F7F6F4;">
+                    <span style="width: 54px; font-size: 12px; font-weight: 700; color: #2E6273;">{{ h.dia }}</span>
+                    <span style="flex: 1; font-size: 14px; font-weight: 500; line-height: 1.45; color: #1A1A1A;">{{ h.text }}</span>
+                    <span style="{{ h.badgeStyle }}">{{ h.badge }}</span>
+                  </div>
+                </sc-for>
+              </div>
+
+              <div style="background: #D6DE2B; border-radius: 22px; padding: 20px; display: flex; flex-direction: column; gap: 8px;">
+                <span style="font-size: 10px; font-weight: 600; letter-spacing: 0.16em; text-transform: uppercase; color: #1A1A1A99;">Movimiento de esta semana</span>
+                <p style="margin: 0; font-size: 17px; font-weight: 600; line-height: 1.45; color: #1A1A1A; text-wrap: pretty;">Escribirle a tres colegas para preguntar cómo alquilaron su espacio.</p>
+              </div>
+
+              <div style="display: flex; flex-direction: column; gap: 10px;">
+                <div style="display: flex; align-items: center; justify-content: space-between;">
+                  <span style="font-size: 10px; font-weight: 600; letter-spacing: 0.16em; text-transform: uppercase; color: #1A1A1A99;">Evidencias</span>
+                  <span style="font-size: 12px; font-weight: 500; color: #2E6273;">7 registradas</span>
+                </div>
+                <sc-for list="{{ evidencias }}" as="ev" hint-placeholder-count="3">
+                  <div style="display: flex; gap: 12px; padding: 14px 16px; border: 1px solid #1A1A1A14; border-radius: 16px;">
+                    <div style="width: 40px; height: 40px; border-radius: 12px; background: repeating-linear-gradient(135deg, #EFECE8 0 8px, #F7F6F4 8px 16px);"></div>
+                    <div style="flex: 1; display: flex; flex-direction: column; gap: 2px;">
+                      <span style="font-size: 14px; font-weight: 500; line-height: 1.4; color: #1A1A1A;">{{ ev.text }}</span>
+                      <span style="font-size: 11px; font-weight: 300; color: #1A1A1A8c;">{{ ev.fecha }}</span>
+                    </div>
+                  </div>
+                </sc-for>
+              </div>
+            </div>
+          </sc-if>
+
+          <sc-if value="{{ isRitual }}" hint-placeholder-val="{{ false }}">
+            <div data-screen-label="Ritual semanal" style="display: flex; flex-direction: column; gap: 20px;">
+              <div style="display: flex; flex-direction: column; gap: 8px;">
+                <span style="font-size: 10px; font-weight: 600; letter-spacing: 0.16em; text-transform: uppercase; color: #2E6273;">Semana 2 · Ritual</span>
+                <h1 style="margin: 0; font-size: 28px; font-weight: 700; line-height: 1.16; letter-spacing: -0.015em; color: #1A1A1A;">Tu semana, en dos momentos</h1>
+              </div>
+
+              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 6px; padding: 5px; border-radius: 999px; background: #F2F0EE;">
+                <button onClick="{{ setLunes }}" style="{{ lunesTabStyle }}">Lunes</button>
+                <button onClick="{{ setViernes }}" style="{{ viernesTabStyle }}">Viernes</button>
+              </div>
+
+              <sc-if value="{{ isLunes }}" hint-placeholder-val="{{ true }}">
+                <div style="display: flex; flex-direction: column; gap: 18px;">
+                  <div style="background: #B9DCE5; border-radius: 22px; padding: 22px 20px; display: flex; flex-direction: column; gap: 8px;">
+                    <span style="font-size: 10px; font-weight: 600; letter-spacing: 0.16em; text-transform: uppercase; color: #2E6273;">Lunes</span>
+                    <h2 style="margin: 0; font-size: 24px; font-weight: 700; line-height: 1.22; color: #1A1A1A; text-wrap: pretty;">Elegí tu movimiento de la semana</h2>
+                    <p style="margin: 0; font-size: 14px; font-weight: 300; line-height: 1.6; color: #1A1A1Acc;">Uno solo. Que se pueda hacer en siete días y que te dé un poco de miedo.</p>
+                  </div>
+                  <div style="display: flex; flex-direction: column; gap: 8px;">
+                    <label style="font-size: 11px; font-weight: 600; letter-spacing: 0.14em; text-transform: uppercase; color: #1A1A1A99;">Mi movimiento</label>
+                    <textarea value="{{ movimiento }}" onChange="{{ onMovimiento }}" rows="3" placeholder="Escribilo como una acción, no como una intención." style="width: 100%; resize: none; background: #FFFFFF; border: 1px solid #1A1A1A1f; border-radius: 14px; padding: 14px; font-size: 15px; font-weight: 300; line-height: 1.6; color: #1A1A1A; outline: none;" style-focus="border-color: #C49BC9;"></textarea>
+                  </div>
+                  <div style="display: flex; flex-direction: column; gap: 8px;">
+                    <label style="font-size: 11px; font-weight: 600; letter-spacing: 0.14em; text-transform: uppercase; color: #1A1A1A99;">¿Cuándo?</label>
+                    <input value="{{ cuando }}" onChange="{{ onCuando }}" placeholder="Miércoles a la mañana" style="width: 100%; background: #FFFFFF; border: 1px solid #1A1A1A1f; border-radius: 14px; padding: 14px; font-size: 15px; font-weight: 300; color: #1A1A1A; outline: none;" style-focus="border-color: #C49BC9;">
+                  </div>
+                  <button onClick="{{ confirmarMovimiento }}" style="width: 100%; padding: 16px 20px; border: none; border-radius: 999px; background: #C49BC9; color: #FFFFFF; font-family: 'Poppins', sans-serif; font-size: 15px; font-weight: 600; cursor: pointer;" style-hover="filter: brightness(0.94);">Confirmar mi movimiento</button>
+                </div>
+              </sc-if>
+
+              <sc-if value="{{ isViernes }}" hint-placeholder-val="{{ false }}">
+                <div style="display: flex; flex-direction: column; gap: 18px;">
+                  <div style="background: #FBE3E8; border-radius: 22px; padding: 22px 20px; display: flex; flex-direction: column; gap: 8px;">
+                    <span style="font-size: 10px; font-weight: 600; letter-spacing: 0.16em; text-transform: uppercase; color: #2E6273;">Viernes</span>
+                    <h2 style="margin: 0; font-size: 24px; font-weight: 700; line-height: 1.22; color: #1A1A1A; text-wrap: pretty;">Registrá tu evidencia</h2>
+                    <p style="margin: 0; font-size: 14px; font-weight: 300; line-height: 1.6; color: #1A1A1Acc;">Algo que pasó porque te moviste. Aunque haya salido distinto a lo que esperabas.</p>
+                  </div>
+                  <div style="padding: 16px; border: 1px solid #1A1A1A14; border-radius: 16px; display: flex; flex-direction: column; gap: 4px;">
+                    <span style="font-size: 10px; font-weight: 600; letter-spacing: 0.14em; text-transform: uppercase; color: #1A1A1A99;">Tu movimiento fue</span>
+                    <span style="font-size: 15px; font-weight: 500; line-height: 1.45; color: #1A1A1A;">Escribirle a tres colegas para preguntar cómo alquilaron su espacio.</span>
+                  </div>
+                  <div style="display: flex; flex-direction: column; gap: 8px;">
+                    <label style="font-size: 11px; font-weight: 600; letter-spacing: 0.14em; text-transform: uppercase; color: #1A1A1A99;">Qué pasó</label>
+                    <textarea value="{{ evidencia }}" onChange="{{ onEvidencia }}" rows="4" placeholder="Dos me contestaron y una me pasó el contacto de su dueña." style="width: 100%; resize: none; background: #FFFFFF; border: 1px solid #1A1A1A1f; border-radius: 14px; padding: 14px; font-size: 15px; font-weight: 300; line-height: 1.6; color: #1A1A1A; outline: none;" style-focus="border-color: #C49BC9;"></textarea>
+                  </div>
+                  <div style="display: flex; align-items: center; gap: 12px; padding: 16px; border: 1px dashed #1A1A1A33; border-radius: 16px; cursor: pointer;">
+                    <div style="width: 40px; height: 40px; border-radius: 12px; background: repeating-linear-gradient(135deg, #EFECE8 0 8px, #F7F6F4 8px 16px);"></div>
+                    <span style="flex: 1; font-family: ui-monospace, monospace; font-size: 11px; letter-spacing: 0.06em; text-transform: uppercase; color: #1A1A1A99;">Sumar una foto (opcional)</span>
+                  </div>
+                  <button onClick="{{ guardarEvidencia }}" style="width: 100%; padding: 16px 20px; border: none; border-radius: 999px; background: #C49BC9; color: #FFFFFF; font-family: 'Poppins', sans-serif; font-size: 15px; font-weight: 600; cursor: pointer;" style-hover="filter: brightness(0.94);">Registrar evidencia</button>
+                </div>
+              </sc-if>
+            </div>
+          </sc-if>
+
+          <sc-if value="{{ isEvidenciaOk }}" hint-placeholder-val="{{ false }}">
+            <div data-screen-label="Evidencia registrada" style="flex: 1; display: flex; flex-direction: column; justify-content: center; gap: 24px; padding: 40px 0;">
+              <div style="width: 64px; height: 64px; border-radius: 50%; background: #D6DE2B; display: flex; align-items: center; justify-content: center; font-size: 26px; font-weight: 700; color: #1A1A1A;">✓</div>
+              <div style="display: flex; flex-direction: column; gap: 12px;">
+                <h1 style="margin: 0; font-size: 30px; font-weight: 700; line-height: 1.16; letter-spacing: -0.015em; color: #1A1A1A; text-wrap: pretty;">Evidencia número 8</h1>
+                <p style="margin: 0; font-size: 15px; font-weight: 300; line-height: 1.6; color: #1A1A1Acc;">Ocho semanas seguidas en las que algo se movió. Queda guardada en tu proyecto.</p>
+              </div>
+              <div style="display: flex; flex-direction: column; gap: 10px;">
+                <button onClick="{{ compartir }}" style="{{ compartirStyle }}" style-hover="filter: brightness(0.94);">{{ compartirLabel }}</button>
+                <button onClick="{{ goProyecto }}" style="width: 100%; padding: 15px 20px; border: 1px solid #1A1A1A26; border-radius: 999px; background: #FFFFFF; color: #1A1A1A; font-family: 'Poppins', sans-serif; font-size: 14px; font-weight: 500; cursor: pointer;" style-hover="border-color: #1A1A1A;">Ver mi proyecto</button>
+              </div>
+              <span style="text-align: center; font-size: 12px; font-weight: 300; color: #1A1A1A99;">{{ compartirHint }}</span>
+            </div>
+          </sc-if>
+
+          <sc-if value="{{ isHito }}" hint-placeholder-val="{{ false }}">
+            <div data-screen-label="Hito día 30" style="display: flex; flex-direction: column; gap: 22px;">
+              <div style="background: #1A1A1A; border-radius: 22px; padding: 26px 22px; display: flex; flex-direction: column; gap: 14px;">
+                <span style="font-size: 10px; font-weight: 600; letter-spacing: 0.16em; text-transform: uppercase; color: #D6DE2B;">Hito · Día 30 de 90</span>
+                <h1 style="margin: 0; font-size: 30px; font-weight: 700; line-height: 1.16; letter-spacing: -0.02em; color: #FFFFFF; text-wrap: pretty;">30 días tomándote este sueño en serio</h1>
+                <div style="height: 5px; border-radius: 999px; background: #FFFFFF1f; overflow: hidden;">
+                  <div style="width: 33.3%; height: 100%; background: #D6DE2B;"></div>
+                </div>
+                <span style="font-size: 13px; font-weight: 300; color: #FFFFFFb3;">Un tercio del camino. Nadie lo hizo por vos.</span>
+              </div>
+
+              <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px;">
+                <sc-for list="{{ hitoStats }}" as="s" hint-placeholder-count="3">
+                  <div style="background: #F7F6F4; border-radius: 18px; padding: 16px 12px; display: flex; flex-direction: column; gap: 4px;">
+                    <span style="font-size: 24px; font-weight: 700; line-height: 1; color: #1A1A1A;">{{ s.n }}</span>
+                    <span style="font-size: 11px; font-weight: 300; line-height: 1.35; color: #1A1A1A99;">{{ s.label }}</span>
+                  </div>
+                </sc-for>
+              </div>
+
+              <div style="display: flex; flex-direction: column; gap: 10px;">
+                <span style="font-size: 10px; font-weight: 600; letter-spacing: 0.16em; text-transform: uppercase; color: #1A1A1A99;">Lo que se movió</span>
+                <sc-for list="{{ hitoTimeline }}" as="t" hint-placeholder-count="4">
+                  <div style="display: flex; gap: 14px;">
+                    <div style="display: flex; flex-direction: column; align-items: center; gap: 4px;">
+                      <div style="width: 10px; height: 10px; border-radius: 50%; background: #C49BC9; margin-top: 6px;"></div>
+                      <div style="flex: 1; width: 1px; background: #1A1A1A1a;"></div>
+                    </div>
+                    <div style="flex: 1; padding-bottom: 16px; display: flex; flex-direction: column; gap: 3px;">
+                      <span style="font-size: 11px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: #2E6273;">{{ t.semana }}</span>
+                      <span style="font-size: 15px; font-weight: 500; line-height: 1.45; color: #1A1A1A; text-wrap: pretty;">{{ t.mov }}</span>
+                      <span style="font-size: 13px; font-weight: 300; line-height: 1.5; color: #1A1A1A99; text-wrap: pretty;">{{ t.ev }}</span>
+                    </div>
+                  </div>
+                </sc-for>
+              </div>
+
+              <div style="background: #F5F2F6; border-radius: 22px; padding: 22px 20px; display: flex; flex-direction: column; gap: 20px;">
+                <span style="font-size: 12px; font-weight: 600; letter-spacing: 0.14em; text-transform: uppercase; color: #2E6273;">Revisión</span>
+                <sc-for list="{{ hitoPreguntas }}" as="p" hint-placeholder-count="3">
+                  <div style="display: flex; flex-direction: column; gap: 8px;">
+                    <h3 style="margin: 0; font-size: 16px; font-weight: 600; line-height: 1.4; color: #1A1A1A; text-wrap: pretty;">{{ p.q }}</h3>
+                    <textarea value="{{ p.value }}" onChange="{{ p.onChange }}" rows="3" placeholder="Escribí sin editarte." style="width: 100%; resize: none; background: #FFFFFF; border: 1px solid #1A1A1A14; border-radius: 14px; padding: 13px; font-size: 15px; font-weight: 300; line-height: 1.6; color: #1A1A1A; outline: none;" style-focus="border-color: #C49BC9;"></textarea>
+                  </div>
+                </sc-for>
+              </div>
+
+              <button onClick="{{ goHome }}" style="width: 100%; padding: 16px 20px; border: none; border-radius: 999px; background: #C49BC9; color: #FFFFFF; font-family: 'Poppins', sans-serif; font-size: 15px; font-weight: 600; cursor: pointer;" style-hover="filter: brightness(0.94);">Seguir hacia el día 60</button>
+            </div>
+          </sc-if>
+
+          <sc-if value="{{ isComunidad }}" hint-placeholder-val="{{ false }}">
+            <div data-screen-label="Comunidad" style="display: flex; flex-direction: column; gap: 18px;">
+              <div style="display: flex; flex-direction: column; gap: 8px;">
+                <h1 style="margin: 0; font-size: 28px; font-weight: 700; line-height: 1.16; letter-spacing: -0.015em; color: #1A1A1A;">Comunidad</h1>
+                <p style="margin: 0; font-size: 14px; font-weight: 300; line-height: 1.6; color: #1A1A1Acc;">Evidencias de mujeres que están en sus propios 90 días.</p>
+              </div>
+              <sc-for list="{{ feed }}" as="f" hint-placeholder-count="3">
+                <div style="border: 1px solid #1A1A1A14; border-radius: 20px; padding: 18px; display: flex; flex-direction: column; gap: 10px;">
+                  <div style="display: flex; align-items: center; gap: 10px;">
+                    <div style="{{ f.avatarStyle }}"></div>
+                    <div style="flex: 1; display: flex; flex-direction: column;">
+                      <span style="font-size: 14px; font-weight: 600; color: #1A1A1A;">{{ f.nombre }}</span>
+                      <span style="font-size: 11px; font-weight: 300; color: #1A1A1A8c;">{{ f.meta }}</span>
+                    </div>
+                  </div>
+                  <p style="margin: 0; font-size: 15px; font-weight: 300; line-height: 1.6; color: #1A1A1A; text-wrap: pretty;">{{ f.texto }}</p>
+                  <span style="font-size: 12px; font-weight: 500; color: #2E6273;">{{ f.reacciones }}</span>
+                </div>
+              </sc-for>
+            </div>
+          </sc-if>
+
+          <sc-if value="{{ isPerfil }}" hint-placeholder-val="{{ false }}">
+            <div data-screen-label="Perfil" style="display: flex; flex-direction: column; gap: 18px;">
+              <div style="display: flex; align-items: center; gap: 14px;">
+                <div style="width: 60px; height: 60px; border-radius: 50%; background: #C49BC9;"></div>
+                <div style="display: flex; flex-direction: column; gap: 3px;">
+                  <span style="font-size: 20px; font-weight: 700; color: #1A1A1A;">Meli</span>
+                  <span style="font-size: 13px; font-weight: 300; color: #1A1A1A99;">Día 12 de 90 · Construíte</span>
+                </div>
+              </div>
+              <sc-for list="{{ perfilItems }}" as="p" hint-placeholder-count="4">
+                <div style="display: flex; align-items: center; gap: 12px; padding: 16px; border-radius: 16px; background: #F7F6F4; cursor: pointer;">
+                  <span style="flex: 1; font-size: 15px; font-weight: 500; color: #1A1A1A;">{{ p.label }}</span>
+                  <span style="font-size: 13px; font-weight: 300; color: #1A1A1A99;">{{ p.meta }}</span>
+                </div>
+              </sc-for>
+            </div>
+          </sc-if>
+
+        </div>
+
+        <div style="position: sticky; bottom: 0; background: #FFFFFF; border-top: 1px solid #1A1A1A12; display: grid; grid-template-columns: repeat(5, 1fr); gap: 2px; padding: 12px 6px calc(14px + env(safe-area-inset-bottom));">
+          <sc-for list="{{ nav }}" as="n" hint-placeholder-count="5">
+            <div onClick="{{ n.onClick }}" style="display: flex; flex-direction: column; align-items: center; gap: 7px; padding: 4px 0; cursor: pointer;">
+              <div style="{{ n.iconStyle }}"></div>
+              <span style="{{ n.labelStyle }}">{{ n.label }}</span>
+            </div>
+          </sc-for>
+        </div>
+
+      </div>
+    </sc-if>
+
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:430,&quot;height&quot;:932},&quot;plan&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;default&quot;:&quot;Premium&quot;,&quot;options&quot;:[&quot;Premium&quot;,&quot;Gratuita&quot;],&quot;tsType&quot;:&quot;string&quot;},&quot;accentColor&quot;:{&quot;editor&quot;:&quot;color&quot;,&quot;default&quot;:&quot;#C49BC9&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;options&quot;:[&quot;#C49BC9&quot;,&quot;#D6DE2B&quot;,&quot;#B9DCE5&quot;,&quot;#2E6273&quot;]}}">
+const TITLES = {
+  home: 'Inicio',
+  ruta: 'Mi ruta',
+  etapa: 'Construíte',
+  experiencia: 'Experiencia',
+  guardado: 'Guardado',
+  proyecto: 'Mi proyecto',
+  ritual: 'Ritual semanal',
+  evidenciaOk: 'Evidencia',
+  hito: 'Hito día 30',
+  comunidad: 'Comunidad',
+  perfil: 'Perfil',
+  biblioteca: 'Biblioteca',
+  membresia: 'Membresía'
+};
+
+const ACCESOS = {
+  gratis: { label: 'Gratis', style: 'font-size: 10px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: #1A1A1A; background: #D6DE2B; border-radius: 999px; padding: 4px 9px;' },
+  membresia: { label: 'Membresía', style: 'font-size: 10px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: #2E6273; background: #B9DCE533; border-radius: 999px; padding: 4px 9px;' },
+  premium: { label: 'Premium', style: 'font-size: 10px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: #1A1A1A99; border: 1px solid #1A1A1A26; border-radius: 999px; padding: 3px 9px;' }
+};
+
+const BIBLIO = {
+  paraVos: [
+    { tipo: 'Meditación', name: 'Sostener la incomodidad', motivo: 'Para las semanas en que el movimiento da miedo.', acceso: 'membresia' },
+    { tipo: 'Taller grabado', name: 'Identidad y hábitos', motivo: 'Complementa lo que estás trabajando en Construíte.', acceso: 'membresia' }
+  ],
+  cursos: [
+    { name: 'Tomate tus sueños en serio', meta: '3 clases · 40 min', acceso: 'gratis' },
+    { name: 'Decidir sin permiso', meta: '6 clases · 2 h', acceso: 'membresia' },
+    { name: 'Dinero y valentía', meta: '5 clases · 1 h 40', acceso: 'premium' }
+  ],
+  meditaciones: [
+    { name: 'Volver al cuerpo', meta: '8 min', acceso: 'gratis' },
+    { name: 'Antes de una conversación difícil', meta: '11 min', acceso: 'membresia' },
+    { name: 'Cerrar la semana', meta: '14 min', acceso: 'membresia' }
+  ],
+  talleres: [
+    { name: 'Encuentro de agosto: punto de partida', meta: '1 h 20', acceso: 'membresia' },
+    { name: 'Hábitos que sostienen decisiones', meta: '55 min', acceso: 'membresia' },
+    { name: 'Intensivo de 3 días', meta: '4 h', acceso: 'premium' }
+  ],
+  recursos: [
+    { name: 'Guía: cómo pedir sin pedir permiso', meta: 'PDF · 6 páginas', acceso: 'gratis' },
+    { name: 'Plantilla de movimiento semanal', meta: 'PDF imprimible', acceso: 'membresia' },
+    { name: 'Ejercicio de límites', meta: 'PDF · 3 páginas', acceso: 'membresia' }
+  ]
+};
+
+const ETAPAS = [
+  { name: 'DEFINÍ', meta: '4 experiencias · completada', state: 'done' },
+  { name: 'CONSTRUÍTE', meta: '4 experiencias · 2 hechas', state: 'current' },
+  { name: 'DISEÑÁ', meta: '3 experiencias', state: 'future' },
+  { name: 'MOVETE', meta: '4 experiencias', state: 'future' },
+  { name: 'SOSTENÉ', meta: '3 experiencias', state: 'future' }
+];
+
+const EXPERIENCIAS = [
+  { name: 'Quién está manejando tu vida', meta: 'Video 12 min · respondida', state: 'done' },
+  { name: 'Hasta dónde te bancás crecer', meta: 'Video 8 min · respondida', state: 'done' },
+  { name: 'Automático vs intencional', meta: 'Video 9 min · 3 preguntas', state: 'current' },
+  { name: 'Diseño de tu nueva identidad', meta: 'Video 11 min · 3 preguntas', state: 'next' }
+];
+
+const PREGUNTAS = [
+  { q: '¿Quién necesitás practicar ser para sostener este sueño?', destino: 'Va a "Identidad que estoy practicando"', placeholder: 'Describila en presente, como si ya fueras ella.' },
+  { q: '¿Qué decisión tu versión anterior no tomaría?', destino: 'Va a "Estándares y decisiones"', placeholder: 'Una decisión concreta, no una actitud.' },
+  { q: '¿Qué estándar nuevo querés practicar?', destino: 'Va a "Estándares y decisiones"', placeholder: 'Algo que puedas cumplir o romper esta semana.' }
+];
+
+const HITO_PREGUNTAS = [
+  { q: '¿Qué cambió en vos en estos 30 días?' },
+  { q: '¿Qué movimiento te costó más y por qué?' },
+  { q: '¿Qué vas a hacer distinto en los próximos 30?' }
+];
+
+class Component extends DCLogic {
+  state = {
+    screen: 'start',
+    prev: 'home',
+    tab: 'inicio',
+    ritualDia: 'lunes',
+    exp: 'Diseño de tu nueva identidad',
+    respuestas: ['', '', ''],
+    decision: '',
+    movimiento: '',
+    cuando: '',
+    evidencia: '',
+    shared: false,
+    hitoRespuestas: ['', '', '']
+  };
+
+  go(screen, tab) {
+    this.setState((s) => ({ screen, prev: s.screen, tab: tab || s.tab }));
+    if (typeof window !== 'undefined') window.scrollTo(0, 0);
+  }
+
+  renderVals() {
+    const s = this.state;
+    const accent = this.props.accentColor ?? '#C49BC9';
+    const free = (this.props.plan ?? 'Premium') === 'Gratuita';
+    const screen = s.screen;
+    const badge = (bg, color) => `font-size: 10px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: ${color}; background: ${bg}; border-radius: 999px; padding: 4px 9px;`;
+
+    const etapas = ETAPAS.map((e, i) => {
+      const done = e.state === 'done', cur = e.state === 'current';
+      return {
+        num: done ? '✓' : String(i + 1),
+        name: e.name,
+        meta: e.meta,
+        badge: done ? 'Completada' : cur ? 'En curso' : 'Después',
+        onClick: () => { if (cur) this.go('etapa'); },
+        cardStyle: `padding: 16px; border-radius: 18px; cursor: ${cur ? 'pointer' : 'default'}; background: ${cur ? '#F5F2F6' : '#FFFFFF'}; border: 1px solid ${cur ? accent + '66' : '#1A1A1A14'}; opacity: ${e.state === 'future' ? 0.62 : 1};`,
+        dotStyle: `width: 30px; height: 30px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 700; color: ${done ? '#1A1A1A' : cur ? '#FFFFFF' : '#1A1A1A99'}; background: ${done ? '#D6DE2B' : cur ? accent : '#1A1A1A0f'};`,
+        nameStyle: `font-size: 16px; font-weight: 700; letter-spacing: 0.04em; color: #1A1A1A;`,
+        badgeStyle: badge(done ? '#D6DE2B33' : cur ? accent + '2e' : '#1A1A1A0d', done ? '#2E6273' : '#1A1A1A99')
+      };
+    });
+
+    const experiencias = EXPERIENCIAS.map((x) => {
+      const done = x.state === 'done', cur = x.state === 'current';
+      return {
+        name: x.name,
+        meta: x.meta,
+        badge: done ? 'Hecha' : cur ? 'Ahora' : 'Pendiente',
+        onClick: () => this.go('experiencia'),
+        cardStyle: `display: flex; align-items: center; gap: 12px; padding: 16px; border-radius: 18px; cursor: pointer; background: ${cur ? '#1A1A1A' : '#FFFFFF'}; border: 1px solid ${cur ? '#1A1A1A' : '#1A1A1A14'};`,
+        markStyle: `width: 10px; height: 10px; border-radius: 50%; background: ${done ? '#D6DE2B' : cur ? accent : '#1A1A1A26'};`,
+        nameStyle: `font-size: 15px; font-weight: 600; line-height: 1.35; color: ${cur ? '#FFFFFF' : '#1A1A1A'};`,
+        badgeStyle: badge(cur ? '#FFFFFF1f' : done ? '#D6DE2B33' : '#1A1A1A0d', cur ? '#FFFFFF' : '#1A1A1A99')
+      };
+    });
+
+    const PREGUNTAS_FREE = [
+      { q: '¿Cuál fue la última vez que hiciste algo que te daba miedo y lo hiciste igual?', destino: 'Se guarda en tus respuestas', placeholder: 'Contalo en dos o tres líneas. Fijate qué te sostuvo.' }
+    ];
+    const SET = free ? PREGUNTAS_FREE : PREGUNTAS;
+
+    const preguntas = SET.map((p, i) => ({
+      num: `0${i + 1}`,
+      q: p.q,
+      destino: p.destino,
+      placeholder: p.placeholder,
+      value: s.respuestas[i],
+      onChange: (e) => {
+        const next = [...this.state.respuestas];
+        next[i] = e.target.value;
+        this.setState({ respuestas: next });
+      }
+    }));
+
+    const listo = SET.every((_, i) => (s.respuestas[i] || '').trim().length > 0);
+
+    const biblioRow = (c) => ({
+      name: c.name,
+      meta: c.meta,
+      acceso: ACCESOS[c.acceso].label,
+      accesoStyle: ACCESOS[c.acceso].style,
+      nameStyle: `font-size: 15px; font-weight: 500; line-height: 1.4; color: #1A1A1A; opacity: ${free && c.acceso !== 'gratis' ? 0.6 : 1};`
+    });
+
+    const nav = [
+      { key: 'inicio', label: 'Inicio', screen: 'home', icon: 'ring' },
+      { key: 'ruta', label: 'Mi Ruta', screen: 'ruta', icon: 'dot' },
+      { key: 'comunidad', label: 'Comunidad', screen: 'comunidad', icon: 'ring' },
+      { key: 'biblioteca', label: 'Biblioteca', screen: 'biblioteca', icon: 'dot' },
+      { key: 'perfil', label: 'Perfil', screen: 'perfil', icon: 'drop' }
+    ].map((n) => {
+      const active = s.tab === n.key;
+      const shape = n.icon === 'drop' ? 'border-radius: 50% 50% 50% 0;' : 'border-radius: 50%;';
+      return {
+        label: n.label,
+        onClick: () => this.go(n.screen, n.key),
+        iconStyle: active
+          ? `width: 15px; height: 15px; ${shape} background: ${accent};`
+          : `width: 15px; height: 15px; ${shape} border: 2px solid #1A1A1A; opacity: 0.35;`,
+        labelStyle: `font-size: 10px; font-weight: ${active ? 600 : 500}; letter-spacing: 0.06em; text-transform: uppercase; color: #1A1A1A; opacity: ${active ? 1 : 0.45};`
+      };
+    });
+
+    const tabStyle = (on) => `padding: 11px 16px; border: none; border-radius: 999px; cursor: pointer; font-family: 'Poppins', sans-serif; font-size: 14px; font-weight: ${on ? 600 : 500}; color: ${on ? '#FFFFFF' : '#1A1A1A99'}; background: ${on ? '#1A1A1A' : 'transparent'};`;
+
+    return {
+      isStart: screen === 'start',
+      isApp: screen !== 'start',
+      isHome: screen === 'home' && !free,
+      isHomeFree: screen === 'home' && free,
+      isFree: free,
+      isPremium: !free,
+      respuestasDestino: free ? 'Se guardan en tus respuestas' : 'Van a tu Proyecto',
+      guardarLabel: free ? 'Guardar mis respuestas' : 'Guardar en mi Proyecto',
+      verProyectoLabel: free ? 'Conocer la membresía' : 'Ver mi Proyecto',
+      isBiblioteca: screen === 'biblioteca',
+      isMembresia: screen === 'membresia',
+      goBiblioteca: () => this.go('biblioteca', 'biblioteca'),
+      goMembresia: () => this.go('membresia'),
+      goStart: () => this.go('start'),
+      etapaActual: free ? 'Tu sueño declarado' : 'Etapa 2 · Construíte',
+      decisionPrompt: free
+        ? 'Un paso chico que puedas hacer esta semana, aunque te dé algo de miedo.'
+        : 'Una acción concreta que tu nueva identidad haría esta semana.',
+      paraVos: (free
+        ? [
+            { tipo: 'Curso', name: 'Tomate tus sueños en serio', motivo: 'Te falta la última clase del recorrido de entrada.', acceso: 'gratis' },
+            { tipo: 'Meditación', name: 'Volver al cuerpo', motivo: 'Ocho minutos para la semana en que elegís tu movimiento.', acceso: 'gratis' }
+          ]
+        : BIBLIO.paraVos
+      ).map((p) => ({
+        tipo: p.tipo,
+        name: p.name,
+        motivo: p.motivo,
+        acceso: ACCESOS[p.acceso].label,
+        accesoStyle: ACCESOS[p.acceso].style
+      })),
+      cursos: BIBLIO.cursos.map(biblioRow),
+      meditaciones: BIBLIO.meditaciones.map(biblioRow),
+      talleres: BIBLIO.talleres.map(biblioRow),
+      recursosBiblio: BIBLIO.recursos.map(biblioRow),
+      membresiaItems: [
+        { title: 'Tu Proyecto de Valentía de 90 días', meta: 'Sueño, para qué, resultado e hitos en un documento vivo' },
+        { title: 'La ruta completa del método', meta: 'Definí · Construíte · Diseñá · Movete · Sostené' },
+        { title: 'Identidad, estrategia e hitos', meta: 'Las experiencias que hoy no podés abrir' },
+        { title: 'Revisiones de los días 30, 60 y 90', meta: 'Para ver el paso del tiempo con datos tuyos' },
+        { title: 'Comunidad completa y encuentros en vivo', meta: 'Un encuentro mensual y meditación semanal' }
+      ],
+      isRuta: screen === 'ruta' && !free,
+      isRutaFree: screen === 'ruta' && free,
+      miniRuta: [
+        { name: 'Un sueño no es un capricho', meta: 'Video 4 min · respondida', state: 'done' },
+        { name: 'La valentía se entrena', meta: 'Video 5 min · 1 pregunta', state: 'current' },
+        { name: 'Noventa días es una promesa', meta: 'Video 6 min · 1 pregunta', state: 'next' }
+      ].map((x) => {
+        const done = x.state === 'done', cur = x.state === 'current';
+        return {
+          name: x.name,
+          meta: x.meta,
+          badge: done ? 'Hecha' : cur ? 'Ahora' : 'Pendiente',
+          onClick: () => this.go('experiencia'),
+          cardStyle: `display: flex; align-items: center; gap: 12px; padding: 16px; border-radius: 18px; cursor: pointer; background: ${cur ? '#1A1A1A' : '#FFFFFF'}; border: 1px solid ${cur ? '#1A1A1A' : '#1A1A1A14'};`,
+          markStyle: `width: 10px; height: 10px; border-radius: 50%; background: ${done ? '#D6DE2B' : cur ? accent : '#1A1A1A26'};`,
+          nameStyle: `font-size: 15px; font-weight: 600; line-height: 1.35; color: ${cur ? '#FFFFFF' : '#1A1A1A'};`,
+          badgeStyle: badge(cur ? '#FFFFFF1f' : done ? '#D6DE2B33' : '#1A1A1A0d', cur ? '#FFFFFF' : '#1A1A1A99')
+        };
+      }),
+      isEtapa: screen === 'etapa' && !free,
+      isExperiencia: screen === 'experiencia',
+      isGuardado: screen === 'guardado',
+      isProyecto: screen === 'proyecto' && !free,
+      isRitual: screen === 'ritual',
+      isEvidenciaOk: screen === 'evidenciaOk',
+      isHito: screen === 'hito' && !free,
+      isComunidad: screen === 'comunidad',
+      isPerfil: screen === 'perfil',
+      screenTitle: TITLES[screen] || '',
+      dayLabel: free ? 'Plan gratuito' : screen === 'hito' ? 'Día 30' : 'Día 12 · 90',
+      showBack: !['home', 'comunidad', 'perfil', 'biblioteca', 'ruta'].includes(screen),
+      goBack: () => this.go(s.prev === screen ? 'home' : s.prev),
+      goHome: () => this.go('home', 'inicio'),
+      goRuta: () => this.go('ruta', 'inicio'),
+      goEtapa: () => this.go('etapa', 'inicio'),
+      goExperiencia: () => this.go('experiencia', 'inicio'),
+      goProyecto: () => this.go(free ? 'membresia' : 'proyecto', 'inicio'),
+      goRitual: () => this.go('ritual', 'inicio'),
+      goHito: () => this.go(free ? 'membresia' : 'hito', 'inicio'),
+      goComunidad: () => this.go('comunidad', 'comunidad'),
+      nav,
+      etapas,
+      etapaBars: ETAPAS.map((e) => ({
+        style: `flex: 1; height: 6px; border-radius: 999px; background: ${e.state === 'done' ? '#1A1A1A' : e.state === 'current' ? accent : '#1A1A1A14'};`
+      })),
+      recursos: [
+        { name: 'Meditación: sostener la incomodidad', meta: '12 min' },
+        { name: 'Guía: cómo pedir sin pedir permiso', meta: 'PDF' },
+        { name: 'Encuentro grabado de agosto', meta: '1 h 20' }
+      ],
+      experiencias,
+      recursosEtapa: [
+        { name: 'Audio: cuando aparece la culpa', meta: '9 min' },
+        { name: 'Ejercicio de límites', meta: 'PDF' }
+      ],
+      preguntas,
+      decision: s.decision,
+      onDecision: (e) => this.setState({ decision: e.target.value }),
+      guardar: () => { if (listo) this.go('guardado'); },
+      guardarStyle: `width: 100%; padding: 17px 20px; border: none; border-radius: 999px; cursor: ${listo ? 'pointer' : 'not-allowed'}; font-family: 'Poppins', sans-serif; font-size: 15px; font-weight: 600; color: ${listo ? '#FFFFFF' : '#1A1A1A80'}; background: ${listo ? accent : '#1A1A1A14'};`,
+      estandares: [
+        { text: 'No bajo el precio para que no se enojen.', origen: 'Automático vs intencional · día 9' },
+        { text: 'Respondo mensajes de trabajo hasta las 19.', origen: 'Hasta dónde te bancás crecer · día 6' },
+        { text: 'Digo que no sin dar tres explicaciones.', origen: 'Quién está manejando tu vida · día 3' }
+      ],
+      hitos: [
+        { dia: 'Día 30', text: 'Primera revisión del proyecto', badge: 'En 18 días', badgeStyle: badge('#B9DCE5', '#2E6273') },
+        { dia: 'Día 45', text: 'Visitar tres espacios posibles', badge: 'Planificado', badgeStyle: badge('#1A1A1A0d', '#1A1A1A99') },
+        { dia: 'Día 90', text: 'Consultorio abierto con tres pacientes', badge: 'Meta', badgeStyle: badge('#D6DE2B', '#1A1A1A') }
+      ],
+      evidencias: [
+        { text: 'Mandé el primer presupuesto sin descuento.', fecha: 'Semana 2 · viernes' },
+        { text: 'Hablé con la dueña de un espacio en Nueva Córdoba.', fecha: 'Semana 1 · jueves' },
+        { text: 'Escribí mi sueño y se lo conté a Juli.', fecha: 'Semana 1 · lunes' }
+      ],
+      isLunes: s.ritualDia === 'lunes',
+      isViernes: s.ritualDia === 'viernes',
+      setLunes: () => this.setState({ ritualDia: 'lunes' }),
+      setViernes: () => this.setState({ ritualDia: 'viernes' }),
+      lunesTabStyle: tabStyle(s.ritualDia === 'lunes'),
+      viernesTabStyle: tabStyle(s.ritualDia === 'viernes'),
+      movimiento: s.movimiento,
+      onMovimiento: (e) => this.setState({ movimiento: e.target.value }),
+      cuando: s.cuando,
+      onCuando: (e) => this.setState({ cuando: e.target.value }),
+      confirmarMovimiento: () => this.setState({ ritualDia: 'viernes' }),
+      evidencia: s.evidencia,
+      onEvidencia: (e) => this.setState({ evidencia: e.target.value }),
+      guardarEvidencia: () => this.go('evidenciaOk'),
+      compartir: () => this.setState({ shared: !s.shared }),
+      compartirLabel: s.shared ? 'Compartida con la comunidad ✓' : 'Compartir con la comunidad',
+      compartirStyle: `width: 100%; padding: 16px 20px; border: none; border-radius: 999px; cursor: pointer; font-family: 'Poppins', sans-serif; font-size: 15px; font-weight: 600; color: #1A1A1A; background: ${s.shared ? '#D6DE2B' : '#B9DCE5'};`,
+      compartirHint: s.shared ? 'Se publicó sin tus respuestas privadas.' : 'Solo se comparte la evidencia, nunca tus respuestas.',
+      hitoStats: [
+        { n: '4', label: 'movimientos elegidos' },
+        { n: '7', label: 'evidencias registradas' },
+        { n: '2/5', label: 'etapas del método' }
+      ],
+      hitoTimeline: [
+        { semana: 'Semana 1', mov: 'Contarle mi sueño a alguien', ev: 'Se lo conté a Juli y no me desarmé.' },
+        { semana: 'Semana 2', mov: 'Averiguar precios de alquiler', ev: 'Hablé con la dueña de un espacio.' },
+        { semana: 'Semana 3', mov: 'Cobrar sin descuento', ev: 'Mandé el presupuesto y lo aceptaron.' },
+        { semana: 'Semana 4', mov: 'Escribir a tres colegas', ev: 'Dos contestaron, una me pasó un contacto.' }
+      ],
+      hitoPreguntas: HITO_PREGUNTAS.map((p, i) => ({
+        q: p.q,
+        value: s.hitoRespuestas[i],
+        onChange: (e) => {
+          const next = [...this.state.hitoRespuestas];
+          next[i] = e.target.value;
+          this.setState({ hitoRespuestas: next });
+        }
+      })),
+      feed: [
+        { nombre: 'Carla', meta: 'Día 41 · Movete', texto: 'Renuncié al turno de los sábados. Me tembló la voz y lo dije igual.', reacciones: '12 mujeres lo valoraron', avatarStyle: 'width: 36px; height: 36px; border-radius: 50%; background: #C49BC9;' },
+        { nombre: 'Romina', meta: 'Día 22 · Construíte', texto: 'Primera clase de prueba dada. Vinieron cuatro personas.', reacciones: '8 mujeres lo valoraron', avatarStyle: 'width: 36px; height: 36px; border-radius: 50%; background: #D6DE2B;' },
+        { nombre: 'Ana', meta: 'Día 67 · Sostené', texto: 'Tres meses sin abandonar el proyecto los lunes.', reacciones: '21 mujeres lo valoraron', avatarStyle: 'width: 36px; height: 36px; border-radius: 50%; background: #B9DCE5;' }
+      ],
+      perfilItems: [
+        { label: 'Mi ruta', meta: 'Etapa 2 de 5' },
+        { label: 'Mis evidencias', meta: '7' },
+        { label: 'Recordatorios del ritual', meta: 'Lun y vie' },
+        { label: 'Mi suscripción', meta: 'Activa' }
+      ]
+    };
+  }
+}
+</script>
+</body>
+</html>

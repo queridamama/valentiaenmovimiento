@@ -1,0 +1,32 @@
+{
+  "name": "valentia-en-movimiento",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint",
+    "test:rls": "tsx supabase/tests/rls.test.ts"
+  },
+  "dependencies": {
+    "next": "^16.3.5",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "@supabase/supabase-js": "^2.45.0",
+    "@supabase/ssr": "^0.12.0"
+  },
+  "devDependencies": {
+    "typescript": "^5.6.0",
+    "@types/node": "^22.10.0",
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
+    "tailwindcss": "^3.4.0",
+    "postcss": "^8.4.0",
+    "autoprefixer": "^10.4.0",
+    "eslint": "^9.14.0",
+    "eslint-config-next": "^16.3.5",
+    "tsx": "^4.19.0",
+    "dotenv": "^16.4.0"
+  }
+}

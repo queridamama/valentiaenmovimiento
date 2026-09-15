@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300;9..144,400;9..144,500;9..144,600&family=Work+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  body { margin: 0; background: #EDE6DA; }
+  * { box-sizing: border-box; }
+  textarea { font-family: 'Work Sans', system-ui, sans-serif; }
+  textarea::placeholder, input::placeholder { color: #241E2B59; }
+  a { color: #B8863B; }
+  a:hover { color: #241E2B; }
+</style>
+</helmet>
+<div style="min-height: 100vh; display: flex; justify-content: center; background: #EDE6DA; font-family: 'Work Sans', system-ui, sans-serif;">
+  <div style="width: 100%; max-width: 430px; min-height: 100vh; background: #FBF7F0; display: flex; flex-direction: column; position: relative; box-shadow: 0 0 60px #241E2B1a;">
+
+    <div style="padding: 20px 24px 14px; display: flex; flex-direction: column; gap: 16px; position: sticky; top: 0; background: #FBF7F0; z-index: 5;">
+      <div style="display: flex; align-items: center; justify-content: space-between; gap: 12px;">
+        <div style="display: flex; align-items: center; gap: 10px;">
+          <div style="width: 9px; height: 9px; background: #B8863B; transform: rotate(45deg);"></div>
+          <span style="font-size: 11px; letter-spacing: 0.16em; text-transform: uppercase; color: #241E2B; opacity: 0.6;">Mi Sueño</span>
+        </div>
+        <span style="font-family: 'Fraunces', serif; font-size: 13px; color: #5B6B4F;">{{ stepLabel }}</span>
+      </div>
+      <div style="display: flex; gap: 6px;">
+        <sc-for list="{{ dots }}" as="dot" hint-placeholder-count="4">
+          <div style="{{ dot.style }}"></div>
+        </sc-for>
+      </div>
+    </div>
+
+    <div style="flex: 1; padding: 8px 24px 140px; display: flex; flex-direction: column;">
+
+      <sc-if value="{{ isLesson }}" hint-placeholder-val="{{ true }}">
+        <div style="display: flex; flex-direction: column; gap: 26px;">
+          <div style="display: flex; flex-direction: column; gap: 14px;">
+            <span style="font-size: 11px; letter-spacing: 0.16em; text-transform: uppercase; color: #B8863B;">{{ lessonKicker }}</span>
+            <h1 style="font-family: 'Fraunces', serif; font-weight: 400; font-size: 34px; line-height: 1.12; letter-spacing: -0.01em; color: #241E2B; margin: 0; text-wrap: pretty;">{{ lessonTitle }}</h1>
+          </div>
+
+          <div style="background: #FFFFFF; border: 1px solid #241E2B14; border-radius: 18px; overflow: hidden; display: flex; flex-direction: column;">
+            <div style="height: 180px; background: repeating-linear-gradient(135deg, #E7DFD1 0 10px, #EFE8DC 10px 20px); display: flex; align-items: flex-end; padding: 14px 16px;">
+              <span style="font-family: ui-monospace, monospace; font-size: 10px; letter-spacing: 0.08em; text-transform: uppercase; color: #241E2B99; background: #FBF7F0; padding: 5px 9px; border-radius: 999px;">{{ imageSlot }}</span>
+            </div>
+            <div style="padding: 22px; display: flex; flex-direction: column; gap: 16px;">
+            <div style="display: flex; align-items: center; gap: 8px; font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: #5B6B4F;">
+              <div style="width: 16px; height: 1px; background: #5B6B4F;"></div>
+              {{ lessonMeta }}
+            </div>
+            <p style="margin: 0; font-size: 16px; line-height: 1.62; color: #241E2Bdd; text-wrap: pretty;">{{ lessonBody1 }}</p>
+            <p style="margin: 0; font-size: 16px; line-height: 1.62; color: #241E2Bdd; text-wrap: pretty;">{{ lessonBody2 }}</p>
+            <p style="margin: 0; font-family: 'Fraunces', serif; font-size: 19px; line-height: 1.4; color: #5B6B4F; border-left: 2px solid #B8863B; padding-left: 14px; text-wrap: pretty;">{{ lessonPull }}</p>
+            </div>
+          </div>
+
+          <div style="display: flex; flex-direction: column; gap: 12px;">
+            <span style="font-size: 11px; letter-spacing: 0.16em; text-transform: uppercase; color: #241E2B; opacity: 0.55;">Tu turno</span>
+            <h2 style="font-family: 'Fraunces', serif; font-weight: 400; font-size: 22px; line-height: 1.3; color: #241E2B; margin: 0; text-wrap: pretty;">{{ lessonQuestion }}</h2>
+            <textarea value="{{ answer }}" onChange="{{ onAnswer }}" placeholder="{{ answerPlaceholder }}" rows="5" style="width: 100%; resize: none; background: transparent; border: none; border-bottom: 1px solid #241E2B33; padding: 10px 0 14px; font-size: 16px; line-height: 1.6; color: #241E2B; outline: none;" style-focus="border-bottom-color: #B8863B;"></textarea>
+            <span style="font-size: 12px; color: #241E2B77;">Nadie más lee esto. Es para vos.</span>
+          </div>
+        </div>
+      </sc-if>
+
+      <sc-if value="{{ isDeclaration }}" hint-placeholder-val="{{ false }}">
+        <div style="display: flex; flex-direction: column; gap: 26px;">
+          <div style="display: flex; flex-direction: column; gap: 14px;">
+            <span style="font-size: 11px; letter-spacing: 0.16em; text-transform: uppercase; color: #B8863B;">Paso 4 · Declaración</span>
+            <h1 style="font-family: 'Fraunces', serif; font-weight: 400; font-size: 34px; line-height: 1.12; letter-spacing: -0.01em; color: #241E2B; margin: 0; text-wrap: pretty;">Declará tu Proyecto de Valentía</h1>
+            <p style="margin: 0; font-size: 15px; line-height: 1.6; color: #241E2Bbb;">Noventa días, un sueño, en tus palabras. Lo vas a poder ajustar, pero no borrar: queda como punto de partida.</p>
+          </div>
+
+          <div style="background: #241E2B; border-radius: 18px; padding: 22px 22px 24px; display: flex; flex-direction: column; gap: 16px;">
+            <div style="display: flex; align-items: center; justify-content: space-between; gap: 12px;">
+              <span style="font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; color: #FBF7F088;">Lo que escribiste</span>
+              <span style="font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; color: #B8863B;">3 clases</span>
+            </div>
+            <sc-for list="{{ recap }}" as="r" hint-placeholder-count="3">
+              <div style="display: flex; flex-direction: column; gap: 5px; padding-top: 14px; border-top: 1px solid #FBF7F01f;">
+                <span style="font-size: 12px; color: #FBF7F07a; line-height: 1.4;">{{ r.q }}</span>
+                <p style="margin: 0; font-family: 'Fraunces', serif; font-size: 16px; line-height: 1.45; color: #FBF7F0; text-wrap: pretty;">{{ r.a }}</p>
+              </div>
+            </sc-for>
+          </div>
+
+          <div style="display: flex; flex-direction: column; gap: 24px;">
+            <div style="display: flex; flex-direction: column; gap: 8px;">
+              <label style="font-size: 11px; letter-spacing: 0.16em; text-transform: uppercase; color: #241E2B; opacity: 0.55;">Mi sueño, en una frase</label>
+              <input value="{{ dreamTitle }}" onChange="{{ onDreamTitle }}" placeholder="Abrir mi consultorio propio" style="width: 100%; background: transparent; border: none; border-bottom: 1px solid #241E2B33; padding: 8px 0 12px; font-family: 'Fraunces', serif; font-size: 22px; color: #241E2B; outline: none;" style-focus="border-bottom-color: #B8863B;">
+            </div>
+            <div style="display: flex; flex-direction: column; gap: 8px;">
+              <label style="font-size: 11px; letter-spacing: 0.16em; text-transform: uppercase; color: #241E2B; opacity: 0.55;">Por qué este sueño y por qué ahora</label>
+              <textarea value="{{ dreamWhy }}" onChange="{{ onDreamWhy }}" rows="4" placeholder="Escribí sin editarte." style="width: 100%; resize: none; background: transparent; border: none; border-bottom: 1px solid #241E2B33; padding: 8px 0 12px; font-size: 16px; line-height: 1.6; color: #241E2B; outline: none;" style-focus="border-bottom-color: #B8863B;"></textarea>
+            </div>
+            <div style="display: flex; flex-direction: column; gap: 8px;">
+              <label style="font-size: 11px; letter-spacing: 0.16em; text-transform: uppercase; color: #241E2B; opacity: 0.55;">Cómo se ve el día 90</label>
+              <textarea value="{{ dreamProof }}" onChange="{{ onDreamProof }}" rows="3" placeholder="Algo concreto que vas a poder mostrar, contar o mirar." style="width: 100%; resize: none; background: transparent; border: none; border-bottom: 1px solid #241E2B33; padding: 8px 0 12px; font-size: 16px; line-height: 1.6; color: #241E2B; outline: none;" style-focus="border-bottom-color: #B8863B;"></textarea>
+            </div>
+            <div style="display: flex; flex-direction: column; gap: 10px;">
+              <label style="font-size: 11px; letter-spacing: 0.16em; text-transform: uppercase; color: #241E2B; opacity: 0.55;">Mi primer acto de valentía esta semana</label>
+              <div style="display: flex; flex-wrap: wrap; gap: 8px;">
+                <sc-for list="{{ firstActs }}" as="act" hint-placeholder-count="4">
+                  <button onClick="{{ act.onClick }}" style="{{ act.style }}">{{ act.label }}</button>
+                </sc-for>
+              </div>
+            </div>
+          </div>
+        </div>
+      </sc-if>
+
+    </div>
+
+    <div style="position: sticky; bottom: 0; background: linear-gradient(to bottom, #FBF7F000, #FBF7F0 22%); padding: 22px 24px 0; display: flex; flex-direction: column; gap: 0;">
+      <div style="display: flex; align-items: center; gap: 12px;">
+        <sc-if value="{{ canGoBack }}" hint-placeholder-val="{{ false }}">
+          <button onClick="{{ goBack }}" style="flex: 0 0 auto; padding: 16px 18px; background: transparent; border: 1px solid #241E2B2b; border-radius: 999px; font-family: 'Work Sans', sans-serif; font-size: 14px; color: #241E2B; cursor: pointer;" style-hover="border-color: #241E2B;">Atrás</button>
+        </sc-if>
+        <button onClick="{{ goNext }}" style="{{ primaryStyle }}" style-hover="background: #241E2B;">{{ primaryLabel }}</button>
+      </div>
+      <span style="font-size: 12px; color: #241E2B88; text-align: center; padding: 10px 0 4px; min-height: 18px;">{{ hint }}</span>
+
+      <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px; border-top: 1px solid #241E2B14; margin: 6px -24px 0; padding: 12px 12px calc(14px + env(safe-area-inset-bottom));">
+        <div style="display: flex; flex-direction: column; align-items: center; gap: 7px; padding: 4px 0; cursor: pointer;">
+          <div style="width: 15px; height: 15px; border: 1.5px solid #241E2B; border-radius: 50%; opacity: 0.4;"></div>
+          <span style="font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: #241E2B; opacity: 0.45;">Inicio</span>
+        </div>
+        <div style="display: flex; flex-direction: column; align-items: center; gap: 7px; padding: 4px 0; cursor: pointer;">
+          <div style="width: 13px; height: 13px; background: #B8863B; transform: rotate(45deg); margin: 1px 0;"></div>
+          <span style="font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: #241E2B; font-weight: 500;">Mi Sueño</span>
+        </div>
+        <div style="display: flex; flex-direction: column; align-items: center; gap: 7px; padding: 4px 0; cursor: pointer;">
+          <div style="display: flex; align-items: center; opacity: 0.4;">
+            <div style="width: 11px; height: 11px; border: 1.5px solid #241E2B; border-radius: 50%;"></div>
+            <div style="width: 11px; height: 11px; border: 1.5px solid #241E2B; border-radius: 50%; margin-left: -4px;"></div>
+          </div>
+          <span style="font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: #241E2B; opacity: 0.45;">Comunidad</span>
+        </div>
+        <div style="display: flex; flex-direction: column; align-items: center; gap: 7px; padding: 4px 0; cursor: pointer;">
+          <div style="width: 15px; height: 15px; border: 1.5px solid #241E2B; border-radius: 50% 50% 50% 0; opacity: 0.4;"></div>
+          <span style="font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: #241E2B; opacity: 0.45;">Perfil</span>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:430,&quot;height&quot;:932},&quot;accentColor&quot;:{&quot;editor&quot;:&quot;color&quot;,&quot;default&quot;:&quot;#B8863B&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;options&quot;:[&quot;#B8863B&quot;,&quot;#A8553C&quot;,&quot;#5B6B4F&quot;,&quot;#241E2B&quot;]},&quot;requireAnswer&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Comportamiento&quot;}}">
+const LESSONS = [
+  {
+    kicker: 'Clase 1 · Bienvenida',
+    title: 'Un sueño no es un capricho',
+    meta: '2 min de lectura',
+    body1: 'Lo primero que hacemos con un sueño es bajarle el precio. Le decimos "algún día", "cuando tenga tiempo", "si se da". Así el sueño sigue vivo pero sin cuerpo: no molesta, no cuesta, no pasa nada.',
+    body2: 'Tomarte un sueño en serio es, antes que nada, dejar de tratarlo como un lujo. Es darle un lugar en tu semana, no en tu fantasía.',
+    pull: 'Un sueño al que no le das tiempo no es un sueño: es una nostalgia adelantada.',
+    question: '¿Qué sueño volvés a escuchar aunque lo calles?',
+    placeholder: 'Escribilo como te salga, sin justificarlo.'
+  },
+  {
+    kicker: 'Clase 2 · Bienvenida',
+    title: 'La valentía se entrena',
+    meta: '2 min de lectura',
+    body1: 'La valentía no es la ausencia de miedo ni un rasgo de personalidad que algunas tienen y otras no. Es una serie de decisiones chicas, repetidas, en presencia del miedo.',
+    body2: 'Por eso acá no vas a esperar a sentirte lista. Vas a moverte primero y dejar que la confianza llegue después, como consecuencia.',
+    pull: 'Primero el movimiento. La certeza viene atrás.',
+    question: '¿Cuál fue la última vez que hiciste algo que te daba miedo y lo hiciste igual?',
+    placeholder: 'Contalo en dos o tres líneas. Fijate qué te sostuvo.'
+  },
+  {
+    kicker: 'Clase 3 · Bienvenida',
+    title: 'Noventa días es una promesa, no una carrera',
+    meta: '3 min de lectura',
+    body1: 'Noventa días alcanzan para que algo real cambie y son lo bastante cortos como para no perderte. No se trata de acelerar: se trata de sostener.',
+    body2: 'Sostener implica elegir. Durante estos tres meses algo va a tener que ocupar menos lugar para que tu proyecto ocupe el suyo.',
+    pull: 'No vas a hacer más cosas. Vas a hacer otras.',
+    question: '¿Qué vas a tener que soltar para sostener estos 90 días?',
+    placeholder: 'Puede ser una tarea, una expectativa o una manera de hacer las cosas.'
+  }
+];
+
+const ACTS = ['Mandar un mensaje', 'Reservar una hora', 'Escribir la idea', 'Decirlo en voz alta'];
+
+class Component extends DCLogic {
+  state = { step: 1, answers: ['', '', ''], title: '', why: '', proof: '', act: null };
+
+  set(k, v) { this.setState({ [k]: v }); }
+
+  renderVals() {
+    const { step, answers } = this.state;
+    const total = 4;
+    const accent = this.props.accentColor ?? '#B8863B';
+    const gate = this.props.requireAnswer ?? true;
+    const isLesson = step <= 3;
+    const L = LESSONS[Math.min(step, 3) - 1];
+    const answered = (answers[step - 1] || '').trim().length > 0;
+    const ready = isLesson ? (!gate || answered) : (this.state.title.trim().length > 0);
+
+    const dots = Array.from({ length: total }, (_, i) => ({
+      style: `flex: 1; height: 3px; border-radius: 2px; background: ${i < step ? (i === step - 1 ? accent : '#241E2B') : '#241E2B1f'};`
+    }));
+
+    const firstActs = ACTS.map((label) => ({
+      label,
+      onClick: () => this.set('act', this.state.act === label ? null : label),
+      style: `padding: 10px 14px; border-radius: 999px; cursor: pointer; font-family: 'Work Sans', sans-serif; font-size: 13px; border: 1px solid ${this.state.act === label ? '#241E2B' : '#241E2B2b'}; background: ${this.state.act === label ? '#241E2B' : 'transparent'}; color: ${this.state.act === label ? '#FBF7F0' : '#241E2B'};`
+    }));
+
+    return {
+      stepLabel: `${step} de ${total}`,
+      dots,
+      isLesson,
+      isDeclaration: !isLesson,
+      lessonKicker: L.kicker,
+      lessonTitle: L.title,
+      lessonMeta: L.meta,
+      lessonBody1: L.body1,
+      lessonBody2: L.body2,
+      lessonPull: L.pull,
+      lessonQuestion: L.question,
+      answerPlaceholder: L.placeholder,
+      answer: answers[step - 1] || '',
+      onAnswer: (e) => {
+        const next = [...this.state.answers];
+        next[step - 1] = e.target.value;
+        this.setState({ answers: next });
+      },
+      recap: LESSONS.map((l, i) => ({
+        q: l.question,
+        a: (answers[i] || '').trim() || 'Sin responder'
+      })),
+      dreamTitle: this.state.title,
+      dreamWhy: this.state.why,
+      dreamProof: this.state.proof,
+      onDreamTitle: (e) => this.set('title', e.target.value),
+      onDreamWhy: (e) => this.set('why', e.target.value),
+      onDreamProof: (e) => this.set('proof', e.target.value),
+      firstActs,
+      canGoBack: step > 1,
+      goBack: () => this.setState({ step: Math.max(1, step - 1) }),
+      goNext: () => { if (ready && step < total) this.setState({ step: step + 1 }); },
+      primaryLabel: isLesson ? (step === 3 ? 'Ir a declarar mi sueño' : 'Siguiente clase') : 'Empezar mis 90 días',
+      imageSlot: ['Foto: mujer escribiendo', 'Foto: Meli en escenario', 'Foto: grupo / encuentro'][Math.min(step, 3) - 1],
+      primaryStyle: `flex: 1; padding: 17px 20px; border: none; border-radius: 999px; cursor: ${ready ? 'pointer' : 'not-allowed'}; font-family: 'Work Sans', sans-serif; font-size: 15px; font-weight: 500; letter-spacing: 0.01em; color: ${ready ? '#FBF7F0' : '#241E2B8c'}; background: ${ready ? accent : '#241E2B14'};`,
+      hint: ready ? '' : (isLesson ? 'Respondé la pregunta para avanzar.' : 'Escribí tu sueño en una frase para continuar.')
+    };
+  }
+}
+</script>
+</body>
+</html>
