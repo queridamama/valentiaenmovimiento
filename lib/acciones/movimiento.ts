@@ -3,56 +3,75 @@
 import { revalidatePath } from "next/cache";
 import { crearClienteServidor } from "@/lib/supabase/server";
 
+export interface EstadoGuardarMovimiento {
+  error: string | null;
+}
+
 // El ritual semanal (lunes: elegir movimiento / viernes: registrar
 // evidencia) trabaja siempre sobre "el movimiento más reciente sin
 // evidencia". No hace falta un concepto explícito de "semana" para esta
 // primera versión: una usuaria completa un movimiento, aparece el
 // siguiente.
-export async function guardarMovimiento(formData: FormData) {
-  const supabase = await crearClienteServidor();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) throw new Error("No hay sesión activa.");
+//
+// Firma pensada para useActionState (primer argumento = estado anterior):
+// así, si el insert/update falla (por ejemplo por un problema del lado de
+// la base, como el bug del trigger corregido en
+// supabase/migrations/0003_fix_movimientos.sql), el error se devuelve como
+// dato en vez de tirarse — el formulario se queda en la página y muestra el
+// mensaje, en lugar de tirar abajo /movimiento entera.
+export async function guardarMovimiento(
+  _estadoPrevio: EstadoGuardarMovimiento,
+  formData: FormData
+): Promise<EstadoGuardarMovimiento> {
+  try {
+    const supabase = await crearClienteServidor();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    if (!user) return { error: "No hay sesión activa." };
 
-  const descripcion = String(formData.get("descripcion") ?? "").trim();
-  if (!descripcion) throw new Error("El movimiento no puede estar vacío.");
+    const descripcion = String(formData.get("descripcion") ?? "").trim();
+    if (!descripcion) return { error: "El movimiento no puede estar vacío." };
 
-  const { data: sueno } = await supabase
-    .from("suenos")
-    .select("id")
-    .eq("usuario_id", user.id)
-    .eq("estado", "activo")
-    .maybeSingle();
+    const { data: sueno } = await supabase
+      .from("suenos")
+      .select("id")
+      .eq("usuario_id", user.id)
+      .eq("estado", "activo")
+      .maybeSingle();
 
-  const { data: pendiente } = await supabase
-    .from("movimientos_semanales")
-    .select("id")
-    .eq("usuario_id", user.id)
-    .eq("estado", "planeado")
-    .order("fecha_creado", { ascending: false })
-    .limit(1)
-    .maybeSingle();
-
-  if (pendiente) {
-    const { error } = await supabase
+    const { data: pendiente } = await supabase
       .from("movimientos_semanales")
-      .update({ descripcion })
-      .eq("id", pendiente.id);
-    if (error) throw error;
-  } else {
-    const { error } = await supabase.from("movimientos_semanales").insert({
-      usuario_id: user.id,
-      sueno_id: sueno?.id ?? null,
-      descripcion,
-      estado: "planeado",
-    });
-    if (error) throw error;
-  }
+      .select("id")
+      .eq("usuario_id", user.id)
+      .eq("estado", "planeado")
+      .order("fecha_creado", { ascending: false })
+      .limit(1)
+      .maybeSingle();
 
-  revalidatePath("/movimiento");
-  revalidatePath("/inicio");
-  revalidatePath("/mi-proyecto");
+    if (pendiente) {
+      const { error } = await supabase
+        .from("movimientos_semanales")
+        .update({ descripcion })
+        .eq("id", pendiente.id);
+      if (error) return { error: error.message };
+    } else {
+      const { error } = await supabase.from("movimientos_semanales").insert({
+        usuario_id: user.id,
+        sueno_id: sueno?.id ?? null,
+        descripcion,
+        estado: "planeado",
+      });
+      if (error) return { error: error.message };
+    }
+
+    revalidatePath("/movimiento");
+    revalidatePath("/inicio");
+    revalidatePath("/mi-proyecto");
+    return { error: null };
+  } catch (e) {
+    return { error: e instanceof Error ? e.message : "No se pudo guardar el movimiento." };
+  }
 }
 
 export async function marcarMovimientoRealizado(movimientoId: string) {

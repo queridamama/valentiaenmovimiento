@@ -1,13 +1,9 @@
 import Link from "next/link";
 import { crearClienteServidor } from "@/lib/supabase/server";
 import { obtenerMovimientoActual, obtenerEvidencias } from "@/lib/datos";
-import {
-  guardarMovimiento,
-  marcarMovimientoRealizado,
-  registrarEvidencia,
-  alternarCompartirEvidencia,
-} from "@/lib/acciones/movimiento";
+import { marcarMovimientoRealizado, registrarEvidencia, alternarCompartirEvidencia } from "@/lib/acciones/movimiento";
 import { BotonPrimario, BotonSecundario, Tarjeta, Titulo, Subtitulo, Campo } from "@/components/ui";
+import FormularioMovimiento from "@/components/FormularioMovimiento";
 
 export default async function MovimientoPage() {
   const supabase = await crearClienteServidor();
@@ -39,17 +35,7 @@ export default async function MovimientoPage() {
         {!enCurso && (
           <Subtitulo>Uno solo. Que se pueda hacer en siete días y que te dé un poco de miedo.</Subtitulo>
         )}
-        <form action={guardarMovimiento} className="space-y-3">
-          <Campo
-            label="Mi movimiento"
-            name="descripcion"
-            defaultValue={movimiento?.descripcion ?? ""}
-            placeholder="¿Qué vas a hacer esta semana?"
-            rows={3}
-            required
-          />
-          <BotonPrimario type="submit">{enCurso ? "Guardar cambios" : "Confirmar mi movimiento"}</BotonPrimario>
-        </form>
+        <FormularioMovimiento descripcionInicial={movimiento?.descripcion ?? ""} enCurso={Boolean(enCurso)} />
       </section>
 
       {enCurso && (
