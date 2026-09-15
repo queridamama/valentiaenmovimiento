@@ -2,6 +2,7 @@ import Link from "next/link";
 import { crearClienteServidor } from "@/lib/supabase/server";
 import { obtenerAutorizacion, obtenerCategorias, obtenerFeedComunidad, unoDeRelacion } from "@/lib/datos";
 import { crearPublicacion, alternarReaccion } from "@/lib/acciones/comunidad";
+import { obtenerAudioPublicacion } from "@/lib/acciones/almacenamiento";
 import { Titulo, Subtitulo, Campo } from "@/components/ui";
 
 const REACCIONES: { tipo: "corazon" | "fuego" | "aplauso"; emoji: string }[] = [
@@ -32,6 +33,18 @@ export default async function ComunidadPage({
   const esStaff = autorizacion.rol === "admin" || autorizacion.rol === "editor";
   const categoriasParaPublicar = categorias.filter(
     (c) => (!c.solo_premium || esPremium) && (!c.solo_admin_publica || esStaff)
+  );
+
+  // El audio de una publicación de Meli vive en el bucket privado: lo que
+  // llega en `audio_url` es un path, no algo reproducible directo — hace
+  // falta pedir una URL firmada por cada post que tenga uno.
+  const audioPorPublicacion = new Map<string, string | null>();
+  await Promise.all(
+    feed
+      .filter((post) => post.audio_url)
+      .map(async (post) => {
+        audioPorPublicacion.set(post.id, await obtenerAudioPublicacion(post.id));
+      })
   );
   const categoriaActiva = categorias.find((c) => c.id === categoriaId);
   const crear = crearPublicacion.bind(null, categoriaActiva?.id ?? categoriasParaPublicar[0]?.id ?? "");
@@ -109,7 +122,9 @@ export default async function ComunidadPage({
                     <img src={post.imagen_url} alt="" className="w-full rounded-lg" />
                   )}
                   <div className="contenido-enriquecido text-[15px]" dangerouslySetInnerHTML={{ __html: post.contenido }} />
-                  {post.audio_url && <audio src={post.audio_url} controls className="w-full" />}
+                  {audioPorPublicacion.get(post.id) && (
+                    <audio src={audioPorPublicacion.get(post.id)!} controls className="w-full" />
+                  )}
                 </div>
               ) : (
                 <p className="text-[15px] leading-relaxed">{post.contenido}</p>

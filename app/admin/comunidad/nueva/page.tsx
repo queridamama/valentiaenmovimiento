@@ -16,8 +16,8 @@ export default function NuevaPublicacionMeliPage() {
 
         <EditorEnriquecido name="contenido" label="Texto" />
 
-        <CampoArchivo label="Imagen (opcional)" name="imagen_url" carpeta="portadas" accept="image/*" tipo="imagen" />
-        <CampoArchivo label="Audio (opcional)" name="audio_url" carpeta="audios" accept="audio/*" tipo="audio" />
+        <CampoArchivo label="Imagen (opcional)" name="imagen_url" destino="portada" accept="image/*" tipo="imagen" />
+        <CampoArchivo label="Audio (opcional)" name="audio_url" destino="audio" accept="audio/*" tipo="audio" />
 
         <label className="flex flex-col gap-1">
           <span className="text-sm font-medium text-texto/70">Estado</span>

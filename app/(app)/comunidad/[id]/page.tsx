@@ -2,6 +2,7 @@ import Link from "next/link";
 import { crearClienteServidor } from "@/lib/supabase/server";
 import { obtenerPublicacionDetalle, obtenerComentarios, unoDeRelacion } from "@/lib/datos";
 import { comentar, alternarReaccion } from "@/lib/acciones/comunidad";
+import { obtenerAudioPublicacion } from "@/lib/acciones/almacenamiento";
 import { Campo, Titulo } from "@/components/ui";
 
 const REACCIONES: { tipo: "corazon" | "fuego" | "aplauso"; emoji: string }[] = [
@@ -35,6 +36,7 @@ export default async function PublicacionPage({ params }: { params: Promise<{ id
   const cat = unoDeRelacion(post.categorias_comunidad as unknown as { nombre: string } | { nombre: string }[] | null);
   const reacciones = (post.reacciones ?? []) as { tipo: string; usuario_id: string }[];
   const comentarAqui = comentar.bind(null, id);
+  const audioUrl = post.audio_url ? await obtenerAudioPublicacion(id) : null;
 
   return (
     <main className="mx-auto max-w-md space-y-6 px-6 pt-10 pb-6">
@@ -52,7 +54,7 @@ export default async function PublicacionPage({ params }: { params: Promise<{ id
               <img src={post.imagen_url} alt="" className="w-full rounded-lg" />
             )}
             <div className="contenido-enriquecido text-[15px]" dangerouslySetInnerHTML={{ __html: post.contenido }} />
-            {post.audio_url && <audio src={post.audio_url} controls className="w-full" />}
+            {audioUrl && <audio src={audioUrl} controls className="w-full" />}
           </div>
         ) : (
           <p className="text-[15px] leading-relaxed">{post.contenido}</p>

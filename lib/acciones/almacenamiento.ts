@@ -1,47 +1,104 @@
 "use server";
 
 import { exigirStaff } from "@/lib/autorizacion";
+import { crearClienteServidor } from "@/lib/supabase/server";
+import { firmarUrlPrivada, BUCKET_PRIVADO, BUCKET_PUBLICO } from "@/lib/almacenamiento";
 
-const LIMITES: Record<string, { mime: string[]; maxMb: number }> = {
-  portadas: { mime: ["image/"], maxMb: 5 },
-  audios: { mime: ["audio/"], maxMb: 30 },
-  archivos: { mime: ["application/pdf"], maxMb: 20 },
-};
+// "portada" es la única categoría pública (imágenes de tapa: se muestran
+// libremente, como ya pasaba con las URLs de video externas). "audio" y
+// "archivo" son SIEMPRE privados — código o URL no alcanza para verlos,
+// hace falta una URL firmada emitida por una de las acciones de abajo.
+const CONFIGURACION = {
+  portada: { bucket: BUCKET_PUBLICO, carpeta: "portadas", mime: ["image/"], maxMb: 5, publico: true },
+  audio: { bucket: BUCKET_PRIVADO, carpeta: "audios", mime: ["audio/"], maxMb: 30, publico: false },
+  archivo: { bucket: BUCKET_PRIVADO, carpeta: "archivos", mime: ["application/pdf"], maxMb: 20, publico: false },
+} as const;
+
+type Destino = keyof typeof CONFIGURACION;
 
 export interface ResultadoSubida {
-  url: string | null;
+  // Lo que se guarda en la base y viaja en el <input hidden>: una URL
+  // pública estable si es "portada", o el PATH dentro del bucket privado
+  // si es "audio"/"archivo" — nunca una URL firmada (esas expiran).
+  valorGuardado: string | null;
+  // Con qué se muestra ahora mismo en el formulario: la misma URL pública,
+  // o una URL firmada de corta duración recién emitida.
+  previewUrl: string | null;
   error: string | null;
 }
 
-// Sube un archivo al bucket "medios" (ver supabase/migrations/0004_storage.sql)
-// bajo la carpeta que le corresponde por tipo. Solo admin/editor puede
-// llamar a esto (exigirStaff, y además lo exige la policy de Storage del
-// lado de la base — doble candado, igual que el resto del Admin).
-export async function subirArchivo(carpeta: keyof typeof LIMITES, formData: FormData): Promise<ResultadoSubida> {
+// Solo admin/editor puede llamar a esto (exigirStaff) y, además, las
+// policies de Storage (0004_storage.sql) exigen es_staff() para el
+// insert — dos candados independientes para que una alumna nunca pueda
+// subir nada al CMS.
+export async function subirArchivo(destino: Destino, formData: FormData): Promise<ResultadoSubida> {
   const { supabase } = await exigirStaff();
+  const config = CONFIGURACION[destino];
 
   const archivo = formData.get("archivo");
   if (!(archivo instanceof File) || archivo.size === 0) {
-    return { url: null, error: "Elegí un archivo." };
+    return { valorGuardado: null, previewUrl: null, error: "Elegí un archivo." };
   }
-
-  const limite = LIMITES[carpeta];
-  if (!limite.mime.some((prefijo) => archivo.type.startsWith(prefijo))) {
-    return { url: null, error: "Ese tipo de archivo no está permitido acá." };
+  if (!config.mime.some((prefijo) => archivo.type.startsWith(prefijo))) {
+    return { valorGuardado: null, previewUrl: null, error: "Ese tipo de archivo no está permitido acá." };
   }
-  if (archivo.size > limite.maxMb * 1024 * 1024) {
-    return { url: null, error: `El archivo no puede pesar más de ${limite.maxMb}MB.` };
+  if (archivo.size > config.maxMb * 1024 * 1024) {
+    return { valorGuardado: null, previewUrl: null, error: `El archivo no puede pesar más de ${config.maxMb}MB.` };
   }
 
   const extension = archivo.name.split(".").pop()?.toLowerCase().replace(/[^a-z0-9]/g, "") || "bin";
-  const nombreArchivo = `${carpeta}/${crypto.randomUUID()}.${extension}`;
+  const path = `${config.carpeta}/${crypto.randomUUID()}.${extension}`;
 
-  const { error } = await supabase.storage.from("medios").upload(nombreArchivo, archivo, {
+  const { error } = await supabase.storage.from(config.bucket).upload(path, archivo, {
     contentType: archivo.type,
     upsert: false,
   });
-  if (error) return { url: null, error: error.message };
+  if (error) return { valorGuardado: null, previewUrl: null, error: error.message };
 
-  const { data } = supabase.storage.from("medios").getPublicUrl(nombreArchivo);
-  return { url: data.publicUrl, error: null };
+  if (config.publico) {
+    const { data } = supabase.storage.from(config.bucket).getPublicUrl(path);
+    return { valorGuardado: data.publicUrl, previewUrl: data.publicUrl, error: null };
+  }
+
+  // Staff tiene su propia policy de lectura sobre el bucket privado (para
+  // poder previsualizar justo lo que acaba de subir) — no hace falta el
+  // cliente de servicio para este caso.
+  const { data: firmada } = await supabase.storage.from(BUCKET_PRIVADO).createSignedUrl(path, 300);
+  return { valorGuardado: path, previewUrl: firmada?.signedUrl ?? null, error: null };
+}
+
+// Refresca la preview de un archivo privado ya guardado (al entrar a
+// editar un contenido que ya tenía audio/PDF cargado, la URL firmada de la
+// vez anterior ya expiró). Staff-only, sin chequeo adicional por fila:
+// cualquier admin/editor puede gestionar cualquier archivo del CMS, igual
+// que ya puede editar cualquier contenido.
+export async function obtenerPreviewAdmin(path: string): Promise<{ url: string | null; error: string | null }> {
+  const { supabase } = await exigirStaff();
+  const { data, error } = await supabase.storage.from(BUCKET_PRIVADO).createSignedUrl(path, 300);
+  if (error) return { url: null, error: error.message };
+  return { url: data.signedUrl, error: null };
+}
+
+// Caso distinto: acá quien pide la URL puede ser cualquier alumna
+// (autenticada), no solo staff — por eso NO usa exigirStaff. La única
+// publicación con audio hoy es la de Meli, abierta a toda usuaria
+// logueada; el candado real es el mismo que ya protege la lectura de
+// `publicaciones_comunidad` (RLS): si esta consulta no devuelve fila, no
+// hay nada para firmar. Recién ahí, y solo ahí, se usa el cliente de
+// servicio — para firmar, nunca para decidir el acceso.
+export async function obtenerAudioPublicacion(publicacionId: string): Promise<string | null> {
+  const supabase = await crearClienteServidor();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return null;
+
+  const { data: publicacion } = await supabase
+    .from("publicaciones_comunidad")
+    .select("audio_url")
+    .eq("id", publicacionId)
+    .maybeSingle();
+
+  if (!publicacion?.audio_url) return null;
+  return firmarUrlPrivada(publicacion.audio_url);
 }

@@ -34,7 +34,7 @@ export default async function NuevoEventoPage() {
           <textarea name="descripcion" rows={3} className="rounded-lg border border-texto/15 px-3 py-2" />
         </label>
 
-        <CampoArchivo label="Portada" name="portada_url" carpeta="portadas" accept="image/*" tipo="imagen" />
+        <CampoArchivo label="Portada" name="portada_url" destino="portada" accept="image/*" tipo="imagen" />
 
         <label className="flex flex-col gap-1">
           <span className="text-sm font-medium text-texto/70">Fecha y hora</span>

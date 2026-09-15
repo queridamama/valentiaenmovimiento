@@ -53,7 +53,7 @@ export default async function EditarEventoPage({ params }: { params: Promise<{ i
         <CampoArchivo
           label="Portada"
           name="portada_url"
-          carpeta="portadas"
+          destino="portada"
           accept="image/*"
           tipo="imagen"
           valorInicial={evento.portada_url ?? ""}

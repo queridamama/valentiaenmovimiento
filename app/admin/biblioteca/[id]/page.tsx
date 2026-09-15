@@ -81,7 +81,7 @@ export default async function EditarContenidoPage({ params }: { params: Promise<
         <CampoArchivo
           label="Portada"
           name="portada_url"
-          carpeta="portadas"
+          destino="portada"
           accept="image/*"
           tipo="imagen"
           valorInicial={contenido.portada_url ?? ""}
@@ -100,7 +100,7 @@ export default async function EditarContenidoPage({ params }: { params: Promise<
         <CampoArchivo
           label="Audio"
           name="audio_url"
-          carpeta="audios"
+          destino="audio"
           accept="audio/*"
           tipo="audio"
           valorInicial={contenido.audio_url ?? ""}
@@ -109,7 +109,7 @@ export default async function EditarContenidoPage({ params }: { params: Promise<
         <CampoArchivo
           label="Archivo descargable (PDF)"
           name="archivo_url"
-          carpeta="archivos"
+          destino="archivo"
           accept="application/pdf"
           tipo="archivo"
           valorInicial={contenido.archivo_url ?? ""}

@@ -26,7 +26,7 @@ export default async function EditarPublicacionMeliPage({ params }: { params: Pr
         <CampoArchivo
           label="Imagen (opcional)"
           name="imagen_url"
-          carpeta="portadas"
+          destino="portada"
           accept="image/*"
           tipo="imagen"
           valorInicial={publicacion.imagen_url ?? ""}
@@ -34,7 +34,7 @@ export default async function EditarPublicacionMeliPage({ params }: { params: Pr
         <CampoArchivo
           label="Audio (opcional)"
           name="audio_url"
-          carpeta="audios"
+          destino="audio"
           accept="audio/*"
           tipo="audio"
           valorInicial={publicacion.audio_url ?? ""}
