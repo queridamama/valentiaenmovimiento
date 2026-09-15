@@ -2,11 +2,11 @@
 @tailwind components;
 @tailwind utilities;
 
-:root {
-  --font-display: var(--font-display-provisoria, serif);
-  --font-cuerpo: var(--font-cuerpo-provisoria, sans-serif);
-}
-
 body {
   @apply bg-fondo text-texto;
+}
+
+textarea,
+input {
+  @apply bg-tarjeta;
 }

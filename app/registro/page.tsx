@@ -1,8 +1,10 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { crearClienteBrowser } from "@/lib/supabase/client";
+import { Titulo, BotonPrimario } from "@/components/ui";
 
 export default function RegistroPage() {
   const router = useRouter();
@@ -34,15 +36,6 @@ export default function RegistroPage() {
       return;
     }
 
-    // La fila en `perfiles`/`autorizaciones` la crea un trigger en la base
-    // (ver supabase/schema.sql) — no se duplica esa lógica acá.
-    //
-    // Según la configuración del proyecto Supabase ("Confirm email"), signUp
-    // puede devolver sesión activa de una, o puede requerir que la usuaria
-    // confirme el mail antes de poder loguearse. Distinguimos por la
-    // presencia de `data.session`, en vez de asumir un solo caso — si no,
-    // la usuaria queda redirigida a /inicio y rebota a /login sin entender
-    // por qué.
     if (data.session) {
       router.push("/inicio");
       router.refresh();
@@ -53,8 +46,11 @@ export default function RegistroPage() {
   }
 
   return (
-    <main className="mx-auto flex min-h-screen max-w-sm flex-col justify-center gap-6 px-6">
-      <h1 className="font-display text-2xl">Creá tu cuenta</h1>
+    <main className="mx-auto flex min-h-screen max-w-sm flex-col justify-center gap-8 px-6">
+      <div className="space-y-2">
+        <Titulo>Creá tu cuenta</Titulo>
+        <p className="text-[15px] text-texto/60">Empezás como Gratis. Podés convertirte en Premium cuando quieras.</p>
+      </div>
       <form onSubmit={manejarSubmit} className="flex flex-col gap-4">
         <input
           type="text"
@@ -62,7 +58,7 @@ export default function RegistroPage() {
           value={nombre}
           onChange={(e) => setNombre(e.target.value)}
           required
-          className="rounded-card border border-acentoSuave px-4 py-3"
+          className="rounded-card border border-texto/12 bg-tarjeta px-4 py-3 placeholder:text-texto/35 focus:border-acento focus:outline-none"
         />
         <input
           type="email"
@@ -70,7 +66,7 @@ export default function RegistroPage() {
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           required
-          className="rounded-card border border-acentoSuave px-4 py-3"
+          className="rounded-card border border-texto/12 bg-tarjeta px-4 py-3 placeholder:text-texto/35 focus:border-acento focus:outline-none"
         />
         <input
           type="password"
@@ -79,17 +75,19 @@ export default function RegistroPage() {
           onChange={(e) => setPassword(e.target.value)}
           required
           minLength={8}
-          className="rounded-card border border-acentoSuave px-4 py-3"
+          className="rounded-card border border-texto/12 bg-tarjeta px-4 py-3 placeholder:text-texto/35 focus:border-acento focus:outline-none"
         />
         {error && <p className="text-sm text-alerta">{error}</p>}
-        <button
-          type="submit"
-          disabled={cargando}
-          className="rounded-card bg-acento px-6 py-3 text-fondo disabled:opacity-60"
-        >
+        <BotonPrimario type="submit" disabled={cargando}>
           {cargando ? "Creando cuenta…" : "Crear cuenta"}
-        </button>
+        </BotonPrimario>
       </form>
+      <p className="text-center text-sm text-texto/60">
+        ¿Ya tenés cuenta?{" "}
+        <Link href="/login" className="font-medium text-acento">
+          Iniciá sesión
+        </Link>
+      </p>
     </main>
   );
 }

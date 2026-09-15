@@ -1,0 +1,16 @@
+# dependencias
+/node_modules
+
+# Next.js
+/.next/
+/out/
+
+# entorno — nunca commitear claves reales
+.env
+.env.local
+.env*.local
+
+# varios
+.DS_Store
+*.tsbuildinfo
+npm-debug.log*

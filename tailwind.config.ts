@@ -1,27 +1,29 @@
 import type { Config } from "tailwindcss";
 
-// Paleta y tipografía PROVISORIAS — a reemplazar cuando tengamos las
-// referencias de identidad visual de Melisa (ver STATUS.md, Fase 0).
-// El objetivo de dejarlo como tokens acá, y no colores sueltos en cada
-// componente, es que ese reemplazo sea un cambio en un solo lugar.
+// Paleta e identidad visual REALES, tomadas de design-reference/Valentía
+// App.dc.html (Claude Design) — ya no son provisorias. Cualquier ajuste de
+// marca a futuro pasa por acá, no por colores sueltos en componentes.
 const config: Config = {
   content: ["./app/**/*.{ts,tsx}", "./components/**/*.{ts,tsx}"],
   theme: {
     extend: {
       colors: {
-        fondo: "#FBF8F5",
-        texto: "#2B2420",
-        acento: "#8B5E4B",
-        acentoSuave: "#D9C3B5",
-        exito: "#5C7A5A",
+        fondo: "#F7F6F4",
+        tarjeta: "#FFFFFF",
+        texto: "#1A1A1A",
+        acento: "#C49BC9",
+        acentoTeal: "#2E6273",
+        acentoLima: "#D6DE2B",
+        acentoCeleste: "#B9DCE5",
+        acentoRosa: "#FBE3E8",
         alerta: "#B85C4A",
       },
       fontFamily: {
-        display: ["var(--font-display)"],
-        cuerpo: ["var(--font-cuerpo)"],
+        display: ["var(--font-poppins)", "sans-serif"],
+        cuerpo: ["var(--font-poppins)", "sans-serif"],
       },
       borderRadius: {
-        card: "1rem",
+        card: "1.125rem",
       },
     },
   },

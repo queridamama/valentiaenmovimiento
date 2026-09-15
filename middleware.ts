@@ -3,7 +3,17 @@ import { NextResponse, type NextRequest } from "next/server";
 
 // Rutas que requieren sesión iniciada. Todo lo bajo /app/(app) vive detrás
 // de este chequeo; login, registro y auth/* quedan afuera a propósito.
-const RUTAS_PROTEGIDAS = ["/inicio", "/mi-sueno", "/comunidad", "/perfil", "/admin"];
+const RUTAS_PROTEGIDAS = [
+  "/inicio",
+  "/mi-sueno",
+  "/comunidad",
+  "/perfil",
+  "/admin",
+  "/experiencias",
+  "/mi-proyecto",
+  "/movimiento",
+  "/membresia",
+];
 
 export async function middleware(request: NextRequest) {
   let response = NextResponse.next({ request });

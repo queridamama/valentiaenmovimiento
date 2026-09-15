@@ -2,7 +2,62 @@
 
 Actualizado en cada entrega.
 
-## Auditoría de Fase 0–1 (esta ronda)
+## Vertical funcional: Registro → Gratis → Mi Sueño → Movimiento →
+## Comunidad → Premium → Mi Proyecto (esta ronda)
+
+Corrida en Claude Code, con red: `npm install`, `npx tsc --noEmit`,
+`npm run build` y `npm run lint` corridos de verdad contra el proyecto real
+(no solo revisión estática) — los cuatro pasan limpios. `npm run dev`
+levantado y verificado que la landing, login, registro y recuperar
+responden 200, y que las rutas protegidas (`/inicio`, `/mi-sueno`,
+`/comunidad`, `/perfil`, `/admin`, `/experiencias`, `/mi-proyecto`,
+`/movimiento`, `/membresia`) redirigen a `/login` sin sesión. No probado
+todavía contra un proyecto Supabase real con datos (necesita la
+`SUPABASE_URL`/claves reales de Melisa, que no se piden por chat).
+
+Construido:
+- **Experiencias administrables**: `experiencias` / `preguntas_experiencia`
+  / `respuestas_experiencia` / `experiencias_completadas`
+  (`supabase/migrations/0002_experiencias.sql`, aditiva). El área de cada
+  respuesta la fija un trigger a partir de la pregunta (nunca el cliente),
+  así que no hay forma de que una respuesta aterrice en la sección
+  equivocada de Mi Proyecto.
+- **Mi Sueño**: recorrido de 4 experiencias demo (3 clases + declaración),
+  todas Gratis, publicadas, sin video (funcionan con texto + preguntas).
+  La declaración alimenta `suenos` (descripción + por qué) y crea el primer
+  `movimiento` automáticamente.
+- **Movimiento semanal**: elegir/editar, marcar realizado, registrar
+  evidencia, compartir evidencia en Comunidad (toggle).
+- **Comunidad V1**: feed con categorías (Comunidad, Sueños, Movimientos,
+  Evidencias, Necesito destrabar [premium], Meli [solo staff publica]),
+  publicaciones de texto, comentarios, reacciones ❤️🔥👏.
+- **Admin** (`/admin`, solo admin/editor): CRUD de experiencias + preguntas
+  (crear, editar, duplicar, publicar/borrador/archivar, cambiar acceso,
+  ordenar); `/admin/usuarias` (solo admin) para pasar una usuaria de
+  Gratis a Premium a mano.
+- **Primera experiencia Premium**: "Diseño de tu nueva identidad" en la
+  etapa CONSTRUÍTE, con 4 preguntas (identidad, decisión, estándar,
+  movimiento), demo, sin video.
+- **Mi Proyecto**: lee todo por área desde `respuestas_experiencia` +
+  `suenos` + `movimientos_semanales` + `evidencias` — ninguna sección está
+  hardcodeada a una experiencia específica.
+- **Identidad visual real**: paleta y tipografía (Poppins) tomadas de
+  `design-reference/Valentía App.dc.html`, ya no son provisorias.
+- Se agregó `.gitignore` (no existía) y se migró `next lint` (removido en
+  Next 16) a ESLint 9 flat config (`eslint.config.mjs`).
+
+Pendiente explícitamente (no entra en esta vertical, ver pedido original):
+- Mercado Pago / cobro real.
+- Biblioteca / CMS de contenidos, cursos y eventos (las tablas ya existen
+  en `schema.sql` pero no se construyó UI ni Admin para ellas).
+- Etapas DEFINÍ, DISEÑÁ, MOVETE, SOSTENÉ sin contenido todavía (se cargan
+  desde `/admin/experiencias` cuando estén listas).
+- Progreso granular por etapa (`progreso_etapas`) e hitos con fecha
+  objetivo estructurada — por ahora "Hitos" en Mi Proyecto son respuestas
+  de texto libre.
+- Subida de imágenes para evidencias (hoy solo texto).
+
+## Auditoría de Fase 0–1 (ronda anterior)
 
 **No cerrada como "lista para producción" — ver el punto "Lo que falta
 verificar" al final.** Esto es lo que se corrigió:

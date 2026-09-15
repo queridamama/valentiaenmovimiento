@@ -1,127 +1,155 @@
+import Link from "next/link";
 import { crearClienteServidor } from "@/lib/supabase/server";
-import { crearSueno, crearMovimiento, crearEvidencia } from "@/lib/acciones/sueno";
+import {
+  obtenerAutorizacion,
+  obtenerSuenoActivo,
+  obtenerRecorridoEntrada,
+  obtenerRuta,
+  obtenerProyectoActivo,
+  asegurarProyectoActivo,
+} from "@/lib/datos";
+import { Badge, EstadoBadge, Tarjeta, EnlacePrimario, Titulo, Subtitulo } from "@/components/ui";
 
 export default async function MiSuenoPage() {
   const supabase = await crearClienteServidor();
   const {
     data: { user },
   } = await supabase.auth.getUser();
+  if (!user) return null;
 
-  const { data: sueno } = await supabase
-    .from("suenos")
-    .select("id, descripcion, por_que_importa")
-    .eq("usuario_id", user?.id)
-    .eq("estado", "activo")
-    .maybeSingle();
+  const [autorizacion, sueno, recorrido] = await Promise.all([
+    obtenerAutorizacion(supabase, user.id),
+    obtenerSuenoActivo(supabase, user.id),
+    obtenerRecorridoEntrada(supabase, user.id),
+  ]);
+  const esPremium = autorizacion.nivel === "premium";
+  const recorridoTerminado = recorrido.length > 0 && recorrido.every((e) => e.completada);
+  const primeraPendienteIdx = recorrido.findIndex((e) => !e.completada);
 
-  if (!sueno) {
-    return (
-      <main className="mx-auto max-w-md space-y-6 px-6 py-10">
-        <h1 className="font-display text-2xl">Declará tu sueño</h1>
-        <form action={crearSueno} className="flex flex-col gap-4">
-          <textarea
-            name="descripcion"
-            placeholder="¿Cuál es tu sueño?"
-            required
-            rows={3}
-            className="rounded-card border border-acentoSuave px-4 py-3"
-          />
-          <textarea
-            name="por_que_importa"
-            placeholder="¿Por qué te importa?"
-            rows={3}
-            className="rounded-card border border-acentoSuave px-4 py-3"
-          />
-          <button type="submit" className="rounded-card bg-acento px-6 py-3 text-fondo">
-            Guardar mi sueño
-          </button>
-        </form>
-      </main>
-    );
+  let proyecto = esPremium ? await obtenerProyectoActivo(supabase, user.id) : null;
+  if (esPremium && !proyecto) {
+    proyecto = await asegurarProyectoActivo(supabase, user.id, sueno?.id ?? null);
   }
-
-  const { data: movimientos } = await supabase
-    .from("movimientos_semanales")
-    .select("id, descripcion, estado, fecha_creado")
-    .eq("sueno_id", sueno.id)
-    .order("fecha_creado", { ascending: false });
-
-  const { data: evidencias } = await supabase
-    .from("evidencias")
-    .select("id, contenido, fecha_creado")
-    .eq("sueno_id", sueno.id)
-    .order("fecha_creado", { ascending: false });
-
-  const movimientoSinEvidencia = movimientos?.find((m) => m.estado === "planeado");
-
-  const crearMovimientoConSueno = crearMovimiento.bind(null, sueno.id);
-  const crearEvidenciaConSueno = crearEvidencia.bind(
-    null,
-    sueno.id,
-    movimientoSinEvidencia?.id ?? null
-  );
+  const ruta = esPremium ? await obtenerRuta(supabase, user.id) : [];
 
   return (
-    <main className="mx-auto max-w-md space-y-8 px-6 py-10">
-      <section className="rounded-card border border-acentoSuave p-4">
-        <p className="text-sm text-texto/60">Mi sueño</p>
-        <p className="mt-1">{sueno.descripcion}</p>
-        {sueno.por_que_importa && (
-          <p className="mt-2 text-sm text-texto/70">{sueno.por_que_importa}</p>
-        )}
-      </section>
-
-      <section className="space-y-3">
-        <h2 className="font-display text-lg">Movimiento</h2>
-        {movimientoSinEvidencia ? (
-          <div className="rounded-card border border-acentoSuave p-4">
-            <p>{movimientoSinEvidencia.descripcion}</p>
-            <p className="mt-1 text-sm text-texto/60">Pendiente de evidencia</p>
-          </div>
+    <main className="mx-auto max-w-md space-y-8 px-6 pt-10 pb-6">
+      <div className="space-y-2">
+        <Titulo>Mi Ruta</Titulo>
+        {!recorridoTerminado ? (
+          <Subtitulo>Hoy estás haciendo el recorrido de entrada. Es corto y es tuyo.</Subtitulo>
+        ) : esPremium ? (
+          <Subtitulo>El método completo: cinco etapas y noventa días.</Subtitulo>
         ) : (
-          <form action={crearMovimientoConSueno} className="flex flex-col gap-3">
-            <textarea
-              name="descripcion"
-              placeholder="¿Cuál va a ser tu próximo movimiento?"
-              required
-              rows={2}
-              className="rounded-card border border-acentoSuave px-4 py-3"
-            />
-            <button type="submit" className="rounded-card bg-acento px-6 py-3 text-fondo">
-              Registrar movimiento
-            </button>
-          </form>
+          <Subtitulo>Ya está tu sueño. Esto es lo que hiciste con él.</Subtitulo>
         )}
-      </section>
+      </div>
 
-      {movimientoSinEvidencia && (
+      {!recorridoTerminado && (
         <section className="space-y-3">
-          <h2 className="font-display text-lg">Evidencia</h2>
-          <form action={crearEvidenciaConSueno} className="flex flex-col gap-3">
-            <textarea
-              name="contenido"
-              placeholder="Contá qué hiciste"
-              required
-              rows={2}
-              className="rounded-card border border-acentoSuave px-4 py-3"
-            />
-            <button type="submit" className="rounded-card bg-acento px-6 py-3 text-fondo">
-              Registrar evidencia
-            </button>
-          </form>
+          <div className="flex items-center justify-between">
+            <Badge tipo="gratis" />
+            <span className="text-xs text-texto/45">
+              {recorrido.filter((e) => e.completada).length} de {recorrido.length}
+            </span>
+          </div>
+          <p className="font-medium">Tomate tus sueños en serio</p>
+          <div className="space-y-2">
+            {recorrido.map((e, i) => {
+              const estado = e.completada ? "hecha" : i === primeraPendienteIdx ? "ahora" : "pendiente";
+              const clicable = e.completada || i === primeraPendienteIdx;
+              const contenido = (
+                <div
+                  className={`flex items-center justify-between gap-3 rounded-card border p-4 ${
+                    estado === "ahora" ? "border-texto bg-texto text-white" : "border-texto/10 bg-tarjeta"
+                  } ${!clicable ? "opacity-50" : ""}`}
+                >
+                  <span className={`text-[15px] font-medium ${estado === "ahora" ? "text-white" : "text-texto"}`}>
+                    {e.titulo}
+                  </span>
+                  <EstadoBadge estado={estado} />
+                </div>
+              );
+              return clicable ? (
+                <Link key={e.id} href={`/experiencias/${e.id}`}>
+                  {contenido}
+                </Link>
+              ) : (
+                <div key={e.id}>{contenido}</div>
+              );
+            })}
+          </div>
+
+          <div className="space-y-2 pt-4">
+            <p className="text-sm font-medium text-texto/70">Después de esto</p>
+            <Subtitulo>La ruta completa del método son cinco etapas y noventa días.</Subtitulo>
+            <Subtitulo>
+              Definí, Construíte, Diseñá, Movete y Sostené: se abren cuando empezás tu Proyecto de Valentía.
+            </Subtitulo>
+          </div>
         </section>
       )}
 
-      {evidencias && evidencias.length > 0 && (
+      {recorridoTerminado && sueno && (
+        <Tarjeta className="space-y-1">
+          <p className="text-xs uppercase tracking-wide text-texto/45">Tu sueño</p>
+          <p className="text-[17px] font-medium leading-snug">{sueno.descripcion}</p>
+        </Tarjeta>
+      )}
+
+      {recorridoTerminado && !esPremium && (
+        <Tarjeta className="space-y-3 border-acento/40 bg-acento/5">
+          <p className="text-[17px] font-medium leading-snug">Convertí tu sueño en un Proyecto de Valentía</p>
+          <Subtitulo>Noventa días con método, ruta completa, hitos y revisiones.</Subtitulo>
+          <EnlacePrimario href="/membresia">Empezar mis 90 días</EnlacePrimario>
+        </Tarjeta>
+      )}
+
+      {recorridoTerminado && esPremium && (
         <section className="space-y-3">
-          <h2 className="font-display text-lg">Tu recorrido</h2>
-          <ul className="space-y-2">
-            {evidencias.map((ev) => (
-              <li key={ev.id} className="rounded-card border border-acentoSuave p-3 text-sm">
-                {ev.contenido}
-              </li>
-            ))}
-          </ul>
+          {ruta.map((etapa) => {
+            const esActual = etapa.id === proyecto?.etapa_actual;
+            const hechas = etapa.experiencias.filter((e) => e.completada).length;
+            return (
+              <div key={etapa.id} className="space-y-2">
+                <div
+                  className={`rounded-card border p-4 ${
+                    esActual ? "border-acento/50 bg-acento/5" : "border-texto/10 bg-tarjeta opacity-70"
+                  }`}
+                >
+                  <p className="text-[15px] font-bold tracking-wide">{etapa.nombre}</p>
+                  <p className="text-xs text-texto/50">
+                    {etapa.experiencias.length} experiencia{etapa.experiencias.length === 1 ? "" : "s"}
+                    {etapa.experiencias.length > 0 ? ` · ${hechas} hecha${hechas === 1 ? "" : "s"}` : ""}
+                  </p>
+                </div>
+                {esActual && etapa.experiencias.length > 0 && (
+                  <div className="space-y-2 pl-3">
+                    {etapa.experiencias.map((e) => {
+                      const estado = e.completada ? "hecha" : "ahora";
+                      return (
+                        <Link
+                          key={e.id}
+                          href={`/experiencias/${e.id}`}
+                          className={`flex items-center justify-between gap-3 rounded-card border p-4 ${
+                            estado === "ahora" ? "border-texto bg-texto text-white" : "border-texto/10 bg-tarjeta"
+                          }`}
+                        >
+                          <span className={`text-[15px] font-medium ${estado === "ahora" ? "text-white" : "text-texto"}`}>
+                            {e.titulo}
+                          </span>
+                          <EstadoBadge estado={estado} />
+                        </Link>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            );
+          })}
+          <Link href="/mi-proyecto" className="inline-block pt-2 text-sm font-medium text-acento">
+            Ver mi Proyecto →
+          </Link>
         </section>
       )}
     </main>
