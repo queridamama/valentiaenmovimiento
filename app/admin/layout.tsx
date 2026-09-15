@@ -2,6 +2,14 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { crearClienteServidor } from "@/lib/supabase/server";
 
+const DESTINOS = [
+  { href: "/admin/experiencias", label: "Experiencias" },
+  { href: "/admin/biblioteca", label: "Biblioteca" },
+  { href: "/admin/cursos", label: "Cursos" },
+  { href: "/admin/comunidad", label: "Comunidad" },
+  { href: "/admin/eventos", label: "Eventos" },
+];
+
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
   const supabase = await crearClienteServidor();
   const {
@@ -22,12 +30,16 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   return (
     <div className="min-h-screen bg-fondo">
       <header className="border-b border-texto/10 bg-tarjeta px-6 py-4">
-        <div className="mx-auto flex max-w-3xl items-center justify-between">
-          <p className="font-display text-lg font-semibold">Admin · Valentía en Movimiento</p>
-          <nav className="flex gap-4 text-sm font-medium">
-            <Link href="/admin/experiencias" className="text-texto/70 hover:text-texto">
-              Experiencias
-            </Link>
+        <div className="mx-auto flex max-w-5xl flex-wrap items-center justify-between gap-3">
+          <Link href="/admin" className="font-display text-lg font-semibold">
+            Admin · Valentía en Movimiento
+          </Link>
+          <nav className="flex flex-wrap gap-4 text-sm font-medium">
+            {DESTINOS.map((d) => (
+              <Link key={d.href} href={d.href} className="text-texto/70 hover:text-texto">
+                {d.label}
+              </Link>
+            ))}
             {autorizacion.rol === "admin" && (
               <Link href="/admin/usuarias" className="text-texto/70 hover:text-texto">
                 Usuarias
@@ -39,7 +51,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
           </nav>
         </div>
       </header>
-      <main className="mx-auto max-w-3xl px-6 py-8">{children}</main>
+      <main className="mx-auto max-w-5xl px-6 py-8">{children}</main>
     </div>
   );
 }

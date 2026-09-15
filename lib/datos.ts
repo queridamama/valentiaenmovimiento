@@ -259,8 +259,11 @@ export async function obtenerFeedComunidad(supabase: SupabaseClient, categoriaId
   let query = supabase
     .from("publicaciones_comunidad")
     .select(
-      "id, contenido, fecha_creado, categoria_id, usuario_id, evidencia_id, movimiento_id, categorias_comunidad(nombre), reacciones(tipo, usuario_id), comentarios(id)"
+      "id, titulo, contenido, imagen_url, audio_url, fecha_creado, categoria_id, usuario_id, evidencia_id, movimiento_id, categorias_comunidad(nombre), reacciones(tipo, usuario_id), comentarios(id)"
     )
+    // Los borradores de Meli (ver 0005_cms_admin.sql) solo se ven desde
+    // /admin/comunidad — acá nunca deben aparecer.
+    .eq("estado", "publicado")
     .order("fecha_creado", { ascending: false })
     .limit(50);
   if (categoriaId) query = query.eq("categoria_id", categoriaId);
@@ -273,8 +276,11 @@ export async function obtenerFeedComunidad(supabase: SupabaseClient, categoriaId
 export async function obtenerPublicacionDetalle(supabase: SupabaseClient, publicacionId: string) {
   const { data } = await supabase
     .from("publicaciones_comunidad")
-    .select("id, contenido, fecha_creado, categoria_id, usuario_id, categorias_comunidad(nombre), reacciones(tipo, usuario_id)")
+    .select(
+      "id, titulo, contenido, imagen_url, audio_url, fecha_creado, categoria_id, usuario_id, categorias_comunidad(nombre), reacciones(tipo, usuario_id)"
+    )
     .eq("id", publicacionId)
+    .eq("estado", "publicado")
     .maybeSingle();
   if (!data) return null;
   const nombres = await mapaDeNombres(supabase, [data.usuario_id]);

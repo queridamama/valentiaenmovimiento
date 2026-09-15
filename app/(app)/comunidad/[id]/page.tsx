@@ -32,6 +32,7 @@ export default async function PublicacionPage({ params }: { params: Promise<{ id
 
   const comentarios = await obtenerComentarios(supabase, id);
   const autor = unoDeRelacion(post.perfiles as unknown as { nombre: string } | { nombre: string }[] | null);
+  const cat = unoDeRelacion(post.categorias_comunidad as unknown as { nombre: string } | { nombre: string }[] | null);
   const reacciones = (post.reacciones ?? []) as { tipo: string; usuario_id: string }[];
   const comentarAqui = comentar.bind(null, id);
 
@@ -42,8 +43,20 @@ export default async function PublicacionPage({ params }: { params: Promise<{ id
       </Link>
 
       <div className="space-y-3 rounded-card border border-texto/10 bg-tarjeta p-4">
-        <p className="text-sm font-semibold">{autor?.nombre ?? "Alguien de la comunidad"}</p>
-        <p className="text-[15px] leading-relaxed">{post.contenido}</p>
+        <p className="text-sm font-semibold">{cat?.nombre === "Meli" ? "Meli" : autor?.nombre ?? "Alguien de la comunidad"}</p>
+        {cat?.nombre === "Meli" ? (
+          <div className="space-y-2">
+            {post.titulo && <p className="text-base font-semibold text-texto">{post.titulo}</p>}
+            {post.imagen_url && (
+              // eslint-disable-next-line @next/next/no-img-element -- viene de Storage
+              <img src={post.imagen_url} alt="" className="w-full rounded-lg" />
+            )}
+            <div className="contenido-enriquecido text-[15px]" dangerouslySetInnerHTML={{ __html: post.contenido }} />
+            {post.audio_url && <audio src={post.audio_url} controls className="w-full" />}
+          </div>
+        ) : (
+          <p className="text-[15px] leading-relaxed">{post.contenido}</p>
+        )}
         <div className="flex gap-3 pt-1">
           {REACCIONES.map((r) => {
             const count = reacciones.filter((x) => x.tipo === r.tipo).length;

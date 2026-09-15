@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { AREAS_RESPUESTA, ETIQUETA_AREA, type AreaRespuesta } from "@/lib/tipos";
+import EditorEnriquecido from "@/components/admin/EditorEnriquecido";
 
 interface PreguntaEditable {
   id?: string;
@@ -74,16 +75,7 @@ export default function FormularioExperiencia({ accion, etapas, inicial, pregunt
           />
         </label>
 
-        <label className="flex flex-col gap-1">
-          <span className="text-sm font-medium text-texto/70">Texto introductorio</span>
-          <textarea
-            name="texto_intro"
-            defaultValue={inicial?.texto_intro}
-            rows={5}
-            placeholder="Separá párrafos con una línea en blanco. No hace falta video para publicar."
-            className="rounded-lg border border-texto/15 px-3 py-2"
-          />
-        </label>
+        <EditorEnriquecido name="texto_intro" label="Texto introductorio" contenidoInicial={inicial?.texto_intro ?? ""} />
 
         <label className="flex flex-col gap-1">
           <span className="text-sm font-medium text-texto/70">URL de video (opcional)</span>

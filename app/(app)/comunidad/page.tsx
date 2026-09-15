@@ -98,10 +98,22 @@ export default async function ComunidadPage({
           return (
             <li key={post.id} className="space-y-3 rounded-card border border-texto/10 bg-tarjeta p-4">
               <div className="flex items-center justify-between">
-                <p className="text-sm font-semibold">{autor?.nombre ?? "Alguien de la comunidad"}</p>
+                <p className="text-sm font-semibold">{cat?.nombre === "Meli" ? "Meli" : autor?.nombre ?? "Alguien de la comunidad"}</p>
                 <span className="text-xs text-texto/40">{cat?.nombre}</span>
               </div>
-              <p className="text-[15px] leading-relaxed">{post.contenido}</p>
+              {cat?.nombre === "Meli" ? (
+                <div className="space-y-2">
+                  {post.titulo && <p className="text-base font-semibold text-texto">{post.titulo}</p>}
+                  {post.imagen_url && (
+                    // eslint-disable-next-line @next/next/no-img-element -- viene de Storage
+                    <img src={post.imagen_url} alt="" className="w-full rounded-lg" />
+                  )}
+                  <div className="contenido-enriquecido text-[15px]" dangerouslySetInnerHTML={{ __html: post.contenido }} />
+                  {post.audio_url && <audio src={post.audio_url} controls className="w-full" />}
+                </div>
+              ) : (
+                <p className="text-[15px] leading-relaxed">{post.contenido}</p>
+              )}
               <div className="flex items-center justify-between pt-1">
                 <div className="flex gap-3">
                   {REACCIONES.map((r) => {

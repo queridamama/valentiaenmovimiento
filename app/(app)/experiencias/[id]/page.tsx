@@ -34,7 +34,7 @@ export default async function ExperienciaPage({ params }: { params: Promise<{ id
 
   const esPremium = experiencia.nivel_acceso === "membresia";
   const guardar = guardarRespuestas.bind(null, experiencia.id);
-  const parrafos = (experiencia.texto_intro ?? "").split(/\n\n+/).filter(Boolean);
+  const tieneTexto = Boolean((experiencia.texto_intro ?? "").trim());
 
   return (
     <main className="mx-auto max-w-md space-y-6 px-6 py-10">
@@ -51,21 +51,15 @@ export default async function ExperienciaPage({ params }: { params: Promise<{ id
       {experiencia.video_url ? (
         <video src={experiencia.video_url} controls className="w-full rounded-card bg-black" />
       ) : (
-        parrafos.length > 0 && (
+        tieneTexto && (
           <div className="rounded-card border border-texto/10 bg-tarjeta p-5 text-sm text-texto/40">
             Todavía no hay video para esta clase — podés seguir con el texto.
           </div>
         )
       )}
 
-      {parrafos.length > 0 && (
-        <div className="space-y-3 text-[15px] leading-relaxed text-texto/80">
-          {parrafos.map((p: string, i: number) => (
-            <p key={i} className={p.startsWith('"') ? "font-medium italic text-texto" : ""}>
-              {p}
-            </p>
-          ))}
-        </div>
+      {tieneTexto && (
+        <div className="contenido-enriquecido" dangerouslySetInnerHTML={{ __html: experiencia.texto_intro ?? "" }} />
       )}
 
       {completada ? (

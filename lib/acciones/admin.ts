@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
-import { crearClienteServidor } from "@/lib/supabase/server";
+import { exigirStaff } from "@/lib/autorizacion";
 import { AREAS_RESPUESTA, ESTADOS_EXPERIENCIA, NIVELES_ACCESO, type AreaRespuesta } from "@/lib/tipos";
 
 interface PreguntaForm {
@@ -11,26 +11,6 @@ interface PreguntaForm {
   placeholder?: string;
   area_respuesta: AreaRespuesta;
   orden: number;
-}
-
-async function exigirStaff() {
-  const supabase = await crearClienteServidor();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) redirect("/login");
-
-  const { data: autorizacion } = await supabase
-    .from("autorizaciones")
-    .select("rol")
-    .eq("usuario_id", user.id)
-    .maybeSingle();
-
-  if (!autorizacion || !["admin", "editor"].includes(autorizacion.rol)) {
-    redirect("/inicio");
-  }
-
-  return { supabase, user, rol: autorizacion.rol as "admin" | "editor" };
 }
 
 function parsearPreguntas(json: string): PreguntaForm[] {

@@ -10,3 +10,24 @@ textarea,
 input {
   @apply bg-tarjeta;
 }
+
+/* Contenido enriquecido (Admin: editor de Tiptap; alumnas: HTML guardado
+   por ese editor). Un solo lugar para que se vean igual en los dos casos. */
+.contenido-enriquecido h2 {
+  @apply mb-2 mt-4 text-lg font-semibold text-texto;
+}
+.contenido-enriquecido p {
+  @apply mb-3 text-[15px] leading-relaxed text-texto/80;
+}
+.contenido-enriquecido ul {
+  @apply mb-3 list-disc space-y-1 pl-5 text-[15px] text-texto/80;
+}
+.contenido-enriquecido ol {
+  @apply mb-3 list-decimal space-y-1 pl-5 text-[15px] text-texto/80;
+}
+.contenido-enriquecido blockquote {
+  @apply mb-3 border-l-2 border-acento/50 pl-4 italic text-texto/70;
+}
+.contenido-enriquecido strong {
+  @apply font-semibold text-texto;
+}
