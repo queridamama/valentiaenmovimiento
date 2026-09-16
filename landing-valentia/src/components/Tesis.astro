@@ -1,0 +1,26 @@
+---
+import { tesis } from "../content/valentia";
+---
+
+<section id="que-es" class="px-5 py-20 sm:px-8 sm:py-28">
+  <div class="mx-auto max-w-4xl space-y-12 text-center">
+    <h2 class="reveal balance font-display text-[32px] font-semibold leading-[1.1] text-texto sm:text-[46px] lg:text-[54px]">
+      {tesis.titulo.map((linea, i) => (
+        <span class:list={["block", i === tesis.titulo.length - 1 && "text-acento-teal"]}>{linea}</span>
+      ))}
+    </h2>
+
+    <p class="reveal mx-auto max-w-xl text-[17px] leading-relaxed text-texto/70">{tesis.texto}</p>
+
+    <div class="reveal flex flex-wrap items-center justify-center gap-3 pt-4 sm:gap-4">
+      {tesis.formula.map((palabra, i) => (
+        <>
+          <span class="rounded-full border border-texto/15 bg-tarjeta px-5 py-2.5 text-sm font-semibold tracking-wide text-texto sm:px-6 sm:py-3 sm:text-base">
+            {palabra}
+          </span>
+          {i < tesis.formula.length - 1 && <span class="text-lg text-texto/30">+</span>}
+        </>
+      ))}
+    </div>
+  </div>
+</section>

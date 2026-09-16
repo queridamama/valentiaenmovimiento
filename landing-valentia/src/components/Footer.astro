@@ -1,0 +1,36 @@
+---
+import { nav, marca } from "../content/valentia";
+import { REGISTER_URL, LOGIN_URL } from "../config/site";
+
+const anio = new Date().getFullYear();
+---
+
+<footer class="border-t border-texto/10 bg-fondo px-5 py-12 sm:px-8">
+  <div class="mx-auto flex max-w-6xl flex-col gap-8 sm:flex-row sm:items-start sm:justify-between">
+    <div class="space-y-2">
+      <p class="font-display text-lg font-semibold">{marca.nombre}</p>
+      <p class="max-w-xs text-sm text-texto/55">Tomate tus sueños en serio.</p>
+    </div>
+
+    <nav class="flex flex-wrap gap-x-6 gap-y-2 text-sm text-texto/60">
+      {nav.links.map((link) => (
+        <a href={link.href} class="hover:text-texto">
+          {link.label}
+        </a>
+      ))}
+    </nav>
+
+    <div class="flex gap-3">
+      <a href={LOGIN_URL} class="rounded-full border border-texto/15 px-4 py-2 text-sm font-medium text-texto">
+        {nav.entrar}
+      </a>
+      <a href={REGISTER_URL} class="rounded-full bg-texto px-4 py-2 text-sm font-semibold text-fondo">
+        {nav.cta}
+      </a>
+    </div>
+  </div>
+
+  <p class="mx-auto mt-10 max-w-6xl text-xs text-texto/40">
+    © {anio} {marca.nombre}. Un proyecto de Melisa Díaz.
+  </p>
+</footer>

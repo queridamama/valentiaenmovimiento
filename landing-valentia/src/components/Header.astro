@@ -1,0 +1,37 @@
+---
+import { nav, marca } from "../content/valentia";
+import { REGISTER_URL, LOGIN_URL, withBase } from "../config/site";
+---
+
+<header class="sticky top-0 z-50 border-b border-texto/10 bg-fondo/90 backdrop-blur-sm">
+  <div class="mx-auto flex max-w-6xl items-center justify-between gap-4 px-5 py-3.5 sm:px-8">
+    <a href={withBase("/")} class="font-display text-[15px] font-semibold tracking-tight text-texto sm:text-base">
+      {marca.nombre}
+    </a>
+
+    <nav class="hidden items-center gap-7 text-sm font-medium text-texto/70 md:flex">
+      {nav.links.map((link) => (
+        <a href={link.href} class="transition hover:text-texto">
+          {link.label}
+        </a>
+      ))}
+    </nav>
+
+    <div class="flex items-center gap-3 sm:gap-4">
+      <a
+        href={LOGIN_URL}
+        data-analytics="click-entrar-header"
+        class="hidden text-sm font-medium text-texto/70 hover:text-texto sm:inline"
+      >
+        {nav.entrar}
+      </a>
+      <a
+        href={REGISTER_URL}
+        data-analytics="click-empezar-gratis-header"
+        class="rounded-full bg-texto px-4 py-2 text-sm font-semibold text-fondo transition hover:bg-acento hover:text-texto sm:px-5 sm:py-2.5"
+      >
+        {nav.cta}
+      </a>
+    </div>
+  </div>
+</header>

@@ -1,0 +1,50 @@
+@import "tailwindcss";
+
+/* Misma paleta que la app de Valentía en Movimiento (ver
+   tailwind.config.ts del proyecto principal) — Tailwind v4 define el
+   theme acá mismo, en CSS, en vez de un archivo tailwind.config.js. */
+@theme {
+  --color-fondo: #f7f6f4;
+  --color-tarjeta: #ffffff;
+  --color-texto: #1a1a1a;
+  --color-acento: #c49bc9;
+  --color-acento-teal: #2e6273;
+  --color-acento-lima: #d6de2b;
+  --color-acento-celeste: #b9dce5;
+  --color-acento-rosa: #fbe3e8;
+
+  --font-display: "Poppins", sans-serif;
+  --font-cuerpo: "Poppins", sans-serif;
+}
+
+body {
+  background: var(--color-fondo);
+  color: var(--color-texto);
+  font-family: var(--font-cuerpo);
+}
+
+/* Reveal-on-scroll: sin JS o con prefers-reduced-motion, el contenido
+   simplemente está visible siempre — la animación es un extra, nunca un
+   requisito para ver la página. */
+.reveal {
+  opacity: 1;
+  transform: none;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .reveal {
+    opacity: 0;
+    transform: translateY(18px);
+    transition:
+      opacity 0.7s ease,
+      transform 0.7s ease;
+  }
+  .reveal.is-visible {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.balance {
+  text-wrap: balance;
+}

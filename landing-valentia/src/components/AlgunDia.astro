@@ -1,0 +1,15 @@
+---
+import { algunDia } from "../content/valentia";
+---
+
+<section class="bg-texto px-5 py-20 text-fondo sm:px-8 sm:py-28">
+  <div class="reveal mx-auto max-w-3xl space-y-8 text-center">
+    <h2 class="balance font-display text-[30px] font-semibold leading-tight sm:text-[42px]">
+      {algunDia.frase}
+    </h2>
+    <div class="space-y-4 text-[16px] leading-relaxed text-fondo/70 sm:text-[18px]">
+      {algunDia.parrafos.map((p) => <p>{p}</p>)}
+    </div>
+    <p class="pt-2 text-[17px] font-medium text-acento-lima sm:text-[19px]">{algunDia.cierre}</p>
+  </div>
+</section>

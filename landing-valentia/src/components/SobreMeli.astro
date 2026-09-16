@@ -1,0 +1,30 @@
+---
+import { meli } from "../content/valentia";
+import { withBase } from "../config/site";
+---
+
+<section id="meli" class="bg-acento-rosa/30 px-5 py-20 sm:px-8 sm:py-28">
+  <div class="mx-auto grid max-w-5xl gap-10 lg:grid-cols-[minmax(0,320px)_1fr] lg:items-center lg:gap-16">
+    <div class="reveal mx-auto w-full max-w-xs lg:mx-0">
+      <div class="aspect-[4/5] overflow-hidden rounded-[24px]">
+        <img src={withBase("images/meli.webp")} alt="Melisa Díaz" class="h-full w-full object-cover" />
+      </div>
+    </div>
+
+    <div class="reveal space-y-5">
+      <h2 class="balance font-display text-[28px] font-semibold leading-tight text-texto sm:text-[36px]">
+        {meli.titulo}
+      </h2>
+      <div>
+        <p class="text-[15px] font-bold uppercase tracking-wide text-texto">{meli.nombre}</p>
+        <p class="text-sm text-texto/55">{meli.rol}</p>
+      </div>
+      <div class="space-y-3 text-[15px] leading-relaxed text-texto/70 sm:text-[16px]">
+        {meli.parrafos.map((p) => <p>{p}</p>)}
+      </div>
+      <p class="pt-2 font-display text-lg font-medium italic leading-snug text-texto sm:text-xl">
+        {meli.frase.map((linea) => <span class="block">{linea}</span>)}
+      </p>
+    </div>
+  </div>
+</section>

@@ -1,0 +1,28 @@
+---
+import { evidencia } from "../content/valentia";
+---
+
+<section class="bg-texto px-5 py-20 text-fondo sm:px-8 sm:py-28">
+  <div class="mx-auto max-w-4xl text-center">
+    <h2 class="reveal balance font-display text-[28px] font-semibold leading-tight sm:text-[38px]">
+      {evidencia.titulo}
+    </h2>
+    <p class="reveal mx-auto mt-4 max-w-md text-[16px] text-fondo/65">{evidencia.intro}</p>
+
+    <div class="reveal mx-auto mt-10 flex max-w-3xl flex-wrap justify-center gap-2.5 sm:mt-12 sm:gap-3">
+      {evidencia.ejemplos.map((e) => (
+        <span class="rounded-full border border-fondo/20 px-4 py-2 text-sm text-fondo/80">{e}</span>
+      ))}
+    </div>
+
+    <p class="reveal mt-12 font-display text-2xl font-semibold text-acento-lima sm:text-3xl">{evidencia.frase}</p>
+
+    <!--
+      Espacio reservado para testimonios reales de alumnas cuando existan.
+      A propósito no hay testimonios acá todavía — no se inventan citas ni
+      resultados. Cuando Meli tenga 3-4 testimonios reales (con nombre y
+      permiso), se arma un componente Testimonios.astro y se suma después
+      de esta sección.
+    -->
+  </div>
+</section>

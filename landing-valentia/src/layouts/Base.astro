@@ -1,0 +1,93 @@
+---
+import "../styles/global.css";
+import Header from "../components/Header.astro";
+import Footer from "../components/Footer.astro";
+import { seo, marca } from "../content/valentia";
+import { CANONICAL_URL, withBase } from "../config/site";
+
+interface Props {
+  title?: string;
+  description?: string;
+}
+
+const { title = seo.title, description = seo.description } = Astro.props;
+const ogImage = new URL(withBase("images/valentia/og-cover.jpg"), Astro.site).toString();
+---
+
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>{title}</title>
+    <meta name="description" content={description} />
+    <link rel="canonical" href={CANONICAL_URL} />
+
+    <link rel="icon" type="image/svg+xml" href={withBase("favicon.svg")} />
+    <link rel="icon" type="image/png" href={withBase("favicon.png")} />
+    <link rel="apple-touch-icon" href={withBase("apple-touch-icon.png")} />
+
+    <!-- OpenGraph -->
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content={marca.nombre} />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:url" content={CANONICAL_URL} />
+    <meta property="og:image" content={ogImage} />
+    <meta property="og:locale" content="es_AR" />
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content={title} />
+    <meta name="twitter:description" content={description} />
+    <meta name="twitter:image" content={ogImage} />
+
+    <!-- Fuente: la misma familia que usa la app (Poppins). Preconnect
+         para que no sume una vuelta de red extra antes de empezar a
+         descargarla. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+
+    <!--
+      Lugar reservado para analítica futura (Meta Pixel / Google
+      Analytics / GTM). A propósito no carga nada todavía: no hay que
+      inventar IDs falsos. Los CTAs clave ya tienen data-analytics="..."
+      (ver Hero.astro, Cierre.astro, Premium.astro) para poder engancharlos
+      con un solo listener delegado el día que se agregue un pixel real.
+
+      <script async src="https://www.googletagmanager.com/gtag/js?id=G-XXXXXXX"></script>
+    -->
+  </head>
+  <body class="font-cuerpo antialiased">
+    <Header />
+    <main>
+      <slot />
+    </main>
+    <Footer />
+
+    <script>
+      // Reveal-on-scroll mínimo: sin dependencias, no bloquea el render,
+      // y si falla o no corre (JS deshabilitado), todo el contenido ya es
+      // visible por default (ver .reveal en global.css).
+      const elementos = document.querySelectorAll(".reveal");
+      if ("IntersectionObserver" in window && elementos.length > 0) {
+        const observer = new IntersectionObserver(
+          (entradas) => {
+            for (const entrada of entradas) {
+              if (entrada.isIntersecting) {
+                entrada.target.classList.add("is-visible");
+                observer.unobserve(entrada.target);
+              }
+            }
+          },
+          { threshold: 0.15, rootMargin: "0px 0px -40px 0px" }
+        );
+        elementos.forEach((el) => observer.observe(el));
+      }
+    </script>
+  </body>
+</html>

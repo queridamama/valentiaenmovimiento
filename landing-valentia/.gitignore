@@ -1,0 +1,8 @@
+# Proyecto independiente de la app principal — sus propias dependencias
+# y artefactos de build no se comparten ni se mezclan con el resto del repo.
+node_modules/
+dist/
+.astro/
+.env
+.env.local
+npm-debug.log*

@@ -1,0 +1,29 @@
+---
+import { cierre } from "../content/valentia";
+import { REGISTER_URL, LOGIN_URL } from "../config/site";
+---
+
+<section class="bg-gradient-to-b from-texto to-[#2b2b2b] px-5 py-24 text-fondo sm:px-8 sm:py-32">
+  <div class="reveal mx-auto max-w-3xl space-y-10 text-center">
+    <h2 class="balance font-display text-[30px] font-semibold leading-[1.15] sm:text-[44px]">
+      {cierre.headline.map((linea) => <span class="block">{linea}</span>)}
+    </h2>
+
+    <div class="space-y-1 text-[16px] text-fondo/70 sm:text-[18px]">
+      {cierre.texto.map((p) => <p>{p}</p>)}
+    </div>
+
+    <div class="flex flex-col items-center gap-4 pt-2">
+      <a
+        href={REGISTER_URL}
+        data-analytics="click-empezar-gratis-cierre"
+        class="rounded-full bg-acento-lima px-9 py-4 text-[16px] font-semibold text-texto transition hover:brightness-95 sm:px-10 sm:py-5"
+      >
+        {cierre.cta}
+      </a>
+      <a href={LOGIN_URL} data-analytics="click-entrar-cierre" class="text-sm font-medium text-fondo/60 hover:text-fondo">
+        {cierre.ctaSecundario}
+      </a>
+    </div>
+  </div>
+</section>
