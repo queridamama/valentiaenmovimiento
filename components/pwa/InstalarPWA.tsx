@@ -121,12 +121,11 @@ export default function InstalarPWA() {
           onClick={() => setMostrarInstructivoIOS(false)}
         >
           <div className="w-full max-w-sm space-y-4 rounded-[24px] bg-white p-6" onClick={(e) => e.stopPropagation()}>
-            <p className="text-[15px] font-bold text-marca">Para agregar Valentía a tu inicio</p>
-            <ol className="space-y-2 text-[13.5px] leading-relaxed text-texto/75">
-              <li>1. Abrí esta página en Safari.</li>
-              <li>2. Tocá el botón Compartir.</li>
-              <li>3. Elegí &ldquo;Agregar a pantalla de inicio&rdquo;.</li>
-            </ol>
+            <p className="text-[15px] font-bold text-marca">Agregá Valentía a tu pantalla de inicio</p>
+            <p className="text-[13.5px] leading-relaxed text-texto/75">
+              Tocá el botón Compartir <span aria-hidden="true">↑</span> y elegí &ldquo;Agregar a la pantalla
+              principal&rdquo;.
+            </p>
             <button
               type="button"
               onClick={() => setMostrarInstructivoIOS(false)}

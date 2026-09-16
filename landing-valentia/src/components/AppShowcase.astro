@@ -18,16 +18,18 @@ const desfases = ["sm:translate-y-0", "sm:translate-y-6", "sm:-translate-y-3", "
       <p class="text-[14px] text-texto/45">{appShowcase.textoComunidad}</p>
     </div>
 
-    <div class="reveal mt-12 flex snap-x snap-mandatory gap-5 overflow-x-auto pb-4 sm:mt-16 sm:justify-center sm:gap-6">
+    <div class="reveal mt-12 flex snap-x snap-mandatory gap-5 overflow-x-auto px-5 pb-4 sm:mt-16 sm:justify-center sm:gap-6 sm:px-0">
       {appShowcase.pantallas.map((pantalla, i) => (
         <div class={`shrink-0 snap-center transition ${desfases[i % desfases.length]}`}>
-          <div class="w-[220px] overflow-hidden rounded-[26px] border-4 border-marca bg-tarjeta shadow-[0_18px_40px_-15px_rgba(26,26,26,0.35)] sm:w-[240px]">
-            <img
-              src={withBase(`images/app/${pantalla.archivo}`)}
-              alt={pantalla.alt}
-              loading="lazy"
-              class="aspect-[9/18] w-full object-cover"
-            />
+          <div class="w-[220px] rounded-[26px] border-4 border-marca bg-white p-2 shadow-[0_18px_40px_-15px_rgba(26,26,26,0.35)] sm:w-[240px]">
+            <div class="overflow-hidden rounded-[18px] bg-tarjeta">
+              <img
+                src={withBase(`images/app/${pantalla.archivo}`)}
+                alt={pantalla.alt}
+                loading="lazy"
+                class="aspect-[9/16] w-full object-contain"
+              />
+            </div>
           </div>
         </div>
       ))}
