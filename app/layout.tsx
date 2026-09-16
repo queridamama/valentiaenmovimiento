@@ -1,5 +1,6 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Poppins, Caveat, Permanent_Marker } from "next/font/google";
+import RegistrarServiceWorker from "@/components/pwa/RegistrarServiceWorker";
 import "./globals.css";
 
 const poppins = Poppins({
@@ -26,6 +27,17 @@ const marker = Permanent_Marker({
 export const metadata: Metadata = {
   title: "Valentía en Movimiento",
   description: "Tomate tus sueños en serio.",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "default",
+    title: "Valentía",
+  },
+};
+
+// themeColor va acá (no en `metadata`) desde Next 14 — ver
+// generateViewport en la doc del proyecto.
+export const viewport: Viewport = {
+  themeColor: "#255D78",
 };
 
 export default function RootLayout({
@@ -35,7 +47,10 @@ export default function RootLayout({
 }) {
   return (
     <html lang="es" className={`${poppins.variable} ${caveat.variable} ${marker.variable}`}>
-      <body className="min-h-screen">{children}</body>
+      <body className="min-h-screen">
+        {children}
+        <RegistrarServiceWorker />
+      </body>
     </html>
   );
 }

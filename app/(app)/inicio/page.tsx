@@ -8,6 +8,7 @@ import {
 } from "@/lib/datos";
 import { Badge, Etiqueta } from "@/components/ui";
 import { TarjetaSueno, TarjetaCamino } from "@/components/tarjetas";
+import InstalarPWA from "@/components/pwa/InstalarPWA";
 
 export default async function InicioPage() {
   const supabase = await crearClienteServidor();
@@ -121,6 +122,8 @@ export default async function InicioPage() {
           icono="gente"
         />
       </div>
+
+      <InstalarPWA />
     </main>
   );
 }

@@ -21,13 +21,18 @@ un desfasaje de unas horas cerca de la medianoche — no afecta la lógica
 del ritual (elegir → volver → registrar), solo en qué momento exacto
 aparece el cartel.
 
+## Qué existe ahora: la app es instalable (PWA) — ver PWA.md
+
+Desde la pasada de instalación, Valentía ya tiene manifest, service
+worker mínimo y el bloque "Agregar Valentía a mi inicio" en `/inicio`.
+El detalle completo (cómo funciona en Android/iPhone, qué icono falta)
+está en `PWA.md`. Esto es un requisito previo para push real (ítem 1 de
+la lista de abajo), pero **todavía no incluye push notifications**.
+
 ## Qué NO existe todavía: push notifications reales
 
-Hoy la app **no tiene ninguna infraestructura de push notifications**.
 Revisé el proyecto antes de esta pasada y confirmé que no existe:
 
-- manifest.json / configuración de PWA instalable,
-- service worker,
 - suscripción de push (`PushManager`, VAPID keys),
 - ninguna tabla en Supabase para guardar suscripciones de notificación,
 - ningún cron/scheduler que dispare avisos los lunes/viernes.
@@ -40,8 +45,9 @@ entera.
 
 En términos generales (para cuando se priorice):
 
-1. **Convertir la app en PWA instalable**: `manifest.json` + ícono +
-   un service worker (Next.js tiene soporte, pero es una pieza nueva).
+1. ~~Convertir la app en PWA instalable~~ — hecho, ver `PWA.md`. Push
+   real en la web depende de esto (`PushManager` solo funciona con un
+   service worker ya registrado).
 2. **Pedir permiso explícito** a la usuaria (nunca activarlo solo) — un
    botón tipo "Quiero recibir recordatorios" en Perfil.
 3. **Guardar la suscripción push** (`PushSubscription`) en una tabla
