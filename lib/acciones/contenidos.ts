@@ -34,6 +34,7 @@ export async function guardarContenido(contenidoId: string | null, formData: For
     video_url: String(formData.get("video_url") ?? "").trim() || null,
     audio_url: String(formData.get("audio_url") ?? "").trim() || null,
     archivo_url: String(formData.get("archivo_url") ?? "").trim() || null,
+    duracion: String(formData.get("duracion") ?? "").trim() || null,
     estado,
     actualizado_en: new Date().toISOString(),
   };
@@ -71,6 +72,7 @@ export async function duplicarContenido(contenidoId: string) {
     video_url: original.video_url,
     audio_url: original.audio_url,
     archivo_url: original.archivo_url,
+    duracion: original.duracion,
     estado: "borrador",
     creado_por: user.id,
   });

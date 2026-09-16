@@ -76,6 +76,16 @@ export default async function EditarContenidoPage({ params }: { params: Promise<
           />
         </label>
 
+        <label className="flex flex-col gap-1">
+          <span className="text-sm font-medium text-texto/70">Duración (opcional)</span>
+          <input
+            name="duracion"
+            defaultValue={contenido.duracion ?? ""}
+            placeholder="Ej: 12 min, 3 páginas"
+            className="rounded-lg border border-texto/15 px-3 py-2"
+          />
+        </label>
+
         <EditorEnriquecido name="contenido_html" label="Texto" contenidoInicial={contenido.contenido_html ?? ""} />
 
         <CampoArchivo

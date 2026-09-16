@@ -8,8 +8,8 @@ import {
   obtenerProyectoActivo,
   asegurarProyectoActivo,
 } from "@/lib/datos";
-import { Titulo, Subtitulo, Etiqueta, NotaManuscrita, Progreso } from "@/components/ui";
-import { TarjetaPaso, TarjetaInvitacion, COLORES_PASO } from "@/components/tarjetas";
+import { Titulo, Subtitulo, Etiqueta, Progreso } from "@/components/ui";
+import { TarjetaPaso, TarjetaCamino, COLORES_PASO } from "@/components/tarjetas";
 import type { TipoIcono } from "@/components/iconos";
 
 const ICONOS_PASO: TipoIcono[] = ["estrella", "corazon", "montana", "documento"];
@@ -57,12 +57,10 @@ export default async function MiSuenoPage() {
               {recorrido.filter((e) => e.completada).length} de {recorrido.length} completados
             </p>
             <Progreso actual={recorrido.filter((e) => e.completada).length} total={recorrido.length} />
-            <NotaManuscrita color="lima" rotacion="der" className="mt-2">
-              Podés volver a abrir cualquier clase que ya hiciste
-            </NotaManuscrita>
+            <p className="text-xs text-marca/50">Las clases completadas quedan disponibles para volver a verlas.</p>
           </div>
 
-          <div className="space-y-3">
+          <div className="space-y-4">
             {recorrido.map((e, i) => {
               const estado = e.completada ? "hecha" : i === primeraPendienteIdx ? "ahora" : "pendiente";
               const clicable = e.completada || i === primeraPendienteIdx;
@@ -102,15 +100,42 @@ export default async function MiSuenoPage() {
       )}
 
       {recorridoTerminado && !esPremium && (
-        <TarjetaInvitacion
-          eyebrow="El próximo paso"
-          texto="Convertí tu sueño en un Proyecto de Valentía"
-          subtexto="Noventa días con método, ruta completa, hitos y revisiones."
-          cta="Empezar mis 90 días"
-          href="/membresia"
-          color="lila"
-          icono="corona"
-        />
+        <section className="space-y-4">
+          <p className="text-sm font-medium text-texto/70">Seguís teniendo mucho para hacer</p>
+          <div className="space-y-4">
+            <TarjetaCamino
+              eyebrow="Movimiento de la semana"
+              texto="Elegí algo concreto que vas a hacer esta semana."
+              cta="Elegir mi movimiento"
+              href="/movimiento"
+              color="celeste"
+              icono="pasos"
+            />
+            <TarjetaCamino
+              eyebrow="Biblioteca"
+              texto="Videos, meditaciones y recursos para seguir trabajando en vos."
+              cta="Explorar la Biblioteca"
+              href="/biblioteca"
+              color="lima"
+              icono="libro"
+            />
+            <TarjetaCamino
+              eyebrow="Comunidad"
+              texto="Encontrate con otras mujeres que también están en movimiento."
+              cta="Entrar a la Comunidad"
+              href="/comunidad"
+              color="lila"
+              icono="gente"
+            />
+          </div>
+          <p className="pt-1 text-center text-xs text-texto/40">
+            Cuando quieras ir más profundo, existe{" "}
+            <Link href="/membresia" className="font-medium text-marca underline decoration-marca/30 underline-offset-4">
+              Premium
+            </Link>
+            .
+          </p>
+        </section>
       )}
 
       {recorridoTerminado && esPremium && (
@@ -128,7 +153,7 @@ export default async function MiSuenoPage() {
                   </p>
                 </div>
                 {esActual && etapa.experiencias.length > 0 && (
-                  <div className="space-y-3 pl-2">
+                  <div className="space-y-4 pl-2">
                     {etapa.experiencias.map((e, i) => (
                       <TarjetaPaso
                         key={e.id}

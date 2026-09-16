@@ -12,7 +12,8 @@ export type TipoIcono =
   | "gente"
   | "calendario"
   | "pasos"
-  | "corona";
+  | "corona"
+  | "libro";
 
 function Trazo({ children, tamano }: { children: React.ReactNode; tamano: number }) {
   return (
@@ -96,6 +97,13 @@ function Icono({ tipo, tamano }: { tipo: TipoIcono; tamano: number }) {
         <Trazo tamano={tamano}>
           <path d="M4 17.5 3 8l5 4 4-6.5 4 6.5 5-4-1 9.5Z" />
           <path d="M4 17.5h16" />
+        </Trazo>
+      );
+    case "libro":
+      return (
+        <Trazo tamano={tamano}>
+          <path d="M12 6.5c-1.6-1.3-3.6-2-6-2v13c2.4 0 4.4.7 6 2 1.6-1.3 3.6-2 6-2v-13c-2.4 0-4.4.7-6 2Z" />
+          <path d="M12 6.5v13" />
         </Trazo>
       );
   }

@@ -158,36 +158,6 @@ export function Subrayado({
   return <span className={`subrayado subrayado-${color} ${className}`}>{children}</span>;
 }
 
-// Nota manuscrita: el bloque rotado, con fondo pastel y fuente script, que
-// aparece como "aside" editorial en las referencias (siempre con texto
-// REAL que ya existe en la pantalla — nunca copy inventado acá adentro).
-export function NotaManuscrita({
-  children,
-  color = "rosa",
-  rotacion = "izq",
-  className = "",
-}: {
-  children: ReactNode;
-  color?: "rosa" | "celeste" | "lila" | "lima";
-  rotacion?: "izq" | "der";
-  className?: string;
-}) {
-  const fondos: Record<string, string> = {
-    rosa: "bg-acentoRosa/70",
-    celeste: "bg-acentoCeleste/50",
-    lila: "bg-acento/20",
-    lima: "bg-acentoLima/30",
-  };
-  return (
-    <div
-      className={`relative rounded-[28px] px-5 py-4 text-center ${fondos[color]} ${className}`}
-      style={{ transform: `rotate(${rotacion === "izq" ? "-2deg" : "2deg"})` }}
-    >
-      <p className="font-script text-xl leading-snug text-marca">{children}</p>
-    </div>
-  );
-}
-
 // Forma orgánica de fondo (blob), puramente decorativa — para romper la
 // grilla detrás de una foto, un ícono grande o el header de una pantalla.
 export function FormaDecorativa({

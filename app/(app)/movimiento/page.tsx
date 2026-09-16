@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { crearClienteServidor } from "@/lib/supabase/server";
-import { obtenerMovimientoActual, obtenerEvidencias } from "@/lib/datos";
+import { obtenerMovimientoActual, obtenerEvidencias, obtenerSemanasEnMovimiento } from "@/lib/datos";
 import { marcarMovimientoRealizado, registrarEvidencia, alternarCompartirEvidencia } from "@/lib/acciones/movimiento";
 import { BotonPrimario, BotonSecundario, Titulo, Subtitulo, Etiqueta, Campo } from "@/components/ui";
 import { IconoPastel } from "@/components/iconos";
@@ -17,12 +17,14 @@ export default async function MovimientoPage() {
   } = await supabase.auth.getUser();
   if (!user) return null;
 
-  const [movimiento, evidencias] = await Promise.all([
+  const [movimiento, evidencias, semanas] = await Promise.all([
     obtenerMovimientoActual(supabase, user.id),
     obtenerEvidencias(supabase, user.id),
+    obtenerSemanasEnMovimiento(supabase, user.id),
   ]);
 
   const enCurso = movimiento && movimiento.estado === "planeado";
+  const cumplido = movimiento && movimiento.estado === "cumplido";
   const marcarRealizado = movimiento ? marcarMovimientoRealizado.bind(null, movimiento.id) : undefined;
   const registrar = movimiento ? registrarEvidencia.bind(null, movimiento.id) : undefined;
 
@@ -38,6 +40,18 @@ export default async function MovimientoPage() {
         <Titulo>Tu semana, en dos momentos</Titulo>
         <Subtitulo>Elegí un movimiento, después contá qué pasó.</Subtitulo>
       </div>
+
+      {cumplido && (
+        <p className="rounded-[20px] bg-acentoLima/25 px-4 py-3 text-[13.5px] font-medium text-marca">
+          ✨ Esta semana te pusiste en movimiento.
+        </p>
+      )}
+
+      {semanas.esteMes > 0 && (
+        <p className="text-[12.5px] text-texto/45">
+          Este mes registraste {semanas.esteMes} movimiento{semanas.esteMes === 1 ? "" : "s"}.
+        </p>
+      )}
 
       <div className="flex items-center justify-center gap-1.5">
         {MOMENTOS.map((m, i) => (
@@ -99,7 +113,7 @@ export default async function MovimientoPage() {
             <Etiqueta>Tu recorrido</Etiqueta>
             <span className="text-xs text-texto/45">{evidencias.length} registradas</span>
           </div>
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-2 gap-4">
             {evidencias.map((ev, i) => (
               <TarjetaEvidencia
                 key={ev.id}

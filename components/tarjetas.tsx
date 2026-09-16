@@ -56,102 +56,43 @@ export function TarjetaSueno({
   );
 }
 
-// Invitación genérica a un próximo paso (empezar el recorrido, pasar a
-// Premium, etc.) — mismo esqueleto visual, distinto color/ícono/texto real
-// según dónde se use.
-export function TarjetaInvitacion({
+// Uno de los "4 caminos" de Inicio (Mi Ruta / Movimiento / Biblioteca /
+// Comunidad): mismo esqueleto para las cuatro, cada una con su color,
+// ícono, texto explicativo real y CTA según el estado real de la usuaria.
+// `nota` es el único dato dinámico (ej. el movimiento ya elegido); `texto`
+// es la explicación fija de para qué sirve ese camino.
+export function TarjetaCamino({
   eyebrow,
   texto,
-  subtexto,
+  nota,
   cta,
   href,
-  color = "lila",
-  icono = "estrella",
+  color,
+  icono,
   className = "",
 }: {
   eyebrow: string;
   texto: string;
-  subtexto?: string;
+  nota?: string;
   cta: string;
   href: string;
-  color?: "rosa" | "celeste" | "lila" | "lima";
-  icono?: TipoIcono;
+  color: "rosa" | "celeste" | "lila" | "lima";
+  icono: TipoIcono;
   className?: string;
 }) {
   return (
-    <div className={`relative overflow-hidden rounded-[28px] ${FONDOS_BLOQUE[color]} p-6 ${className}`}>
-      <div className="flex items-start gap-4">
-        <IconoPastel tipo={icono} color="blanco" tamano="grande" />
-        <div className="flex-1 space-y-2">
+    <div className={`space-y-3 rounded-[26px] ${FONDOS_BLOQUE[color]} p-5 ${className}`}>
+      <div className="flex items-start gap-3">
+        <IconoPastel tipo={icono} color="blanco" />
+        <div className="min-w-0 flex-1 space-y-1">
           <Etiqueta>{eyebrow}</Etiqueta>
-          <p className="font-display text-[18px] font-bold leading-snug text-marca">{texto}</p>
-          {subtexto && <p className="text-[13px] leading-relaxed text-marca/70">{subtexto}</p>}
+          <p className="text-[13.5px] leading-relaxed text-marca/75">{texto}</p>
+          {nota && <p className="text-[13px] font-medium text-marca">{nota}</p>}
         </div>
       </div>
-      <div className="pt-4">
-        <BotonBloque href={href}>
-          {cta} <span aria-hidden="true">→</span>
-        </BotonBloque>
-      </div>
-    </div>
-  );
-}
-
-// El movimiento semanal real: elegido, o todavía sin elegir.
-export function TarjetaMovimiento({
-  descripcion,
-  nota,
-  href,
-  cta,
-  className = "",
-}: {
-  descripcion: string | null;
-  nota?: string;
-  href: string;
-  cta: string;
-  className?: string;
-}) {
-  return (
-    <div className={`flex flex-col justify-between rounded-[28px] ${FONDOS_BLOQUE.celeste} p-5 ${className}`}>
-      <div className="space-y-2">
-        <IconoPastel tipo="pasos" color="blanco" />
-        <Etiqueta className="pt-1">Movimiento de la semana</Etiqueta>
-        {descripcion ? (
-          <p className="text-[14px] font-medium leading-snug text-marca">{descripcion}</p>
-        ) : (
-          <p className="text-[14px] leading-snug text-marca/70">Todavía no elegiste tu movimiento.</p>
-        )}
-        {nota && <p className="text-[11px] text-marca/55">{nota}</p>}
-      </div>
-      <Link href={href} className="pt-3 text-[13px] font-semibold text-marca underline decoration-marca/30 underline-offset-4">
-        {cta} →
-      </Link>
-    </div>
-  );
-}
-
-// Acceso a Comunidad, con "sensación humana" — gente + texto real.
-export function TarjetaComunidad({
-  texto,
-  href,
-  cta,
-  className = "",
-}: {
-  texto: string;
-  href: string;
-  cta: string;
-  className?: string;
-}) {
-  return (
-    <div className={`flex flex-col justify-between rounded-[28px] ${FONDOS_BLOQUE.lila} p-5 ${className}`}>
-      <div className="space-y-2">
-        <IconoPastel tipo="gente" color="blanco" />
-        <Etiqueta className="pt-1">Comunidad</Etiqueta>
-        <p className="text-[14px] leading-snug text-marca/80">{texto}</p>
-      </div>
-      <Link href={href} className="pt-3 text-[13px] font-semibold text-marca underline decoration-marca/30 underline-offset-4">
-        {cta} →
-      </Link>
+      <BotonBloque href={href}>
+        {cta} <span aria-hidden="true">→</span>
+      </BotonBloque>
     </div>
   );
 }

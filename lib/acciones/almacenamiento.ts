@@ -102,3 +102,30 @@ export async function obtenerAudioPublicacion(publicacionId: string): Promise<st
   if (!publicacion?.audio_url) return null;
   return firmarUrlPrivada(publicacion.audio_url);
 }
+
+// Mismo patrón que obtenerAudioPublicacion, para un contenido de
+// Biblioteca/Ruta/Curso: la policy "contenidos_lectura" (contenido_accesible())
+// ya decidió si esta fila puede llegar a la alumna — acá solo se firma lo
+// que ya llegó, nunca se vuelve a chequear el nivel de acceso.
+export async function obtenerArchivosContenido(
+  contenidoId: string
+): Promise<{ audioUrl: string | null; archivoUrl: string | null }> {
+  const supabase = await crearClienteServidor();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { audioUrl: null, archivoUrl: null };
+
+  const { data: contenido } = await supabase
+    .from("contenidos")
+    .select("audio_url, archivo_url")
+    .eq("id", contenidoId)
+    .maybeSingle();
+  if (!contenido) return { audioUrl: null, archivoUrl: null };
+
+  const [audioUrl, archivoUrl] = await Promise.all([
+    contenido.audio_url ? firmarUrlPrivada(contenido.audio_url) : Promise.resolve(null),
+    contenido.archivo_url ? firmarUrlPrivada(contenido.archivo_url) : Promise.resolve(null),
+  ]);
+  return { audioUrl, archivoUrl };
+}

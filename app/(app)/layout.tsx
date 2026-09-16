@@ -4,14 +4,13 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import Logo from "@/components/Logo";
 
-// Nav inferior de 4 destinos (Inicio, Mi Ruta, Comunidad, Perfil), según
-// design-reference/Valentía App.dc.html. El diseño completo tiene un
-// quinto tab (Biblioteca) que todavía no se construyó en esta vertical
-// (ver STATUS.md) — se suma cuando exista esa sección.
+// Nav inferior de 5 destinos: Inicio, Mi Ruta, Comunidad, Biblioteca,
+// Perfil — todas rutas reales.
 const DESTINOS = [
   { href: "/inicio", label: "Inicio", icono: "inicio" as const },
   { href: "/mi-sueno", label: "Mi Ruta", icono: "ruta" as const },
   { href: "/comunidad", label: "Comunidad", icono: "comunidad" as const },
+  { href: "/biblioteca", label: "Biblioteca", icono: "biblioteca" as const },
   { href: "/perfil", label: "Perfil", icono: "perfil" as const },
 ];
 
@@ -42,6 +41,14 @@ function IconoNav({ tipo, activo }: { tipo: (typeof DESTINOS)[number]["icono"]; 
         <path d="M3.5 19c.6-3 2.7-4.5 5.5-4.5s4.9 1.5 5.5 4.5" />
         <circle cx="17" cy="8" r="2.3" />
         <path d="M15.5 14.2c2.2.2 3.7 1.6 4.2 3.8" />
+      </svg>
+    );
+  }
+  if (tipo === "biblioteca") {
+    return (
+      <svg viewBox="0 0 24 24" width="20" height="20" {...props}>
+        <path d="M12 6.5c-1.6-1.3-3.6-2-6-2v13c2.4 0 4.4.7 6 2 1.6-1.3 3.6-2 6-2v-13c-2.4 0-4.4.7-6 2Z" />
+        <path d="M12 6.5v13" />
       </svg>
     );
   }

@@ -6,12 +6,15 @@ import {
   obtenerMovimientoActual,
   obtenerEvidencias,
   obtenerProyectoActivo,
+  obtenerRuta,
 } from "@/lib/datos";
 import { diaDelProyecto } from "@/lib/fechas";
-import { Titulo, Subtitulo, Etiqueta } from "@/components/ui";
+import { Titulo, Subtitulo } from "@/components/ui";
+import { TarjetaProyecto } from "@/components/tarjetas";
 import type { AreaRespuesta } from "@/lib/tipos";
 
 const PASTELES = ["bg-acentoRosa/60", "bg-acentoCeleste/50", "bg-acento/20", "bg-acentoLima/35"];
+const NOMBRES_ETAPA = ["DEFINÍ", "CONSTRUÍTE", "DISEÑÁ", "MOVETE", "SOSTENÉ"];
 
 function Seccion({ titulo, children, color }: { titulo: string; children: React.ReactNode; color?: string }) {
   return (
@@ -41,6 +44,10 @@ export default async function MiProyectoPage() {
     obtenerEvidencias(supabase, user.id),
     obtenerProyectoActivo(supabase, user.id),
   ]);
+  const esPremium = autorizacion.nivel === "premium";
+  const ruta = esPremium && proyecto ? await obtenerRuta(supabase, user.id) : [];
+  const etapaActual = ruta.find((e) => e.id === proyecto?.etapa_actual);
+  const etapaIndice = etapaActual ? NOMBRES_ETAPA.indexOf(etapaActual.nombre) : 0;
 
   const area = (a: AreaRespuesta) => respuestas.get(a) ?? [];
   const ultima = (a: AreaRespuesta) => area(a).at(-1);
@@ -50,10 +57,19 @@ export default async function MiProyectoPage() {
 
   return (
     <main className="mx-auto max-w-md space-y-8 px-5 pb-10 pt-6">
-      <div className="space-y-1.5">
-        <Etiqueta>Documento vivo{proyecto ? ` · Día ${diaDelProyecto(proyecto.fecha_inicio)}` : ""}</Etiqueta>
-        <Titulo>Mi Proyecto de Valentía</Titulo>
-        <Subtitulo>Se escribe solo, con lo que respondés en cada experiencia.</Subtitulo>
+      <div className="space-y-4">
+        <div>
+          <Titulo>Mi Proyecto de Valentía</Titulo>
+          <Subtitulo>Se escribe solo, con lo que respondés en cada experiencia.</Subtitulo>
+        </div>
+        {esPremium && proyecto && (
+          <TarjetaProyecto
+            dia={diaDelProyecto(proyecto.fecha_inicio)}
+            etapaNombre={etapaActual?.nombre}
+            etapaIndice={Math.max(0, etapaIndice)}
+            href="/mi-proyecto"
+          />
+        )}
       </div>
 
       <Seccion titulo="Mi sueño" color={PASTELES[0]}>

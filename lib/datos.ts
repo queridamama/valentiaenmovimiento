@@ -312,3 +312,145 @@ export async function obtenerComentarios(supabase: SupabaseClient, publicacionId
   const nombres = await mapaDeNombres(supabase, comentarios.map((c) => c.usuario_id));
   return comentarios.map((c) => ({ ...c, perfiles: { nombre: nombres.get(c.usuario_id) ?? null } }));
 }
+
+// ---------- Biblioteca ----------
+// La estructura de datos ya existía completa desde 0005_cms_admin.sql
+// (contenidos, cursos, modulos, contenido_ubicaciones) — acá solo se lee
+// del lado de la alumna. `contenidos!inner(...)` hace que, si RLS no deja
+// ver un contenido (Premium para una Gratis), la fila entera desaparece
+// de la lista en vez de llegar con el contenido en null: así Biblioteca
+// nunca muestra "algo" que en realidad no se puede abrir.
+
+export async function obtenerBiblioteca(supabase: SupabaseClient) {
+  const { data } = await supabase
+    .from("contenido_ubicaciones")
+    .select(
+      "id, nivel_acceso, orden, contenidos!inner(id, tipo, titulo, descripcion, portada_url, video_url, audio_url, archivo_url, duracion)"
+    )
+    .eq("contexto", "biblioteca")
+    .order("orden", { ascending: true });
+
+  return (data ?? [])
+    .map((u) => ({
+      ubicacionId: u.id as string,
+      nivelAcceso: u.nivel_acceso as "gratis" | "membresia",
+      contenido: unoDeRelacion(
+        u.contenidos as unknown as
+          | { id: string; tipo: string; titulo: string; descripcion: string | null; portada_url: string | null; video_url: string | null; audio_url: string | null; archivo_url: string | null; duracion: string | null }
+          | { id: string; tipo: string; titulo: string; descripcion: string | null; portada_url: string | null; video_url: string | null; audio_url: string | null; archivo_url: string | null; duracion: string | null }[]
+          | null
+      ),
+    }))
+    .filter((u): u is typeof u & { contenido: NonNullable<(typeof u)["contenido"]> } => u.contenido !== null);
+}
+
+export async function obtenerContenido(supabase: SupabaseClient, contenidoId: string) {
+  const { data } = await supabase
+    .from("contenidos")
+    .select("id, tipo, titulo, descripcion, contenido_html, portada_url, video_url, audio_url, archivo_url, duracion")
+    .eq("id", contenidoId)
+    .maybeSingle();
+  return data;
+}
+
+// "Mini cursos gratuitos": mismos `cursos`/`modulos` que ya usa el CMS,
+// filtrados a los que hoy son de acceso libre — el nombre de la sección
+// en Biblioteca es literal, no hace falta una tabla nueva.
+export async function obtenerCursosGratuitos(supabase: SupabaseClient) {
+  const { data: cursos } = await supabase
+    .from("cursos")
+    .select("id, titulo, descripcion, orden")
+    .eq("nivel_acceso", "gratis")
+    .eq("estado", "publicado")
+    .order("orden", { ascending: true });
+  if (!cursos || cursos.length === 0) return [];
+
+  const { data: modulos } = await supabase
+    .from("modulos")
+    .select("id, curso_id")
+    .in("curso_id", cursos.map((c) => c.id));
+
+  const conteoPorCurso = new Map<string, number>();
+  (modulos ?? []).forEach((m) => conteoPorCurso.set(m.curso_id, (conteoPorCurso.get(m.curso_id) ?? 0) + 1));
+
+  return cursos.map((c) => ({ ...c, cantidadModulos: conteoPorCurso.get(c.id) ?? 0 }));
+}
+
+export async function obtenerCursoConModulos(supabase: SupabaseClient, cursoId: string) {
+  const { data: curso } = await supabase
+    .from("cursos")
+    .select("id, titulo, descripcion")
+    .eq("id", cursoId)
+    .maybeSingle();
+  if (!curso) return null;
+
+  const { data: modulos } = await supabase
+    .from("modulos")
+    .select("id, titulo, orden")
+    .eq("curso_id", cursoId)
+    .order("orden", { ascending: true });
+
+  const moduloIds = (modulos ?? []).map((m) => m.id);
+  type FilaUbicacion = { modulo_id: string; contenidos: { id: string; tipo: string; titulo: string; duracion: string | null } | { id: string; tipo: string; titulo: string; duracion: string | null }[] | null };
+  let ubicaciones: FilaUbicacion[] = [];
+  if (moduloIds.length > 0) {
+    const { data } = await supabase
+      .from("contenido_ubicaciones")
+      .select("modulo_id, contenidos!inner(id, tipo, titulo, duracion)")
+      .in("modulo_id", moduloIds)
+      .order("orden", { ascending: true });
+    ubicaciones = (data ?? []) as FilaUbicacion[];
+  }
+
+  const porModulo = new Map<string, FilaUbicacion[]>();
+  ubicaciones.forEach((u) => {
+    const lista = porModulo.get(u.modulo_id) ?? [];
+    lista.push(u);
+    porModulo.set(u.modulo_id, lista);
+  });
+
+  return {
+    ...curso,
+    modulos: (modulos ?? []).map((m) => ({
+      ...m,
+      contenidos: (porModulo.get(m.id) ?? [])
+        .map((u) => unoDeRelacion(u.contenidos))
+        .filter((c): c is NonNullable<typeof c> => c !== null),
+    })),
+  };
+}
+
+// ---------- Semanas en movimiento ----------
+// Sin tabla nueva: se deriva de movimientos_semanales.estado = 'cumplido'
+// (se llega a ese estado tanto marcando "realizado" como registrando una
+// evidencia — ver lib/acciones/movimiento.ts). Una semana ISO con al menos
+// un movimiento cumplido cuenta como "semana en movimiento". Nunca resta
+// ni "rompe" nada: una semana sin movimiento simplemente no suma.
+function claveSemanaIso(fechaIso: string): string {
+  const original = new Date(fechaIso);
+  const fecha = new Date(Date.UTC(original.getFullYear(), original.getMonth(), original.getDate()));
+  const diaIso = fecha.getUTCDay() || 7;
+  fecha.setUTCDate(fecha.getUTCDate() + 4 - diaIso);
+  const inicioAno = new Date(Date.UTC(fecha.getUTCFullYear(), 0, 1));
+  const numeroSemana = Math.ceil(((fecha.getTime() - inicioAno.getTime()) / 86400000 + 1) / 7);
+  return `${fecha.getUTCFullYear()}-W${String(numeroSemana).padStart(2, "0")}`;
+}
+
+export async function obtenerSemanasEnMovimiento(supabase: SupabaseClient, userId: string) {
+  const { data } = await supabase
+    .from("movimientos_semanales")
+    .select("fecha_creado")
+    .eq("usuario_id", userId)
+    .eq("estado", "cumplido");
+
+  const movimientos = data ?? [];
+  const semanas = new Set(movimientos.map((m) => claveSemanaIso(m.fecha_creado)));
+
+  const ahora = new Date();
+  const esteMes = movimientos.filter((m) => {
+    const f = new Date(m.fecha_creado);
+    return f.getFullYear() === ahora.getFullYear() && f.getMonth() === ahora.getMonth();
+  }).length;
+
+  return { total: semanas.size, esteMes };
+}
