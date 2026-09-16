@@ -104,6 +104,9 @@ body {
 .subrayado-acento {
   text-decoration-color: var(--color-acento);
 }
+.subrayado-marca {
+  text-decoration-color: var(--color-marca);
+}
 
 .rotar-leve {
   display: inline-block;

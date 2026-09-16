@@ -1,0 +1,33 @@
+---
+// "Los sueños también necesitan estrategia": la mirada propia de Meli
+// sobre construir con decisiones reales sin perder la conexión con una
+// misma — editorial y en primera persona, sin look de consultoría.
+import { estrategia } from "../content/valentia";
+import Doodle from "./Doodle.astro";
+---
+
+<section class="bg-acento/8 px-5 py-20 sm:px-8 sm:py-28">
+  <div class="mx-auto max-w-2xl space-y-8 text-center">
+    <h2 class="reveal balance font-display text-[28px] font-semibold leading-tight text-marca sm:text-[38px]">
+      {estrategia.titulo}
+    </h2>
+
+    <div class="reveal mx-auto max-w-xl space-y-4 text-[16px] leading-relaxed text-texto/75 sm:text-[17px]">
+      {estrategia.parrafos.map((p) => <p>{p}</p>)}
+    </div>
+
+    <p class="reveal font-script text-2xl text-marca sm:text-3xl">{estrategia.pivote}</p>
+
+    <p class="reveal balance subrayado subrayado-marca mx-auto max-w-xl font-display text-[19px] font-semibold uppercase leading-snug tracking-tight text-marca sm:text-[24px]">
+      {estrategia.frase}
+    </p>
+
+    <div class="reveal flex justify-center pt-1">
+      <Doodle tipo="garabato" color="var(--color-acento)" class="h-4 w-40 opacity-70" />
+    </div>
+
+    <p class="reveal mx-auto max-w-xl text-[15px] leading-relaxed text-texto/60 sm:text-[16px]">
+      {estrategia.cierre}
+    </p>
+  </div>
+</section>

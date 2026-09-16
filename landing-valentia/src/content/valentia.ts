@@ -48,6 +48,19 @@ export const tesis = {
   formula: ["INTENCIÓN", "VALENTÍA", "ESTRATEGIA", "ACCIÓN"],
 };
 
+export const estrategia = {
+  titulo: "LOS SUEÑOS TAMBIÉN NECESITAN ESTRATEGIA.",
+  parrafos: [
+    "Con los años aprendí a mirar mis sueños con la misma seriedad con la que aprendí a construir mis empresas.",
+    "Ponerles intención, tomar decisiones, pensar una estrategia, revisar qué está funcionando y animarme a cambiar lo que haga falta.",
+    "Pero también aprendí que quiero estar presente mientras construyo esa vida, disfrutarla, escucharme y seguir conectada con lo que realmente quiero.",
+  ],
+  pivote: "En Valentía conviven esas dos miradas.",
+  frase: "TOMARTE UN SUEÑO EN SERIO COMO TOMARÍAS EN SERIO UNA EMPRESA, SIN CONVERTIR TU VIDA EN UNA EMPRESA.",
+  cierre:
+    "En el recorrido vas a encontrarte con preguntas de coaching, ejercicios para mirar tus propios patrones, meditaciones y herramientas que fui usando durante años para tomar decisiones, atravesar procesos y volver a conectarme con lo que quiero.",
+};
+
 export const recorrido = {
   titulo: ["No necesitás saber cómo llegar.", "Necesitás empezar."],
   pasos: [
