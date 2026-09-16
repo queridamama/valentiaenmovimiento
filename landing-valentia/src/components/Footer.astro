@@ -1,14 +1,15 @@
 ---
 import { nav, marca } from "../content/valentia";
 import { REGISTER_URL, LOGIN_URL } from "../config/site";
+import LogoMarca from "./LogoMarca.astro";
 
 const anio = new Date().getFullYear();
 ---
 
 <footer class="border-t border-texto/10 bg-fondo px-5 py-12 sm:px-8">
   <div class="mx-auto flex max-w-6xl flex-col gap-8 sm:flex-row sm:items-start sm:justify-between">
-    <div class="space-y-2">
-      <p class="font-display text-lg font-semibold">{marca.nombre}</p>
+    <div class="space-y-3">
+      <LogoMarca tamano="chico" />
       <p class="max-w-xs text-sm text-texto/55">Tomate tus sueños en serio.</p>
     </div>
 

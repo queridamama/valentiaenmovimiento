@@ -1,15 +1,27 @@
 ---
 import { hero } from "../content/valentia";
 import { REGISTER_URL, LOGIN_URL, withBase } from "../config/site";
+import FotoMarca from "./FotoMarca.astro";
+import Doodle from "./Doodle.astro";
 ---
 
 <section id="hero" class="relative overflow-hidden">
-  <div class="mx-auto grid max-w-6xl items-center gap-10 px-5 pb-14 pt-10 sm:px-8 sm:pb-20 sm:pt-16 lg:grid-cols-2 lg:gap-16 lg:pb-28 lg:pt-20">
+  <div class="mx-auto grid max-w-6xl items-center gap-12 px-5 pb-16 pt-10 sm:px-8 sm:pb-20 sm:pt-16 lg:grid-cols-2 lg:gap-16 lg:pb-28 lg:pt-20">
     <div class="reveal order-2 space-y-6 lg:order-1">
       <p class="text-xs font-semibold uppercase tracking-[0.25em] text-acento-teal">{hero.eyebrow}</p>
-      <h1 class="balance font-display text-[38px] font-semibold leading-[1.05] text-texto sm:text-[48px] lg:text-[58px]">
-        {hero.headline}
+
+      <h1 class="balance relative font-display text-[38px] font-semibold leading-[1.08] text-texto sm:text-[48px] lg:text-[54px]">
+        TOMATE TUS SUEÑOS
+        <span class="relative inline-block">
+          <span class="marcador marcador-lima">EN SERIO.</span>
+          <Doodle
+            tipo="flecha-izq"
+            color="var(--color-acento)"
+            class="pointer-events-none absolute -left-14 top-1/2 hidden h-6 w-12 -translate-y-1/2 sm:block"
+          />
+        </span>
       </h1>
+
       <div class="max-w-md space-y-3 text-[16px] leading-relaxed text-texto/70 sm:text-[17px]">
         {hero.copy.map((p) => <p>{p}</p>)}
       </div>
@@ -30,13 +42,15 @@ import { REGISTER_URL, LOGIN_URL, withBase } from "../config/site";
     </div>
 
     <div class="reveal order-1 lg:order-2">
-      <div class="relative mx-auto aspect-[4/5] w-full max-w-sm overflow-hidden rounded-[28px] sm:max-w-md lg:max-w-none">
-        <img
-          src={withBase("images/valentia/hero.jpg")}
-          alt="Mujer en movimiento hacia su sueño — imagen editorial de Valentía en Movimiento"
-          class="h-full w-full object-cover"
-        />
-      </div>
+      <FotoMarca
+        src={withBase("images/valentia/hero.jpg")}
+        alt="Mujer en movimiento hacia su sueño — imagen editorial de Valentía en Movimiento"
+        srcSecundaria={withBase("images/valentia/hero-detalle.jpg")}
+        altSecundaria=""
+        colorBlob="celeste"
+        posicionSecundaria="abajo-izquierda"
+        class="mx-auto w-full max-w-[300px] sm:max-w-[360px] lg:max-w-[400px]"
+      />
     </div>
   </div>
 </section>

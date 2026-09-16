@@ -1,6 +1,15 @@
 ---
 import { premium } from "../content/valentia";
 import { REGISTER_URL } from "../config/site";
+import Doodle from "./Doodle.astro";
+
+const coloresEtapa = ["acento", "lima", "celeste", "rosa", "acento"] as const;
+const bgEtapa: Record<(typeof coloresEtapa)[number], string> = {
+  acento: "bg-acento/20 text-acento-teal",
+  lima: "bg-acento-lima/30 text-texto",
+  celeste: "bg-acento-celeste/40 text-acento-teal",
+  rosa: "bg-acento-rosa text-texto",
+};
 ---
 
 <section id="premium" class="px-5 py-20 sm:px-8 sm:py-28">
@@ -10,19 +19,25 @@ import { REGISTER_URL } from "../config/site";
       <h2 class="balance mx-auto max-w-2xl font-display text-[28px] font-semibold leading-tight text-texto sm:text-[38px]">
         {premium.titulo}
       </h2>
-      <p class="text-[18px] font-medium text-texto/80">{premium.subtitulo}</p>
+      <p class="subrayado subrayado-acento inline-block text-[18px] font-medium text-texto/80">{premium.subtitulo}</p>
       <p class="mx-auto max-w-lg text-[16px] text-texto/60">{premium.texto}</p>
     </div>
 
-    <div class="reveal mt-12 flex flex-wrap items-center justify-center gap-2 sm:mt-14 sm:gap-3">
-      {premium.etapas.map((etapa, i) => (
-        <>
-          <span class="rounded-full bg-acento/15 px-4 py-2.5 text-sm font-bold tracking-wide text-acento-teal sm:px-5 sm:text-base">
-            {etapa}
-          </span>
-          {i < premium.etapas.length - 1 && <span class="text-texto/25">→</span>}
-        </>
-      ))}
+    <div class="reveal mt-12 flex flex-wrap items-center justify-center gap-2.5 sm:mt-14 sm:gap-3">
+      {premium.etapas.map((etapa, i) => {
+        const color = coloresEtapa[i % coloresEtapa.length];
+        return (
+          <>
+            <span
+              class={`inline-block rounded-full px-4 py-2.5 text-sm font-bold tracking-wide sm:px-5 sm:text-base ${bgEtapa[color]}`}
+              style={`transform: rotate(${i % 2 === 0 ? "-2deg" : "2deg"});`}
+            >
+              {etapa}
+            </span>
+            {i < premium.etapas.length - 1 && <span class="text-texto/25">→</span>}
+          </>
+        );
+      })}
     </div>
 
     <p class="reveal mt-10 text-center font-display text-xl font-semibold leading-snug text-texto sm:text-2xl">
@@ -39,10 +54,18 @@ import { REGISTER_URL } from "../config/site";
         </ul>
       </div>
       <div class="space-y-3 rounded-[20px] bg-acento-lima/15 p-6 sm:p-7">
-        <p class="text-xs font-semibold uppercase tracking-wide text-acento-teal">Esto sí es</p>
+        <div class="flex items-center justify-between">
+          <p class="text-xs font-semibold uppercase tracking-wide text-acento-teal">Esto sí es</p>
+          <Doodle tipo="corazon" color="var(--color-acento)" class="h-3.5 w-3.5" />
+        </div>
         <ul class="flex flex-wrap gap-2">
-          {premium.siEs.map((s) => (
-            <li class="rounded-full bg-tarjeta px-3.5 py-1.5 text-[14px] font-medium text-texto">{s}</li>
+          {premium.siEs.map((s, i) => (
+            <li
+              class="rounded-full bg-tarjeta px-3.5 py-1.5 text-[14px] font-medium text-texto"
+              style={`transform: rotate(${i % 2 === 0 ? "-1deg" : "1deg"});`}
+            >
+              {s}
+            </li>
           ))}
         </ul>
       </div>

@@ -1,6 +1,21 @@
 ---
 import { recorrido } from "../content/valentia";
 import { REGISTER_URL } from "../config/site";
+import Doodle from "./Doodle.astro";
+
+const colores = ["acento", "lima", "celeste", "rosa", "acento"] as const;
+const clasesColor: Record<(typeof colores)[number], string> = {
+  acento: "text-acento",
+  lima: "text-acento-lima",
+  celeste: "text-acento-celeste",
+  rosa: "text-acento-rosa",
+};
+const clasesSubrayado: Record<(typeof colores)[number], string> = {
+  acento: "subrayado-acento",
+  lima: "subrayado-lima",
+  celeste: "subrayado-celeste",
+  rosa: "subrayado-lima",
+};
 ---
 
 <section id="como-funciona" class="bg-tarjeta px-5 py-20 sm:px-8 sm:py-28">
@@ -9,17 +24,23 @@ import { REGISTER_URL } from "../config/site";
       {recorrido.titulo.map((linea) => <span class="block">{linea}</span>)}
     </h2>
 
-    <div class="mt-14 grid gap-4 sm:mt-16 sm:grid-cols-2 lg:grid-cols-5 lg:gap-5">
-      {recorrido.pasos.map((paso) => (
-        <div class="reveal space-y-3 rounded-[20px] border border-texto/10 bg-fondo p-6">
-          <p class="font-display text-3xl font-semibold text-acento">{paso.numero}</p>
-          <p class="text-[16px] font-semibold text-texto">{paso.titulo}</p>
-          <p class="text-sm leading-relaxed text-texto/60">{paso.texto}</p>
-        </div>
-      ))}
+    <div class="mt-14 grid gap-5 sm:mt-16 sm:grid-cols-2 lg:grid-cols-5 lg:gap-5">
+      {recorrido.pasos.map((paso, i) => {
+        const color = colores[i % colores.length];
+        return (
+          <div class="reveal space-y-2 rounded-[20px] border border-texto/10 bg-fondo p-6">
+            <p class={`subrayado ${clasesSubrayado[color]} inline-block font-marcador text-3xl font-normal ${clasesColor[color]}`}>
+              {paso.numero}
+            </p>
+            <p class="text-[16px] font-semibold text-texto">{paso.titulo}</p>
+            <p class="text-sm leading-relaxed text-texto/60">{paso.texto}</p>
+          </div>
+        );
+      })}
     </div>
 
-    <div class="reveal mt-12 text-center">
+    <div class="reveal mt-14 flex flex-col items-center gap-4">
+      <Doodle tipo="garabato" color="var(--color-acento)" class="h-4 w-44" />
       <a
         href={REGISTER_URL}
         data-analytics="click-empezar-recorrido"

@@ -15,6 +15,11 @@
 
   --font-display: "Poppins", sans-serif;
   --font-cuerpo: "Poppins", sans-serif;
+  /* Script a mano (el "en Movimiento" del logo, citas, acentos chicos) y
+     marcador grueso (palabras protagonista tipo "AHORA") — el lenguaje
+     visual manual/vivo de la identidad real de la marca. */
+  --font-script: "Caveat", cursive;
+  --font-marcador: "Permanent Marker", cursive;
 }
 
 body {
@@ -47,4 +52,52 @@ body {
 
 .balance {
   text-wrap: balance;
+}
+
+/* ---------- Lenguaje "marcador a mano" (identidad real de marca) ---------- */
+
+/* Resaltado tipo marcador detrás de una palabra/frase — blob orgánico, no
+   un rectángulo perfecto. box-decoration-break clona el fondo por línea
+   si la frase resaltada llega a partirse al reflowear en mobile. */
+.marcador {
+  display: inline;
+  border-radius: 255px 15px 225px 15px / 15px 225px 15px 255px;
+  padding: 0.05em 0.35em;
+  box-decoration-break: clone;
+  -webkit-box-decoration-break: clone;
+}
+.marcador-lima {
+  background-color: color-mix(in srgb, var(--color-acento-lima) 75%, transparent);
+}
+.marcador-celeste {
+  background-color: color-mix(in srgb, var(--color-acento-celeste) 80%, transparent);
+}
+.marcador-rosa {
+  background-color: color-mix(in srgb, var(--color-acento-rosa) 90%, transparent);
+}
+.marcador-acento {
+  background-color: color-mix(in srgb, var(--color-acento) 55%, transparent);
+}
+
+/* Subrayado ondulado tipo marcador — decoración nativa, no imagen: sigue
+   el texto perfectamente aunque la frase cambie de largo o de línea. */
+.subrayado {
+  text-decoration-line: underline;
+  text-decoration-style: wavy;
+  text-underline-offset: 0.18em;
+  text-decoration-thickness: 2.5px;
+}
+.subrayado-lima {
+  text-decoration-color: var(--color-acento-lima);
+}
+.subrayado-celeste {
+  text-decoration-color: var(--color-acento-celeste);
+}
+.subrayado-acento {
+  text-decoration-color: var(--color-acento);
+}
+
+.rotar-leve {
+  display: inline-block;
+  transform: rotate(-1.5deg);
 }

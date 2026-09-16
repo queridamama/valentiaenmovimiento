@@ -1,19 +1,31 @@
 ---
 import { cierre } from "../content/valentia";
 import { REGISTER_URL, LOGIN_URL } from "../config/site";
+import Doodle from "./Doodle.astro";
+
+const [l1, l2, l3, l4] = cierre.headline;
 ---
 
 <section class="bg-gradient-to-b from-texto to-[#2b2b2b] px-5 py-24 text-fondo sm:px-8 sm:py-32">
   <div class="reveal mx-auto max-w-3xl space-y-10 text-center">
-    <h2 class="balance font-display text-[30px] font-semibold leading-[1.15] sm:text-[44px]">
-      {cierre.headline.map((linea) => <span class="block">{linea}</span>)}
+    <h2 class="balance font-display text-[28px] font-semibold leading-[1.2] sm:text-[42px]">
+      <span class="block">{l1}</span>
+      <span class="block">{l2}</span>
+      <span class="mt-3 block">{l3}</span>
+      <span class="relative mt-1 inline-block text-texto">
+        <span class="marcador marcador-lima">{l4}</span>
+      </span>
     </h2>
 
     <div class="space-y-1 text-[16px] text-fondo/70 sm:text-[18px]">
       {cierre.texto.map((p) => <p>{p}</p>)}
     </div>
 
-    <div class="flex flex-col items-center gap-4 pt-2">
+    <div class="flex justify-center pt-1">
+      <Doodle tipo="garabato" color="var(--color-acento-celeste)" class="h-4 w-44 opacity-70" />
+    </div>
+
+    <div class="flex flex-col items-center gap-4 pt-1">
       <a
         href={REGISTER_URL}
         data-analytics="click-empezar-gratis-cierre"

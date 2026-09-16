@@ -1,0 +1,64 @@
+---
+// Componente reutilizable de "foto de marca": circular, con un blob de
+// color orgánico detrás y, opcionalmente, una segunda foto circular más
+// chica superpuesta — la composición tipo collage editorial de la
+// referencia. El día que se reemplace una imagen por otra, el estilo
+// visual (círculo + blob + superposición) queda resuelto solo, no hay
+// que volver a maquetar nada.
+interface Props {
+  src: string;
+  alt: string;
+  colorBlob?: "acento" | "celeste" | "lima" | "rosa";
+  srcSecundaria?: string;
+  altSecundaria?: string;
+  posicionSecundaria?: "abajo-derecha" | "abajo-izquierda" | "arriba-izquierda";
+  class?: string;
+}
+
+const {
+  src,
+  alt,
+  colorBlob = "acento",
+  srcSecundaria,
+  altSecundaria = "",
+  posicionSecundaria = "abajo-derecha",
+  class: className = "",
+} = Astro.props;
+
+const colores: Record<string, string> = {
+  acento: "bg-acento/70",
+  celeste: "bg-acento-celeste/70",
+  lima: "bg-acento-lima/55",
+  rosa: "bg-acento-rosa/85",
+};
+
+const posiciones: Record<string, string> = {
+  "abajo-derecha": "-bottom-5 -right-5 sm:-bottom-6 sm:-right-6",
+  "abajo-izquierda": "-bottom-5 -left-5 sm:-bottom-6 sm:-left-6",
+  "arriba-izquierda": "-top-5 -left-5 sm:-top-6 sm:-left-6",
+};
+---
+
+<div class:list={["relative", className]}>
+  <div
+    class:list={["absolute -inset-5 -z-10 sm:-inset-7", colores[colorBlob]]}
+    style="border-radius: 45% 55% 60% 40% / 50% 45% 55% 50%; transform: rotate(-4deg);"
+  />
+  <div class="aspect-square overflow-hidden rounded-full border-[6px] border-fondo shadow-[0_20px_45px_-20px_rgba(26,26,26,0.35)]">
+    {/* eslint-disable-next-line */}
+    <img src={src} alt={alt} class="h-full w-full object-cover" />
+  </div>
+
+  {
+    srcSecundaria && (
+      <div
+        class:list={[
+          "absolute h-[36%] w-[36%] overflow-hidden rounded-full border-[5px] border-fondo shadow-[0_14px_30px_-15px_rgba(26,26,26,0.4)]",
+          posiciones[posicionSecundaria],
+        ]}
+      >
+        <img src={srcSecundaria} alt={altSecundaria} class="h-full w-full object-cover" />
+      </div>
+    )
+  }
+</div>

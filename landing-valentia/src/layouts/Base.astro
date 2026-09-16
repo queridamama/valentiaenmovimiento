@@ -42,13 +42,15 @@ const ogImage = new URL(withBase("images/valentia/og-cover.jpg"), Astro.site).to
     <meta name="twitter:description" content={description} />
     <meta name="twitter:image" content={ogImage} />
 
-    <!-- Fuente: la misma familia que usa la app (Poppins). Preconnect
-         para que no sume una vuelta de red extra antes de empezar a
-         descargarla. -->
+    <!-- Fuentes: Poppins (la misma familia que usa la app) + Caveat
+         (script a mano, el "en Movimiento" del logo y los acentos
+         manuscritos) + Permanent Marker (marcador grueso, para las
+         palabras protagonista tipo "AHORA"). Preconnect para que no sume
+         una vuelta de red extra antes de empezar a descargarlas. -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
-      href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&family=Caveat:wght@500;600;700&family=Permanent+Marker&display=swap"
       rel="stylesheet"
     />
 

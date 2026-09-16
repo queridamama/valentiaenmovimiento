@@ -138,6 +138,22 @@ if __name__ == "__main__":
         "public/images/meli.webp",
         "foto real de Melisa Díaz",
     )
+    # Fotos chicas secundarias para el componente FotoMarca (collage: círculo
+    # grande + círculo chico superpuesto) — hero y sección Sobre Meli.
+    placeholder_marca(
+        os.path.join(BASE, "valentia", "hero-detalle.jpg"),
+        (900, 900),
+        "DETALLE",
+        "public/images/valentia/hero-detalle.jpg",
+        "foto chica superpuesta (opcional)",
+    )
+    placeholder_marca(
+        os.path.join(BASE, "valentia", "meli-detalle.jpg"),
+        (900, 900),
+        "MELI",
+        "public/images/valentia/meli-detalle.jpg",
+        "segunda foto de Meli (opcional)",
+    )
 
     pantallas = {
         "home.webp": "Inicio",

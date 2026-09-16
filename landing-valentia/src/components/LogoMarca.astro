@@ -1,0 +1,55 @@
+---
+// Recreación fiel del isotipo real de "Valentía en Movimiento" (mismo
+// texto, mismos colores de marca, misma composición: "VALENTÍA" en negro
+// sobre una placa lila con tres puntitos, "en Movimiento" en script debajo
+// con subrayado ondulado lima y un corazoncito) hecha en código en vez de
+// como imagen — así usa las mismas fuentes que ya carga toda la página.
+//
+// Si en algún momento aparece el archivo maestro real del logo (SVG/PNG
+// con fondo transparente), lo más simple es reemplazar el <img> del
+// Header/Footer directamente por ese archivo en vez de este componente —
+// ver README-DONWEB.md.
+interface Props {
+  tamano?: "chico" | "grande";
+  class?: string;
+}
+
+import Doodle from "./Doodle.astro";
+
+const { tamano = "chico", class: className = "" } = Astro.props;
+const esGrande = tamano === "grande";
+---
+
+<div class:list={["inline-flex flex-col leading-none", className]}>
+  <div class="relative inline-flex w-fit items-center">
+    <span
+      class={`absolute -inset-x-2.5 -z-10 rounded-[999px] bg-acento ${esGrande ? "top-1.5 bottom-2.5" : "top-0.5 bottom-1"}`}
+      style="transform: rotate(-1deg);"
+    />
+    <span class={`absolute left-1.5 z-0 flex items-center gap-[3px] ${esGrande ? "" : ""}`}>
+      <i class="block h-[3px] w-[3px] rounded-full bg-white/70" />
+      <i class="block h-[3px] w-[3px] rounded-full bg-white/70" />
+      <i class="block h-[3px] w-[3px] rounded-full bg-white/70" />
+    </span>
+    <span
+      class={`relative z-10 pl-4 font-display font-extrabold tracking-tight text-texto ${
+        esGrande ? "text-[34px] sm:text-[40px]" : "text-[17px] sm:text-[19px]"
+      }`}
+    >
+      VALENTÍA
+    </span>
+  </div>
+
+  <div class={`-mt-0.5 flex items-center gap-1 pl-3 ${esGrande ? "pl-5" : "pl-3"}`}>
+    <span
+      class={`subrayado subrayado-lima font-script text-texto ${esGrande ? "text-[26px] sm:text-[30px]" : "text-[15px] sm:text-[16px]"}`}
+    >
+      en Movimiento
+    </span>
+    <Doodle
+      tipo="corazon"
+      color="var(--color-acento-lima)"
+      class={esGrande ? "h-3.5 w-3.5" : "h-2.5 w-2.5"}
+    />
+  </div>
+</div>

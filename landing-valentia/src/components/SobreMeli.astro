@@ -1,14 +1,20 @@
 ---
 import { meli } from "../content/valentia";
 import { withBase } from "../config/site";
+import FotoMarca from "./FotoMarca.astro";
 ---
 
 <section id="meli" class="bg-acento-rosa/30 px-5 py-20 sm:px-8 sm:py-28">
-  <div class="mx-auto grid max-w-5xl gap-10 lg:grid-cols-[minmax(0,320px)_1fr] lg:items-center lg:gap-16">
-    <div class="reveal mx-auto w-full max-w-xs lg:mx-0">
-      <div class="aspect-[4/5] overflow-hidden rounded-[24px]">
-        <img src={withBase("images/meli.webp")} alt="Melisa Díaz" class="h-full w-full object-cover" />
-      </div>
+  <div class="mx-auto grid max-w-5xl gap-14 lg:grid-cols-[minmax(0,320px)_1fr] lg:items-center lg:gap-16">
+    <div class="reveal mx-auto w-full max-w-[260px] lg:mx-0 lg:max-w-[300px]">
+      <FotoMarca
+        src={withBase("images/meli.webp")}
+        alt="Melisa Díaz"
+        srcSecundaria={withBase("images/valentia/meli-detalle.jpg")}
+        altSecundaria=""
+        colorBlob="acento"
+        posicionSecundaria="abajo-derecha"
+      />
     </div>
 
     <div class="reveal space-y-5">
@@ -22,7 +28,7 @@ import { withBase } from "../config/site";
       <div class="space-y-3 text-[15px] leading-relaxed text-texto/70 sm:text-[16px]">
         {meli.parrafos.map((p) => <p>{p}</p>)}
       </div>
-      <p class="pt-2 font-display text-lg font-medium italic leading-snug text-texto sm:text-xl">
+      <p class="pt-2 font-script text-2xl leading-snug text-texto sm:text-3xl">
         {meli.frase.map((linea) => <span class="block">{linea}</span>)}
       </p>
     </div>
