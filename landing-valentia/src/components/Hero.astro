@@ -8,9 +8,9 @@ import Doodle from "./Doodle.astro";
 <section id="hero" class="relative overflow-hidden">
   <div class="mx-auto grid max-w-6xl items-center gap-12 px-5 pb-16 pt-10 sm:px-8 sm:pb-20 sm:pt-16 lg:grid-cols-2 lg:gap-16 lg:pb-28 lg:pt-20">
     <div class="reveal order-2 space-y-6 lg:order-1">
-      <p class="text-xs font-semibold uppercase tracking-[0.25em] text-acento-teal">{hero.eyebrow}</p>
+      <p class="text-xs font-semibold uppercase tracking-[0.25em] text-marca">{hero.eyebrow}</p>
 
-      <h1 class="balance relative font-display text-[38px] font-semibold leading-[1.08] text-texto sm:text-[48px] lg:text-[54px]">
+      <h1 class="balance relative font-display text-[38px] font-semibold leading-[1.08] text-marca sm:text-[48px] lg:text-[54px]">
         TOMATE TUS SUEÑOS
         <span class="relative inline-block">
           <span class="marcador marcador-lima">EN SERIO.</span>
@@ -30,11 +30,11 @@ import Doodle from "./Doodle.astro";
         <a
           href={REGISTER_URL}
           data-analytics="click-empezar-gratis-hero"
-          class="rounded-full bg-texto px-7 py-4 text-center text-[15px] font-semibold text-fondo transition hover:bg-acento hover:text-texto"
+          class="rounded-full bg-marca px-7 py-4 text-center text-[15px] font-semibold text-fondo transition hover:bg-acento hover:text-marca"
         >
           {hero.ctaPrincipal}
         </a>
-        <a href={LOGIN_URL} data-analytics="click-entrar-hero" class="text-center text-[15px] font-semibold text-texto/70 hover:text-texto">
+        <a href={LOGIN_URL} data-analytics="click-entrar-hero" class="text-center text-[15px] font-semibold text-marca/75 hover:text-marca">
           {hero.ctaSecundario}
         </a>
       </div>

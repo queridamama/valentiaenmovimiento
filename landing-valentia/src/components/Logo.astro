@@ -1,0 +1,28 @@
+---
+// Logo REAL de Valentía en Movimiento (no una reinterpretación). Carga
+// siempre el mismo archivo: para reemplazarlo, subí el archivo definitivo
+// pisando public/images/valentia/logo.svg con exactamente ese nombre — no
+// hace falta tocar este componente ni ningún otro.
+//
+// Si el archivo real es PNG en vez de SVG, cambiá únicamente la línea del
+// `src` de acá abajo por "images/valentia/logo.png".
+import { withBase } from "../config/site";
+
+interface Props {
+  tamano?: "chico" | "grande";
+  class?: string;
+}
+
+const { tamano = "chico", class: className = "" } = Astro.props;
+
+const alturas: Record<string, string> = {
+  chico: "h-9 sm:h-10",
+  grande: "h-16 sm:h-20",
+};
+---
+
+<img
+  src={withBase("images/valentia/logo.svg")}
+  alt="Valentía en Movimiento"
+  class:list={[alturas[tamano], "w-auto", className]}
+/>

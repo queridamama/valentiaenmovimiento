@@ -8,7 +8,7 @@
 interface Props {
   src: string;
   alt: string;
-  colorBlob?: "acento" | "celeste" | "lima" | "rosa";
+  colorBlob?: "acento" | "celeste" | "lima" | "rosa" | "marca";
   srcSecundaria?: string;
   altSecundaria?: string;
   posicionSecundaria?: "abajo-derecha" | "abajo-izquierda" | "arriba-izquierda";
@@ -30,6 +30,7 @@ const colores: Record<string, string> = {
   celeste: "bg-acento-celeste/70",
   lima: "bg-acento-lima/55",
   rosa: "bg-acento-rosa/85",
+  marca: "bg-marca/35",
 };
 
 const posiciones: Record<string, string> = {

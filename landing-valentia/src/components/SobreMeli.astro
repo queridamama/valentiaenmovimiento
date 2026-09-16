@@ -18,17 +18,17 @@ import FotoMarca from "./FotoMarca.astro";
     </div>
 
     <div class="reveal space-y-5">
-      <h2 class="balance font-display text-[28px] font-semibold leading-tight text-texto sm:text-[36px]">
+      <h2 class="balance font-display text-[28px] font-semibold leading-tight text-marca sm:text-[36px]">
         {meli.titulo}
       </h2>
       <div>
-        <p class="text-[15px] font-bold uppercase tracking-wide text-texto">{meli.nombre}</p>
+        <p class="text-[15px] font-bold uppercase tracking-wide text-marca">{meli.nombre}</p>
         <p class="text-sm text-texto/55">{meli.rol}</p>
       </div>
       <div class="space-y-3 text-[15px] leading-relaxed text-texto/70 sm:text-[16px]">
         {meli.parrafos.map((p) => <p>{p}</p>)}
       </div>
-      <p class="pt-2 font-script text-2xl leading-snug text-texto sm:text-3xl">
+      <p class="pt-2 font-script text-2xl leading-snug text-marca sm:text-3xl">
         {meli.frase.map((linea) => <span class="block">{linea}</span>)}
       </p>
     </div>

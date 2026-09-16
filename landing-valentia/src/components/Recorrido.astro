@@ -20,7 +20,7 @@ const clasesSubrayado: Record<(typeof colores)[number], string> = {
 
 <section id="como-funciona" class="bg-tarjeta px-5 py-20 sm:px-8 sm:py-28">
   <div class="mx-auto max-w-5xl">
-    <h2 class="reveal balance mx-auto max-w-lg text-center font-display text-[28px] font-semibold leading-tight text-texto sm:text-[38px]">
+    <h2 class="reveal balance mx-auto max-w-lg text-center font-display text-[28px] font-semibold leading-tight text-marca sm:text-[38px]">
       {recorrido.titulo.map((linea) => <span class="block">{linea}</span>)}
     </h2>
 
@@ -28,11 +28,11 @@ const clasesSubrayado: Record<(typeof colores)[number], string> = {
       {recorrido.pasos.map((paso, i) => {
         const color = colores[i % colores.length];
         return (
-          <div class="reveal space-y-2 rounded-[20px] border border-texto/10 bg-fondo p-6">
+          <div class="reveal space-y-2 rounded-[20px] border border-marca/10 bg-fondo p-6">
             <p class={`subrayado ${clasesSubrayado[color]} inline-block font-marcador text-3xl font-normal ${clasesColor[color]}`}>
               {paso.numero}
             </p>
-            <p class="text-[16px] font-semibold text-texto">{paso.titulo}</p>
+            <p class="text-[16px] font-semibold text-marca">{paso.titulo}</p>
             <p class="text-sm leading-relaxed text-texto/60">{paso.texto}</p>
           </div>
         );
@@ -44,7 +44,7 @@ const clasesSubrayado: Record<(typeof colores)[number], string> = {
       <a
         href={REGISTER_URL}
         data-analytics="click-empezar-recorrido"
-        class="inline-block rounded-full bg-texto px-8 py-4 text-[15px] font-semibold text-fondo transition hover:bg-acento hover:text-texto"
+        class="inline-block rounded-full bg-marca px-8 py-4 text-[15px] font-semibold text-fondo transition hover:bg-acento hover:text-marca"
       >
         {recorrido.cta}
       </a>

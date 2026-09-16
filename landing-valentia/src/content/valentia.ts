@@ -5,6 +5,7 @@ export const marca = {
   nombre: "Valentía en Movimiento",
   eyebrow: "VALENTÍA EN MOVIMIENTO",
   territorio: "TOMATE TUS SUEÑOS EN SERIO.",
+  tagline: "Tomate tus sueños en serio.",
 };
 
 export const nav = {
@@ -24,11 +25,11 @@ export const hero = {
   headline: marca.territorio,
   copy: [
     "Hay cosas que no querés seguir dejando para “algún día”.",
-    "Elegí algo importante para vos, dale un lugar en tu vida y empezá a ponerlo en movimiento.",
+    "Elegí algo importante para vos, dale un lugar en tu vida y empezá a moverte junto a otras mujeres que están construyendo lo mismo.",
   ],
   ctaPrincipal: "Empezar gratis",
   ctaSecundario: "Ya soy parte · Entrar",
-  microfrase: "Gratis. Sin límite de tiempo.",
+  microfrase: "Gratis. Sin límite de tiempo. Sos parte desde el día uno.",
 };
 
 export const algunDia = {
@@ -60,11 +61,12 @@ export const recorrido = {
 };
 
 export const appShowcase = {
-  titulo: "Esto es Valentía, en la vida real",
-  texto: "Un lugar para volver a eso que dijiste que era importante.",
+  eyebrow: "TU ESPACIO DENTRO DE VALENTÍA",
+  titulo: "Un lugar para volver a tu sueño",
+  texto: "Para registrar tu movimiento y guardar evidencia — parte de una comunidad que se mueve con vos, no una app más en tu celular.",
   pantallas: [
-    { archivo: "home.webp", alt: "Inicio de Valentía en Movimiento, con el sueño activo y el próximo movimiento" },
-    { archivo: "mi-sueno.webp", alt: "Recorrido de Mi Sueño dentro de la app" },
+    { archivo: "home.webp", alt: "Inicio de tu espacio en Valentía en Movimiento, con el sueño activo y el próximo movimiento" },
+    { archivo: "mi-sueno.webp", alt: "Recorrido de Mi Sueño dentro de tu espacio de Valentía" },
     { archivo: "movimiento.webp", alt: "Pantalla para elegir el movimiento de la semana" },
     { archivo: "evidencia.webp", alt: "Registro de evidencia semanal" },
     { archivo: "comunidad.webp", alt: "Feed de Comunidad de Valentía en Movimiento" },
@@ -89,8 +91,8 @@ export const gratisNoEsDemo = {
     "Podés cambiar de movimiento.",
     "Registrar evidencia.",
     "Volver a tus experiencias.",
-    "Participar.",
-    "Seguir construyendo.",
+    "Ser parte de la comunidad.",
+    "Seguir construyendo, acompañada.",
   ],
   cierre: "Tu sueño no vence a los siete días.",
   frase: "En Valentía Gratis mantenés tu sueño en movimiento.",
@@ -121,13 +123,16 @@ export const premium = {
   texto: "Premium es una experiencia de 90 días para transformar un sueño en un proyecto real.",
   etapas: ["DEFINÍ", "CONSTRUÍTE", "DISEÑÁ", "MOVETE", "SOSTENÉ"],
   frase: ["El sueño marca el rumbo.", "La identidad sostiene el camino."],
+  etiquetaNoEs: "Esto no es",
   noEs: ["Más videos para acumular.", "Motivación vacía.", "Una carrera por hacer todo perfecto."],
+  etiquetaSiEs: "Esto sí es",
   siEs: ["Una ruta.", "Decisiones.", "Estrategia.", "Identidad.", "Movimiento.", "Evidencia.", "Acompañamiento."],
   comparacion: {
-    gratis: { titulo: "GRATIS", texto: "Mantené tu sueño en movimiento." },
-    premium: { titulo: "PREMIUM", texto: "Construílo como un Proyecto de Valentía." },
+    gratis: { titulo: "GRATIS", texto: "Mantené tu sueño en movimiento, dentro de la comunidad." },
+    premium: { titulo: "PREMIUM", texto: "Construílo como un Proyecto de Valentía, con acompañamiento cercano." },
   },
   cta: "Conocer Premium",
+  microfrase: "Empezás gratis — Premium se activa cuando quieras dar el salto.",
 };
 
 export const meli = {
@@ -178,7 +183,7 @@ export const faq = {
     },
     {
       pregunta: "¿Necesito instalar una app?",
-      respuesta: "No para empezar. Entrás desde el navegador. Más adelante Valentía puede agregarse a la pantalla de inicio de tu celular.",
+      respuesta: "No para empezar. Entrás desde el navegador, a tu espacio dentro de la comunidad de Valentía. Más adelante podés agregarlo a la pantalla de inicio de tu celular si querés.",
     },
     {
       pregunta: "¿Tengo que hacer algo todos los días?",
@@ -194,7 +199,7 @@ export const cierre = {
     "NECESITA QUE DEJES",
     "DE DEJARLO PARA DESPUÉS.",
   ],
-  texto: ["Elegí algo importante.", "Dale un lugar.", "Hacé el primer movimiento."],
+  texto: ["Elegí algo importante.", "Dale un lugar.", "Hacé el primer movimiento.", "No lo vas a hacer sola."],
   cta: "Empezar gratis",
   ctaSecundario: "Ya soy parte · Entrar",
 };

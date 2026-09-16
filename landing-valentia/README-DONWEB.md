@@ -76,22 +76,27 @@ Todo el texto de la página vive en **un solo archivo**:
 src/content/valentia.ts
 ```
 
-Para cambiar cualquier frase de la web, se edita ese archivo (o se le pide a tu asistente "cambiá esta frase por esta otra") — no hace falta tocar nada más.
+Para cambiar cualquier frase de la web, se edita ese archivo (o se le pide a tu asistente "cambiá esta frase por esta otra") — no hace falta tocar nada más. Hay una guía más detallada, con un mapa de qué bloque de ese archivo corresponde a cada sección de la página (Hero, Gratis, Premium, Sobre Meli, FAQ, Cierre, etc.), en **`EDITAR-TEXTOS.md`**.
 
-Las imágenes van en `public/images/`. Hoy son composiciones de marca temporales (dicen "REEMPLAZAR" bien visible) para que la página no se vea vacía mientras no están las fotos definitivas. Reemplazalas por archivo, respetando el mismo nombre:
+Las imágenes van en `public/images/`. Hoy son composiciones de marca temporales (dicen "REEMPLAZAR" bien visible) para que la página no se vea vacía mientras no están las fotos/el logo definitivos. Reemplazalas por archivo, respetando el mismo nombre:
 
 | Qué es | Dónde va | Nombre de archivo |
 |---|---|---|
+| **Logo real de Valentía en Movimiento** | `public/images/valentia/logo.svg` | `logo.svg` |
 | Foto real de Meli | `public/images/meli.webp` | `meli.webp` |
+| Segunda foto (chica, opcional) de Meli, superpuesta a la principal | `public/images/valentia/meli-detalle.jpg` | `meli-detalle.jpg` |
 | Foto/imagen del hero (portada de arriba de todo) | `public/images/valentia/hero.jpg` | `hero.jpg` |
+| Segunda foto (chica, opcional) del hero, superpuesta a la principal | `public/images/valentia/hero-detalle.jpg` | `hero-detalle.jpg` |
 | Imagen que se comparte en WhatsApp/redes (OpenGraph) | `public/images/valentia/og-cover.jpg` | `og-cover.jpg` |
-| Captura de Inicio de la app | `public/images/app/home.webp` | `home.webp` |
+| Captura de Inicio de tu espacio en Valentía | `public/images/app/home.webp` | `home.webp` |
 | Captura de Mi Sueño | `public/images/app/mi-sueno.webp` | `mi-sueno.webp` |
 | Captura de Movimiento semanal | `public/images/app/movimiento.webp` | `movimiento.webp` |
 | Captura de Comunidad | `public/images/app/comunidad.webp` | `comunidad.webp` |
 | Captura de Evidencia | `public/images/app/evidencia.webp` | `evidencia.webp` |
 
-Para reemplazar una imagen: borrás el archivo viejo, subís el nuevo con **exactamente el mismo nombre**, corrés `npm run build` de nuevo y volvés a subir `dist` (pasos 1 a 3 de arriba).
+Para reemplazar una imagen (o el logo): borrás el archivo viejo, subís el nuevo con **exactamente el mismo nombre**, corrés `npm run build` de nuevo y volvés a subir `dist` (pasos 1 a 3 de arriba).
+
+**Sobre el logo:** hoy `logo.svg` es un placeholder que imita los colores y la composición de la marca, con la etiqueta "REEMPLAZAR" bien visible — no es el logo real. En cuanto tengas el archivo definitivo (idealmente SVG con fondo transparente; si solo tenés PNG también sirve, avisale a tu asistente para que cambie una línea), lo subís pisando ese mismo archivo y el logo real va a aparecer solo en el header y en el pie de página, sin tocar ningún otro archivo del proyecto.
 
 ---
 

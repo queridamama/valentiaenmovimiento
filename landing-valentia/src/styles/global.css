@@ -6,9 +6,14 @@
 @theme {
   --color-fondo: #f7f6f4;
   --color-tarjeta: #ffffff;
+  /* Gris muy oscuro, reservado para texto largo (legibilidad) — nunca
+     protagonista. El color de identidad real de la marca es --color-marca. */
   --color-texto: #1a1a1a;
+  /* Color de marca: títulos, navegación, botones y palabras destacadas.
+     Reemplaza al negro como protagonista de la página. */
+  --color-marca: #255d78;
+  --color-marca-oscuro: #163b4b;
   --color-acento: #c49bc9;
-  --color-acento-teal: #2e6273;
   --color-acento-lima: #d6de2b;
   --color-acento-celeste: #b9dce5;
   --color-acento-rosa: #fbe3e8;
@@ -77,6 +82,9 @@ body {
 }
 .marcador-acento {
   background-color: color-mix(in srgb, var(--color-acento) 55%, transparent);
+}
+.marcador-marca {
+  background-color: color-mix(in srgb, var(--color-marca) 18%, transparent);
 }
 
 /* Subrayado ondulado tipo marcador — decoración nativa, no imagen: sigue

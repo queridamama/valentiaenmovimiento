@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 420 160" role="img" aria-label="Valentía en Movimiento — placeholder de logo, reemplazar por el archivo real">
+  <g transform="rotate(-2 130 46)">
+    <rect x="14" y="18" width="232" height="56" rx="28" fill="#c49bc9" />
+    <circle cx="34" cy="46" r="3" fill="#ffffff" fill-opacity="0.75" />
+    <circle cx="44" cy="46" r="3" fill="#ffffff" fill-opacity="0.75" />
+    <circle cx="54" cy="46" r="3" fill="#ffffff" fill-opacity="0.75" />
+  </g>
+  <text x="34" y="62" font-family="Poppins, Arial, sans-serif" font-weight="800" font-size="36" fill="#255d78" letter-spacing="0.5">VALENTÍA</text>
+  <text x="34" y="102" font-family="Georgia, 'Times New Roman', serif" font-style="italic" font-size="24" fill="#255d78">en Movimiento</text>
+  <path d="M32 112 q95 22 190 0" stroke="#d6de2b" stroke-width="4" fill="none" stroke-linecap="round" />
+  <path d="M226 106c-4-5-11-5-14-1-3 4-1 9 6 15 6-6 8-11 6-15-3-4-9-4-13 1" fill="#d6de2b" />
+  <rect x="4" y="128" width="322" height="26" rx="13" fill="#ffffff" fill-opacity="0.9" />
+  <text x="16" y="146" font-family="Arial, sans-serif" font-weight="700" font-size="14" fill="#1a1a1a">REEMPLAZAR · images/valentia/logo.svg</text>
+</svg>

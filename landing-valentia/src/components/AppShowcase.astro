@@ -10,7 +10,8 @@ const desfases = ["sm:translate-y-0", "sm:translate-y-6", "sm:-translate-y-3", "
 <section class="px-5 py-20 sm:px-8 sm:py-28">
   <div class="mx-auto max-w-6xl">
     <div class="reveal mx-auto max-w-lg space-y-3 text-center">
-      <h2 class="balance font-display text-[28px] font-semibold leading-tight text-texto sm:text-[38px]">
+      <p class="text-xs font-semibold uppercase tracking-[0.25em] text-marca">{appShowcase.eyebrow}</p>
+      <h2 class="balance font-display text-[28px] font-semibold leading-tight text-marca sm:text-[38px]">
         {appShowcase.titulo}
       </h2>
       <p class="text-[16px] text-texto/60">{appShowcase.texto}</p>
@@ -19,7 +20,7 @@ const desfases = ["sm:translate-y-0", "sm:translate-y-6", "sm:-translate-y-3", "
     <div class="reveal mt-12 flex snap-x snap-mandatory gap-5 overflow-x-auto pb-4 sm:mt-16 sm:justify-center sm:gap-6">
       {appShowcase.pantallas.map((pantalla, i) => (
         <div class={`shrink-0 snap-center transition ${desfases[i % desfases.length]}`}>
-          <div class="w-[220px] overflow-hidden rounded-[26px] border-4 border-texto bg-tarjeta shadow-[0_18px_40px_-15px_rgba(26,26,26,0.35)] sm:w-[240px]">
+          <div class="w-[220px] overflow-hidden rounded-[26px] border-4 border-marca bg-tarjeta shadow-[0_18px_40px_-15px_rgba(26,26,26,0.35)] sm:w-[240px]">
             <img
               src={withBase(`images/app/${pantalla.archivo}`)}
               alt={pantalla.alt}

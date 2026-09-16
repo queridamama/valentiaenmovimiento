@@ -5,21 +5,21 @@ import Doodle from "./Doodle.astro";
 
 const coloresEtapa = ["acento", "lima", "celeste", "rosa", "acento"] as const;
 const bgEtapa: Record<(typeof coloresEtapa)[number], string> = {
-  acento: "bg-acento/20 text-acento-teal",
-  lima: "bg-acento-lima/30 text-texto",
-  celeste: "bg-acento-celeste/40 text-acento-teal",
-  rosa: "bg-acento-rosa text-texto",
+  acento: "bg-acento/20 text-marca",
+  lima: "bg-acento-lima/30 text-marca",
+  celeste: "bg-acento-celeste/40 text-marca",
+  rosa: "bg-acento-rosa text-marca",
 };
 ---
 
 <section id="premium" class="px-5 py-20 sm:px-8 sm:py-28">
   <div class="mx-auto max-w-4xl">
     <div class="reveal space-y-4 text-center">
-      <p class="text-xs font-semibold uppercase tracking-[0.25em] text-acento-teal">{premium.eyebrow}</p>
-      <h2 class="balance mx-auto max-w-2xl font-display text-[28px] font-semibold leading-tight text-texto sm:text-[38px]">
+      <p class="text-xs font-semibold uppercase tracking-[0.25em] text-marca">{premium.eyebrow}</p>
+      <h2 class="balance mx-auto max-w-2xl font-display text-[28px] font-semibold leading-tight text-marca sm:text-[38px]">
         {premium.titulo}
       </h2>
-      <p class="subrayado subrayado-acento inline-block text-[18px] font-medium text-texto/80">{premium.subtitulo}</p>
+      <p class="subrayado subrayado-acento inline-block text-[18px] font-medium text-marca/85">{premium.subtitulo}</p>
       <p class="mx-auto max-w-lg text-[16px] text-texto/60">{premium.texto}</p>
     </div>
 
@@ -34,19 +34,19 @@ const bgEtapa: Record<(typeof coloresEtapa)[number], string> = {
             >
               {etapa}
             </span>
-            {i < premium.etapas.length - 1 && <span class="text-texto/25">→</span>}
+            {i < premium.etapas.length - 1 && <span class="text-marca/25">→</span>}
           </>
         );
       })}
     </div>
 
-    <p class="reveal mt-10 text-center font-display text-xl font-semibold leading-snug text-texto sm:text-2xl">
+    <p class="reveal mt-10 text-center font-display text-xl font-semibold leading-snug text-marca sm:text-2xl">
       {premium.frase.map((linea) => <span class="block">{linea}</span>)}
     </p>
 
     <div class="reveal mt-14 grid gap-4 sm:mt-16 sm:grid-cols-2">
       <div class="space-y-3 rounded-[20px] bg-texto/5 p-6 sm:p-7">
-        <p class="text-xs font-semibold uppercase tracking-wide text-texto/45">Esto no es</p>
+        <p class="text-xs font-semibold uppercase tracking-wide text-texto/45">{premium.etiquetaNoEs}</p>
         <ul class="space-y-2">
           {premium.noEs.map((n) => (
             <li class="text-[15px] text-texto/55">{n}</li>
@@ -55,13 +55,13 @@ const bgEtapa: Record<(typeof coloresEtapa)[number], string> = {
       </div>
       <div class="space-y-3 rounded-[20px] bg-acento-lima/15 p-6 sm:p-7">
         <div class="flex items-center justify-between">
-          <p class="text-xs font-semibold uppercase tracking-wide text-acento-teal">Esto sí es</p>
+          <p class="text-xs font-semibold uppercase tracking-wide text-marca">{premium.etiquetaSiEs}</p>
           <Doodle tipo="corazon" color="var(--color-acento)" class="h-3.5 w-3.5" />
         </div>
         <ul class="flex flex-wrap gap-2">
           {premium.siEs.map((s, i) => (
             <li
-              class="rounded-full bg-tarjeta px-3.5 py-1.5 text-[14px] font-medium text-texto"
+              class="rounded-full bg-tarjeta px-3.5 py-1.5 text-[14px] font-medium text-marca"
               style={`transform: rotate(${i % 2 === 0 ? "-1deg" : "1deg"});`}
             >
               {s}
@@ -74,11 +74,11 @@ const bgEtapa: Record<(typeof coloresEtapa)[number], string> = {
     <div class="reveal mt-10 grid gap-4 sm:grid-cols-2">
       <div class="space-y-1.5 rounded-[20px] border border-texto/10 bg-tarjeta p-6 text-center">
         <p class="text-xs font-semibold uppercase tracking-wide text-texto/45">{premium.comparacion.gratis.titulo}</p>
-        <p class="text-[16px] font-medium text-texto">{premium.comparacion.gratis.texto}</p>
+        <p class="text-[16px] font-medium text-marca">{premium.comparacion.gratis.texto}</p>
       </div>
       <div class="space-y-1.5 rounded-[20px] border border-acento/40 bg-acento/10 p-6 text-center">
-        <p class="text-xs font-semibold uppercase tracking-wide text-acento-teal">{premium.comparacion.premium.titulo}</p>
-        <p class="text-[16px] font-medium text-texto">{premium.comparacion.premium.texto}</p>
+        <p class="text-xs font-semibold uppercase tracking-wide text-marca">{premium.comparacion.premium.titulo}</p>
+        <p class="text-[16px] font-medium text-marca">{premium.comparacion.premium.texto}</p>
       </div>
     </div>
 
@@ -86,11 +86,11 @@ const bgEtapa: Record<(typeof coloresEtapa)[number], string> = {
       <a
         href={REGISTER_URL}
         data-analytics="click-conocer-premium"
-        class="inline-block rounded-full border border-texto/20 px-7 py-3.5 text-[15px] font-semibold text-texto transition hover:border-texto"
+        class="inline-block rounded-full border border-marca/30 px-7 py-3.5 text-[15px] font-semibold text-marca transition hover:border-marca"
       >
         {premium.cta}
       </a>
-      <p class="mt-3 text-xs text-texto/45">Empezás gratis — Premium se activa cuando quieras dar el salto.</p>
+      <p class="mt-3 text-xs text-texto/45">{premium.microfrase}</p>
     </div>
   </div>
 </section>

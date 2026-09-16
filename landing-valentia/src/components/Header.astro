@@ -1,18 +1,18 @@
 ---
 import { nav } from "../content/valentia";
 import { REGISTER_URL, LOGIN_URL, withBase } from "../config/site";
-import LogoMarca from "./LogoMarca.astro";
+import Logo from "./Logo.astro";
 ---
 
-<header class="sticky top-0 z-50 border-b border-texto/10 bg-fondo/90 backdrop-blur-sm">
+<header class="sticky top-0 z-50 border-b border-marca/10 bg-fondo/90 backdrop-blur-sm">
   <div class="mx-auto flex max-w-6xl items-center justify-between gap-4 px-5 py-3 sm:px-8">
     <a href={withBase("/")} aria-label="Valentía en Movimiento — Inicio">
-      <LogoMarca tamano="chico" />
+      <Logo tamano="chico" />
     </a>
 
-    <nav class="hidden items-center gap-7 text-sm font-medium text-texto/70 md:flex">
+    <nav class="hidden items-center gap-7 text-sm font-medium text-marca/75 md:flex">
       {nav.links.map((link) => (
-        <a href={link.href} class="transition hover:text-texto">
+        <a href={link.href} class="transition hover:text-marca">
           {link.label}
         </a>
       ))}
@@ -22,14 +22,14 @@ import LogoMarca from "./LogoMarca.astro";
       <a
         href={LOGIN_URL}
         data-analytics="click-entrar-header"
-        class="hidden text-sm font-medium text-texto/70 hover:text-texto sm:inline"
+        class="hidden text-sm font-medium text-marca/75 hover:text-marca sm:inline"
       >
         {nav.entrar}
       </a>
       <a
         href={REGISTER_URL}
         data-analytics="click-empezar-gratis-header"
-        class="rounded-full bg-texto px-4 py-2 text-sm font-semibold text-fondo transition hover:bg-acento hover:text-texto sm:px-5 sm:py-2.5"
+        class="rounded-full bg-marca px-4 py-2 text-sm font-semibold text-fondo transition hover:bg-acento hover:text-marca sm:px-5 sm:py-2.5"
       >
         {nav.cta}
       </a>
