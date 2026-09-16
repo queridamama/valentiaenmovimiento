@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { crearClienteBrowser } from "@/lib/supabase/client";
+import { urlApp } from "@/lib/url";
 import { Titulo, BotonPrimario } from "@/components/ui";
 
 export default function RegistroPage() {
@@ -26,12 +27,36 @@ export default function RegistroPage() {
       password,
       options: {
         data: { nombre },
-        emailRedirectTo: `${location.origin}/auth/confirm?next=/inicio`,
+        emailRedirectTo: `${urlApp()}/auth/confirm?next=/inicio`,
       },
     });
 
     if (errorRegistro) {
+      // Con "Confirm email" desactivado en el proyecto, Supabase devuelve
+      // este error directo para un email que ya tiene cuenta. Con
+      // confirmación activa (el caso normal acá) no hay error — eso se
+      // detecta abajo, mirando `identities`.
+      const yaTieneCuenta =
+        errorRegistro.code === "user_already_exists" || /already registered/i.test(errorRegistro.message);
+      if (yaTieneCuenta) {
+        router.push(`/registro/ya-existe?email=${encodeURIComponent(email)}`);
+        setCargando(false);
+        return;
+      }
       setError(errorRegistro.message);
+      setCargando(false);
+      return;
+    }
+
+    // Anti-enumeración de Supabase: si el email ya tiene una cuenta
+    // CONFIRMADA, `signUp` no devuelve error — devuelve un usuario
+    // "obfuscado" con `identities: []` y sin sesión. Sin este chequeo la
+    // persona queda esperando un mail de confirmación que nunca le va a
+    // llegar. No consulta auth.users ni usa service role: solo lee la
+    // respuesta que ya devolvió signUp.
+    const yaTieneCuentaConfirmada = data.user && data.user.identities?.length === 0;
+    if (yaTieneCuentaConfirmada) {
+      router.push(`/registro/ya-existe?email=${encodeURIComponent(email)}`);
       setCargando(false);
       return;
     }

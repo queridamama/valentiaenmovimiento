@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { crearClienteBrowser } from "@/lib/supabase/client";
+import { urlApp } from "@/lib/url";
 import { Titulo, Subtitulo, BotonPrimario } from "@/components/ui";
 
 export default function RecuperarPage() {
@@ -15,7 +16,7 @@ export default function RecuperarPage() {
     e.preventDefault();
     setCargando(true);
     await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: `${location.origin}/actualizar-contrasena`,
+      redirectTo: `${urlApp()}/actualizar-contrasena`,
     });
     // Siempre mostramos el mismo mensaje, exista o no esa cuenta — no hay
     // forma de confirmar un email registrado sin filtrar esa información.

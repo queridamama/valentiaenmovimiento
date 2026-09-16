@@ -11,7 +11,7 @@ function FormularioLogin() {
   const searchParams = useSearchParams();
   const supabase = crearClienteBrowser();
 
-  const [email, setEmail] = useState("");
+  const [email, setEmail] = useState(searchParams.get("email") ?? "");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [cargando, setCargando] = useState(false);
