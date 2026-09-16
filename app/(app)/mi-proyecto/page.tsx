@@ -14,7 +14,7 @@ import type { AreaRespuesta } from "@/lib/tipos";
 function Seccion({ titulo, children }: { titulo: string; children: React.ReactNode }) {
   return (
     <section className="space-y-2">
-      <h2 className="font-display text-lg font-semibold">{titulo}</h2>
+      <h2 className="font-display text-lg font-semibold text-marca">{titulo}</h2>
       {children}
     </section>
   );
@@ -57,12 +57,12 @@ export default async function MiProyectoPage() {
       </div>
 
       <Seccion titulo="Mi sueño">
-        {sueno ? <Tarjeta>{sueno.descripcion}</Tarjeta> : <Vacio texto="Todavía no lo declaraste." />}
+        {sueno ? <Tarjeta variante="destacada">{sueno.descripcion}</Tarjeta> : <Vacio texto="Todavía no lo declaraste." />}
       </Seccion>
 
       <Seccion titulo="Mi para qué">
         {sueno?.por_que_importa ? (
-          <Tarjeta>{sueno.por_que_importa}</Tarjeta>
+          <Tarjeta variante="destacada">{sueno.por_que_importa}</Tarjeta>
         ) : (
           <Vacio texto="Todavía no lo escribiste." />
         )}

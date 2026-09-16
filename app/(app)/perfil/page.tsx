@@ -40,7 +40,7 @@ export default async function PerfilPage() {
           Mi ritual semanal →
         </Link>
         {esStaff && (
-          <Link href="/admin" className="block rounded-card border border-acento/40 bg-acento/5 p-4 text-[15px] font-medium text-acentoTeal">
+          <Link href="/admin" className="block rounded-card border border-marca/30 bg-marca/5 p-4 text-[15px] font-medium text-marca">
             Panel de Admin →
           </Link>
         )}

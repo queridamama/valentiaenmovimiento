@@ -1,12 +1,12 @@
 import Link from "next/link";
-import { Tarjeta, Subtitulo } from "@/components/ui";
+import { Tarjeta, Subtitulo, Subrayado } from "@/components/ui";
 
 const ETAPAS = [
-  { nombre: "DEFINÍ", texto: "Tu sueño, tu para qué y de dónde partís." },
-  { nombre: "CONSTRUÍTE", texto: "La identidad que vas a practicar." },
-  { nombre: "DISEÑÁ", texto: "Tu estrategia y tus decisiones." },
-  { nombre: "MOVETE", texto: "Un movimiento por semana, con miedo y todo." },
-  { nombre: "SOSTENÉ", texto: "Hitos, evidencias y revisiones del camino." },
+  { nombre: "DEFINÍ", texto: "Tu sueño, tu para qué y de dónde partís.", color: "bg-acento/15 text-marca" },
+  { nombre: "CONSTRUÍTE", texto: "La identidad que vas a practicar.", color: "bg-acentoLima/25 text-marca" },
+  { nombre: "DISEÑÁ", texto: "Tu estrategia y tus decisiones.", color: "bg-acentoCeleste/30 text-marca" },
+  { nombre: "MOVETE", texto: "Un movimiento por semana, con miedo y todo.", color: "bg-acentoRosa text-marca" },
+  { nombre: "SOSTENÉ", texto: "Hitos, evidencias y revisiones del camino.", color: "bg-acento/15 text-marca" },
 ];
 
 const INCLUYE = [
@@ -40,8 +40,8 @@ export default function MembresiaPage() {
           ← Atrás
         </Link>
         <div className="pt-8">
-          <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-texto/60">Premium</p>
-          <h1 className="mt-2 font-display text-[30px] font-semibold leading-[1.15] text-texto">
+          <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-marca/70">Premium</p>
+          <h1 className="mt-2 font-display text-[30px] font-semibold leading-[1.15] text-marca">
             Convertí tu sueño en un Proyecto de Valentía
           </h1>
           <p className="mt-3 text-[15px] leading-relaxed text-texto/75">
@@ -53,31 +53,33 @@ export default function MembresiaPage() {
 
       <div className="space-y-10 px-6 pt-8">
         <section className="space-y-3">
-          <h2 className="font-display text-lg font-semibold">Qué es el Proyecto de Valentía</h2>
+          <h2 className="font-display text-lg font-semibold text-marca">Qué es el Proyecto de Valentía</h2>
           <Subtitulo>
             No es una lista de tareas ni un curso más. Es un documento vivo — tu sueño, tu para qué, la identidad que
             estás practicando y las decisiones que vas tomando — que se va escribiendo solo, semana a semana, con lo
             que vos misma respondés.
           </Subtitulo>
-          <p className="font-medium italic text-texto">&ldquo;No es más contenido. Es una ruta.&rdquo;</p>
+          <p className="font-medium italic text-marca">&ldquo;No es más contenido. Es una ruta.&rdquo;</p>
         </section>
 
         <section className="space-y-4 rounded-card border border-texto/10 bg-tarjeta p-6 text-center">
-          <p className="font-display text-5xl font-semibold text-acento">90</p>
+          <p className="font-display text-5xl font-semibold text-marca">
+            <Subrayado color="lima">90</Subrayado>
+          </p>
           <p className="text-[15px] font-medium text-texto">días, un método, cinco etapas</p>
           <Subtitulo>Empiezan el día que entrás. No hay que esperar al lunes que viene.</Subtitulo>
         </section>
 
         <section className="space-y-3">
-          <h2 className="font-display text-lg font-semibold">Las cinco etapas</h2>
+          <h2 className="font-display text-lg font-semibold text-marca">Las cinco etapas</h2>
           <div className="space-y-2">
             {ETAPAS.map((etapa, i) => (
               <div key={etapa.nombre} className="flex items-start gap-3 rounded-card border border-texto/10 bg-tarjeta p-4">
-                <span className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-texto/10 text-xs font-bold text-texto/70">
+                <span className={`mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-xs font-bold ${etapa.color}`}>
                   {i + 1}
                 </span>
                 <div>
-                  <p className="text-[15px] font-bold tracking-wide">{etapa.nombre}</p>
+                  <p className="text-[15px] font-bold tracking-wide text-marca">{etapa.nombre}</p>
                   <p className="text-sm text-texto/55">{etapa.texto}</p>
                 </div>
               </div>
@@ -86,7 +88,7 @@ export default function MembresiaPage() {
         </section>
 
         <section className="space-y-3">
-          <h2 className="font-display text-lg font-semibold">Qué incluye Premium</h2>
+          <h2 className="font-display text-lg font-semibold text-marca">Qué incluye Premium</h2>
           <ul className="space-y-2">
             {INCLUYE.map((item) => (
               <li key={item.title} className="rounded-card border border-texto/10 bg-tarjeta p-4">
@@ -98,7 +100,7 @@ export default function MembresiaPage() {
         </section>
 
         <section className="space-y-3">
-          <h2 className="font-display text-lg font-semibold">Gratis vs. Premium</h2>
+          <h2 className="font-display text-lg font-semibold text-marca">Gratis vs. Premium</h2>
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-2 rounded-card border border-texto/10 bg-tarjeta p-4">
               <p className="text-xs font-semibold uppercase tracking-wide text-texto/45">Gratis</p>
@@ -111,8 +113,8 @@ export default function MembresiaPage() {
                 ))}
               </ul>
             </div>
-            <div className="space-y-2 rounded-card border border-acento/40 bg-acento/5 p-4">
-              <p className="text-xs font-semibold uppercase tracking-wide text-acentoTeal">Premium</p>
+            <div className="space-y-2 rounded-card border border-marca/30 bg-marca/5 p-4">
+              <p className="text-xs font-semibold uppercase tracking-wide text-marca">Premium</p>
               <p className="text-sm font-medium text-texto">Construilo en 90 días</p>
               <ul className="space-y-1.5 pt-1">
                 {PREMIUM_BULLETS.map((b) => (
@@ -126,7 +128,7 @@ export default function MembresiaPage() {
         </section>
 
         <section className="space-y-3">
-          <h2 className="font-display text-lg font-semibold">Para que quede claro</h2>
+          <h2 className="font-display text-lg font-semibold text-marca">Para que quede claro</h2>
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-2 rounded-card bg-texto/5 p-4">
               <p className="text-xs font-semibold uppercase tracking-wide text-texto/45">Esto no es</p>
@@ -139,10 +141,10 @@ export default function MembresiaPage() {
               </ul>
             </div>
             <div className="space-y-2 rounded-card bg-acentoLima/15 p-4">
-              <p className="text-xs font-semibold uppercase tracking-wide text-acentoTeal">Esto sí es</p>
+              <p className="text-xs font-semibold uppercase tracking-wide text-marca">Esto sí es</p>
               <ul className="space-y-1.5">
                 {SI_ES.map((s) => (
-                  <li key={s} className="text-xs font-medium text-texto/80">
+                  <li key={s} className="text-xs font-medium text-marca">
                     {s}
                   </li>
                 ))}
@@ -153,16 +155,16 @@ export default function MembresiaPage() {
 
         <section className="space-y-4">
           <Tarjeta className="space-y-1 text-center">
-            <p className="text-3xl font-semibold">$22.000</p>
+            <p className="text-3xl font-semibold text-marca">$22.000</p>
             <p className="text-sm text-texto/50">por mes</p>
           </Tarjeta>
           <Subtitulo className="text-center">
             Podés cancelar cuando quieras. Los 90 días empiezan el día que entrás.
           </Subtitulo>
-          <div className="space-y-3 rounded-card border border-acento/30 bg-acento/5 p-5 text-center">
+          <Tarjeta variante="destacada" className="space-y-3 text-center">
             <p className="text-[15px] font-medium">Muy pronto vas a poder sumarte acá mismo con Mercado Pago.</p>
             <Subtitulo>Mientras tanto, escribile a tu equipo de Valentía en Movimiento y te activan la cuenta.</Subtitulo>
-          </div>
+          </Tarjeta>
         </section>
       </div>
     </main>

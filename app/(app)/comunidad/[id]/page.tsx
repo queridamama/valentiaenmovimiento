@@ -24,7 +24,7 @@ export default async function PublicacionPage({ params }: { params: Promise<{ id
     return (
       <main className="mx-auto max-w-md space-y-4 px-6 py-10 text-center">
         <Titulo>Esta publicación no está disponible</Titulo>
-        <Link href="/comunidad" className="text-sm font-medium text-acento">
+        <Link href="/comunidad" className="text-sm font-medium text-marca">
           ← Volver a Comunidad
         </Link>
       </main>
@@ -37,6 +37,7 @@ export default async function PublicacionPage({ params }: { params: Promise<{ id
   const reacciones = (post.reacciones ?? []) as { tipo: string; usuario_id: string }[];
   const comentarAqui = comentar.bind(null, id);
   const audioUrl = post.audio_url ? await obtenerAudioPublicacion(id) : null;
+  const esDeMeli = cat?.nombre === "Meli";
 
   return (
     <main className="mx-auto max-w-md space-y-6 px-6 pt-10 pb-6">
@@ -44,11 +45,11 @@ export default async function PublicacionPage({ params }: { params: Promise<{ id
         ← Comunidad
       </Link>
 
-      <div className="space-y-3 rounded-card border border-texto/10 bg-tarjeta p-4">
-        <p className="text-sm font-semibold">{cat?.nombre === "Meli" ? "Meli" : autor?.nombre ?? "Alguien de la comunidad"}</p>
-        {cat?.nombre === "Meli" ? (
+      <div className={`space-y-3 rounded-card p-4 ${esDeMeli ? "border border-marca/20 bg-marca/5" : "border border-texto/10 bg-tarjeta"}`}>
+        <p className={`text-sm font-semibold ${esDeMeli ? "text-marca" : ""}`}>{esDeMeli ? "Meli" : autor?.nombre ?? "Alguien de la comunidad"}</p>
+        {esDeMeli ? (
           <div className="space-y-2">
-            {post.titulo && <p className="text-base font-semibold text-texto">{post.titulo}</p>}
+            {post.titulo && <p className="text-base font-semibold text-marca">{post.titulo}</p>}
             {post.imagen_url && (
               // eslint-disable-next-line @next/next/no-img-element -- viene de Storage
               <img src={post.imagen_url} alt="" className="w-full rounded-lg" />
@@ -93,7 +94,7 @@ export default async function PublicacionPage({ params }: { params: Promise<{ id
 
         <form action={comentarAqui} className="space-y-2">
           <Campo name="contenido" label="" placeholder="Escribí un comentario…" rows={2} required />
-          <button type="submit" className="rounded-full bg-acento px-6 py-2.5 text-sm font-semibold text-white">
+          <button type="submit" className="rounded-full bg-marca px-6 py-2.5 text-sm font-semibold text-white">
             Comentar
           </button>
         </form>

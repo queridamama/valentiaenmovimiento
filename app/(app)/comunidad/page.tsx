@@ -4,6 +4,7 @@ import { obtenerAutorizacion, obtenerCategorias, obtenerFeedComunidad, unoDeRela
 import { crearPublicacion, alternarReaccion } from "@/lib/acciones/comunidad";
 import { obtenerAudioPublicacion } from "@/lib/acciones/almacenamiento";
 import { Titulo, Subtitulo, Campo } from "@/components/ui";
+import Doodle from "@/components/Doodle";
 
 const REACCIONES: { tipo: "corazon" | "fuego" | "aplauso"; emoji: string }[] = [
   { tipo: "corazon", emoji: "❤️" },
@@ -51,14 +52,17 @@ export default async function ComunidadPage({
 
   return (
     <main className="mx-auto max-w-md space-y-6 px-6 pt-10 pb-6">
-      <Titulo>Comunidad</Titulo>
+      <div className="flex items-center gap-2">
+        <Titulo>Comunidad</Titulo>
+        <Doodle tipo="corazon" color="#C49BC9" className="mb-1 h-4 w-4" />
+      </div>
       <Subtitulo>Sueños, movimientos y evidencias de mujeres en sus propios 90 días.</Subtitulo>
 
       <div className="flex flex-wrap gap-2">
         <Link
           href="/comunidad"
           className={`rounded-full px-4 py-2 text-sm font-medium ${
-            !categoriaId ? "bg-texto text-white" : "border border-texto/15 text-texto/70"
+            !categoriaId ? "bg-marca text-white" : "border border-texto/15 text-texto/70"
           }`}
         >
           Todas
@@ -70,7 +74,7 @@ export default async function ComunidadPage({
               key={c.id}
               href={`/comunidad?categoria=${c.id}`}
               className={`rounded-full px-4 py-2 text-sm font-medium ${
-                categoriaId === c.id ? "bg-texto text-white" : "border border-texto/15 text-texto/70"
+                categoriaId === c.id ? "bg-marca text-white" : "border border-texto/15 text-texto/70"
               } ${bloqueada ? "opacity-50" : ""}`}
             >
               {c.nombre}
@@ -95,7 +99,7 @@ export default async function ComunidadPage({
             <p className="text-xs text-texto/45">Se publica en: {categoriasParaPublicar[0]?.nombre}</p>
           )}
           <Campo name="contenido" label="" placeholder="Contá algo a la comunidad…" rows={2} required />
-          <button type="submit" className="rounded-full bg-acento px-6 py-2.5 text-sm font-semibold text-white">
+          <button type="submit" className="rounded-full bg-marca px-6 py-2.5 text-sm font-semibold text-white">
             Publicar
           </button>
         </form>
@@ -108,15 +112,23 @@ export default async function ComunidadPage({
           const reacciones = (post.reacciones ?? []) as { tipo: string; usuario_id: string }[];
           const comentariosCount = ((post.comentarios ?? []) as { id: string }[]).length;
 
+          const esDeMeli = cat?.nombre === "Meli";
           return (
-            <li key={post.id} className="space-y-3 rounded-card border border-texto/10 bg-tarjeta p-4">
+            <li
+              key={post.id}
+              className={`space-y-3 rounded-card p-4 ${
+                esDeMeli ? "border border-marca/20 bg-marca/5" : "border border-texto/10 bg-tarjeta"
+              }`}
+            >
               <div className="flex items-center justify-between">
-                <p className="text-sm font-semibold">{cat?.nombre === "Meli" ? "Meli" : autor?.nombre ?? "Alguien de la comunidad"}</p>
+                <p className={`text-sm font-semibold ${esDeMeli ? "text-marca" : ""}`}>
+                  {esDeMeli ? "Meli" : autor?.nombre ?? "Alguien de la comunidad"}
+                </p>
                 <span className="text-xs text-texto/40">{cat?.nombre}</span>
               </div>
-              {cat?.nombre === "Meli" ? (
+              {esDeMeli ? (
                 <div className="space-y-2">
-                  {post.titulo && <p className="text-base font-semibold text-texto">{post.titulo}</p>}
+                  {post.titulo && <p className="text-base font-semibold text-marca">{post.titulo}</p>}
                   {post.imagen_url && (
                     // eslint-disable-next-line @next/next/no-img-element -- viene de Storage
                     <img src={post.imagen_url} alt="" className="w-full rounded-lg" />
@@ -148,7 +160,7 @@ export default async function ComunidadPage({
                     );
                   })}
                 </div>
-                <Link href={`/comunidad/${post.id}`} className="text-xs font-medium text-acento">
+                <Link href={`/comunidad/${post.id}`} className="text-xs font-medium text-marca">
                   {comentariosCount > 0 ? `${comentariosCount} comentarios` : "Comentar"}
                 </Link>
               </div>

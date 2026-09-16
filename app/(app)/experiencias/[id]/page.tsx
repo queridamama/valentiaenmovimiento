@@ -19,7 +19,7 @@ export default async function ExperienciaPage({ params }: { params: Promise<{ id
       <main className="mx-auto max-w-md space-y-4 px-6 py-10 text-center">
         <Titulo>Esta experiencia no está disponible</Titulo>
         <Subtitulo>Puede estar en borrador, archivada, o requerir Membresía.</Subtitulo>
-        <Link href="/mi-sueno" className="inline-block text-sm font-medium text-acento">
+        <Link href="/mi-sueno" className="inline-block text-sm font-medium text-marca">
           ← Volver a mi ruta
         </Link>
       </main>
@@ -93,7 +93,7 @@ export default async function ExperienciaPage({ params }: { params: Promise<{ id
 
         <form action={guardar} className="space-y-6">
           <div className="space-y-1">
-            <p className="text-xs font-semibold uppercase tracking-[0.15em] text-texto/45">Tu turno</p>
+            <p className="text-xs font-semibold uppercase tracking-[0.15em] text-marca">Tu turno</p>
             <p className="text-sm text-texto/50">Nadie más lee esto. Es para vos.</p>
           </div>
           <div className="space-y-5">
@@ -106,7 +106,7 @@ export default async function ExperienciaPage({ params }: { params: Promise<{ id
                   placeholder={p.placeholder ?? ""}
                   rows={3}
                   required
-                  className="rounded-card border border-texto/12 bg-tarjeta px-4 py-3 text-[15px] leading-relaxed placeholder:text-texto/35 focus:border-acento focus:outline-none"
+                  className="rounded-card border border-texto/12 bg-tarjeta px-4 py-3 text-[15px] leading-relaxed placeholder:text-texto/35 focus:border-marca focus:outline-none"
                 />
               </label>
             ))}
@@ -125,7 +125,7 @@ export default async function ExperienciaPage({ params }: { params: Promise<{ id
               Siguiente: {siguiente.titulo} →
             </Link>
           ) : (
-            <Link href="/mi-sueno" className="block text-center text-sm font-medium text-acento">
+            <Link href="/mi-sueno" className="block text-center text-sm font-medium text-marca">
               Volver a mi ruta →
             </Link>
           ))}

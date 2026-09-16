@@ -11,7 +11,7 @@ import {
   obtenerConfiguracionHome,
 } from "@/lib/datos";
 import { diasDesde, diaDelProyecto } from "@/lib/fechas";
-import { Badge, Tarjeta, EnlacePrimario, Subtitulo } from "@/components/ui";
+import { Badge, Tarjeta, EnlacePrimario, Subtitulo, Marcador } from "@/components/ui";
 
 export default async function InicioPage() {
   const supabase = await crearClienteServidor();
@@ -74,7 +74,7 @@ export default async function InicioPage() {
         </div>
 
         {!sueno && (
-        <Tarjeta className="space-y-3">
+        <Tarjeta variante="destacada" className="space-y-3">
           <Subtitulo>Todavía no empezaste tu recorrido. Son tres clases cortas y termina con tu sueño declarado.</Subtitulo>
           <EnlacePrimario href={siguiente ? `/experiencias/${siguiente.id}` : "/mi-sueno"}>
             Empezar Mi Sueño
@@ -87,7 +87,7 @@ export default async function InicioPage() {
           <p className="text-xs uppercase tracking-wide text-texto/45">Tu sueño</p>
           <p className="text-[17px] font-medium leading-snug">{sueno.descripcion}</p>
           <p className="text-xs text-texto/45">Declarado hace {diasDesde(sueno.fecha_creado)} días</p>
-          <Link href="/mi-sueno" className="inline-block pt-1 text-sm font-medium text-acento">
+          <Link href="/mi-sueno" className="inline-block pt-1 text-sm font-medium text-marca">
             Ver mi ruta →
           </Link>
         </Tarjeta>
@@ -96,7 +96,9 @@ export default async function InicioPage() {
       {sueno && !recorridoTerminado && (
         <Tarjeta className="space-y-3">
           <Badge tipo="gratis" />
-          <p className="font-medium">Tomate tus sueños en serio</p>
+          <p className="font-medium">
+            Tomate tus sueños <Marcador>en serio</Marcador>
+          </p>
           <p className="text-sm text-texto/55">
             {recorrido.filter((e) => e.completada).length} de {recorrido.length} clases hechas
           </p>
@@ -107,8 +109,8 @@ export default async function InicioPage() {
       )}
 
       {sueno && recorridoTerminado && !esPremium && (
-        <Tarjeta className="space-y-3 border-acento/40 bg-acento/5">
-          <p className="text-xs uppercase tracking-wide text-acentoTeal">El próximo paso</p>
+        <Tarjeta variante="destacada" className="space-y-3">
+          <p className="text-xs uppercase tracking-wide text-marca">El próximo paso</p>
           <p className="text-[17px] font-medium leading-snug">
             Ya elegiste el sueño. Ahora convertilo en un Proyecto de Valentía.
           </p>
@@ -120,12 +122,12 @@ export default async function InicioPage() {
       )}
 
       {esPremium && proyecto && (
-        <Tarjeta className="space-y-1">
-          <p className="text-xs uppercase tracking-wide text-texto/45">Tu Proyecto de Valentía</p>
+        <Tarjeta variante="destacada" className="space-y-1">
+          <p className="text-xs uppercase tracking-wide text-marca">Tu Proyecto de Valentía</p>
           <p className="text-[17px] font-medium leading-snug">
             Día {diaDelProyecto(proyecto.fecha_inicio)} de 90{etapaActual ? ` · ${etapaActual.nombre}` : ""}
           </p>
-          <Link href="/mi-proyecto" className="inline-block pt-1 text-sm font-medium text-acento">
+          <Link href="/mi-proyecto" className="inline-block pt-1 text-sm font-medium text-marca">
             Ver mi Proyecto →
           </Link>
         </Tarjeta>
@@ -133,30 +135,30 @@ export default async function InicioPage() {
 
       {sueno && (
         <section className="space-y-2">
-          <h2 className="font-display text-lg font-semibold">Tu movimiento de esta semana</h2>
+          <h2 className="font-display text-lg font-semibold text-marca">Tu movimiento de esta semana</h2>
           {movimiento ? (
-            <Tarjeta className="space-y-1">
+            <Tarjeta variante="suave" className="space-y-1">
               <p className="text-[15px]">{movimiento.descripcion}</p>
               <p className="text-xs text-texto/45">
                 {movimiento.estado === "cumplido" ? "Ya registraste evidencia" : "El viernes te recordamos registrar qué pasó."}
               </p>
             </Tarjeta>
           ) : (
-            <Tarjeta className="space-y-2">
+            <Tarjeta variante="suave" className="space-y-2">
               <Subtitulo>Todavía no elegiste tu movimiento de esta semana.</Subtitulo>
             </Tarjeta>
           )}
-          <Link href="/movimiento" className="inline-block text-sm font-medium text-acento">
+          <Link href="/movimiento" className="inline-block text-sm font-medium text-marca">
             Ir a mi ritual semanal →
           </Link>
         </section>
       )}
 
         <section className="space-y-2">
-          <h2 className="font-display text-lg font-semibold">Comunidad</h2>
-          <Tarjeta>
+          <h2 className="font-display text-lg font-semibold text-marca">Comunidad</h2>
+          <Tarjeta variante="suave">
             <Subtitulo>Presentaciones, preguntas y evidencias de la semana.</Subtitulo>
-            <Link href="/comunidad" className="mt-2 inline-block text-sm font-medium text-acento">
+            <Link href="/comunidad" className="mt-2 inline-block text-sm font-medium text-marca">
               Entrar a Comunidad →
             </Link>
           </Tarjeta>

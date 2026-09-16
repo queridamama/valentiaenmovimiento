@@ -11,6 +11,39 @@ input {
   @apply bg-tarjeta;
 }
 
+/* ---------- Lenguaje "marcador a mano" (mismo recurso que la landing) ----------
+   Un acento por bloque como máximo: ver Marcador/Subrayado/Doodle en
+   components/ui.tsx. Nada de esto reemplaza el diseño de card/botón base. */
+:root {
+  --color-marca: #255d78;
+  --color-acento-lima: #d6de2b;
+  --color-acento: #c49bc9;
+}
+
+.marcador {
+  display: inline;
+  border-radius: 255px 15px 225px 15px / 15px 225px 15px 255px;
+  padding: 0.05em 0.35em;
+  box-decoration-break: clone;
+  -webkit-box-decoration-break: clone;
+}
+.marcador-lima {
+  background-color: color-mix(in srgb, var(--color-acento-lima) 65%, transparent);
+}
+
+.subrayado {
+  text-decoration-line: underline;
+  text-decoration-style: wavy;
+  text-underline-offset: 0.18em;
+  text-decoration-thickness: 2px;
+}
+.subrayado-marca {
+  text-decoration-color: var(--color-marca);
+}
+.subrayado-lima {
+  text-decoration-color: var(--color-acento-lima);
+}
+
 /* Contenido enriquecido (Admin: editor de Tiptap; alumnas: HTML guardado
    por ese editor). Un solo lugar para que se vean igual en los dos casos. */
 .contenido-enriquecido h2 {

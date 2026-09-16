@@ -29,7 +29,7 @@ export default async function MovimientoPage() {
       </div>
 
       <section className="space-y-3">
-        <p className="text-sm font-semibold uppercase tracking-wide text-texto/45">
+        <p className="text-sm font-semibold uppercase tracking-wide text-marca">
           {enCurso ? "Editar tu movimiento" : "Elegí tu movimiento de la semana"}
         </p>
         {!enCurso && (
@@ -45,9 +45,9 @@ export default async function MovimientoPage() {
           </form>
 
           <section className="space-y-3">
-            <p className="text-sm font-semibold uppercase tracking-wide text-texto/45">Registrá tu evidencia</p>
+            <p className="text-sm font-semibold uppercase tracking-wide text-marca">Registrá tu evidencia</p>
             <Subtitulo>Algo que pasó porque te moviste. Aunque haya salido distinto a lo que esperabas.</Subtitulo>
-            <Tarjeta>
+            <Tarjeta variante="suave">
               <p className="text-xs text-texto/45">Tu movimiento fue</p>
               <p className="text-[15px]">{movimiento?.descripcion}</p>
             </Tarjeta>
@@ -61,7 +61,7 @@ export default async function MovimientoPage() {
 
       {evidencias.length > 0 && (
         <section className="space-y-3 pb-4">
-          <p className="text-sm font-semibold uppercase tracking-wide text-texto/45">Tu recorrido</p>
+          <p className="text-sm font-semibold uppercase tracking-wide text-marca">Tu recorrido</p>
           <ul className="space-y-2">
             {evidencias.map((ev) => {
               const compartir = alternarCompartirEvidencia.bind(null, ev.id);
@@ -73,7 +73,7 @@ export default async function MovimientoPage() {
                       {new Date(ev.fecha_creado).toLocaleDateString("es-AR", { day: "numeric", month: "short" })}
                     </span>
                     <form action={compartir}>
-                      <button type="submit" className="text-xs font-medium text-acento">
+                      <button type="submit" className="text-xs font-medium text-marca">
                         {ev.compartida_en_comunidad ? "Compartida con la comunidad ✓" : "Compartir con la comunidad"}
                       </button>
                     </form>
@@ -85,7 +85,7 @@ export default async function MovimientoPage() {
         </section>
       )}
 
-      <Link href="/mi-proyecto" className="block text-center text-sm font-medium text-acento">
+      <Link href="/mi-proyecto" className="block text-center text-sm font-medium text-marca">
         Ver mi Proyecto →
       </Link>
     </main>

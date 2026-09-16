@@ -8,7 +8,7 @@ import {
   obtenerProyectoActivo,
   asegurarProyectoActivo,
 } from "@/lib/datos";
-import { Badge, EstadoBadge, Tarjeta, EnlacePrimario, Titulo, Subtitulo } from "@/components/ui";
+import { Badge, EstadoBadge, Tarjeta, EnlacePrimario, Titulo, Subtitulo, BarraProgreso } from "@/components/ui";
 
 export default async function MiSuenoPage() {
   const supabase = await crearClienteServidor();
@@ -47,13 +47,11 @@ export default async function MiSuenoPage() {
 
       {recorrido.length > 0 && (
         <section className="space-y-3">
-          <h2 className="font-display text-lg font-semibold">Tu recorrido</h2>
+          <h2 className="font-display text-lg font-semibold text-marca">Tu recorrido</h2>
           <div className="flex items-center justify-between">
             <Badge tipo="gratis" />
-            <span className="text-xs text-texto/45">
-              {recorrido.filter((e) => e.completada).length} de {recorrido.length}
-            </span>
           </div>
+          <BarraProgreso actual={recorrido.filter((e) => e.completada).length} total={recorrido.length} />
           <p className="font-medium">Tomate tus sueños en serio</p>
           <Subtitulo>Podés volver a abrir cualquier clase que ya hiciste cuando quieras.</Subtitulo>
           <div className="space-y-2">
@@ -63,7 +61,7 @@ export default async function MiSuenoPage() {
               const contenido = (
                 <div
                   className={`flex items-center gap-3 rounded-card border p-4 ${
-                    estado === "ahora" ? "border-texto bg-texto text-white" : "border-texto/10 bg-tarjeta"
+                    estado === "ahora" ? "border-marca bg-marca text-white" : "border-texto/10 bg-tarjeta"
                   } ${!clicable ? "opacity-50" : ""}`}
                 >
                   {e.portada_url && (
@@ -108,7 +106,7 @@ export default async function MiSuenoPage() {
       )}
 
       {recorridoTerminado && !esPremium && (
-        <Tarjeta className="space-y-3 border-acento/40 bg-acento/5">
+        <Tarjeta variante="destacada" className="space-y-3">
           <p className="text-[17px] font-medium leading-snug">Convertí tu sueño en un Proyecto de Valentía</p>
           <Subtitulo>Noventa días con método, ruta completa, hitos y revisiones.</Subtitulo>
           <EnlacePrimario href="/membresia">Empezar mis 90 días</EnlacePrimario>
@@ -124,7 +122,7 @@ export default async function MiSuenoPage() {
               <div key={etapa.id} className="space-y-2">
                 <div
                   className={`rounded-card border p-4 ${
-                    esActual ? "border-acento/50 bg-acento/5" : "border-texto/10 bg-tarjeta opacity-70"
+                    esActual ? "border-marca/40 bg-marca/5" : "border-texto/10 bg-tarjeta opacity-70"
                   }`}
                 >
                   <p className="text-[15px] font-bold tracking-wide">{etapa.nombre}</p>
@@ -142,7 +140,7 @@ export default async function MiSuenoPage() {
                           key={e.id}
                           href={`/experiencias/${e.id}`}
                           className={`flex items-center gap-3 rounded-card border p-4 ${
-                            estado === "ahora" ? "border-texto bg-texto text-white" : "border-texto/10 bg-tarjeta"
+                            estado === "ahora" ? "border-marca bg-marca text-white" : "border-texto/10 bg-tarjeta"
                           }`}
                         >
                           {e.portada_url && (
@@ -163,7 +161,7 @@ export default async function MiSuenoPage() {
               </div>
             );
           })}
-          <Link href="/mi-proyecto" className="inline-block pt-2 text-sm font-medium text-acento">
+          <Link href="/mi-proyecto" className="inline-block pt-2 text-sm font-medium text-marca">
             Ver mi Proyecto →
           </Link>
         </section>
