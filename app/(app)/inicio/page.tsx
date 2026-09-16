@@ -1,4 +1,3 @@
-import Link from "next/link";
 import { crearClienteServidor } from "@/lib/supabase/server";
 import {
   obtenerAutorizacion,
@@ -10,8 +9,11 @@ import {
   obtenerRuta,
   obtenerConfiguracionHome,
 } from "@/lib/datos";
-import { diasDesde, diaDelProyecto } from "@/lib/fechas";
-import { Badge, Tarjeta, EnlacePrimario, Subtitulo, Marcador } from "@/components/ui";
+import { diaDelProyecto } from "@/lib/fechas";
+import { Badge, Etiqueta, NotaManuscrita, FormaDecorativa } from "@/components/ui";
+import { TarjetaSueno, TarjetaInvitacion, TarjetaMovimiento, TarjetaComunidad, TarjetaProyecto } from "@/components/tarjetas";
+
+const NOMBRES_ETAPA = ["DEFINÍ", "CONSTRUÍTE", "DISEÑÁ", "MOVETE", "SOSTENÉ"];
 
 export default async function InicioPage() {
   const supabase = await crearClienteServidor();
@@ -39,130 +41,117 @@ export default async function InicioPage() {
   }
   const ruta = esPremium ? await obtenerRuta(supabase, user.id) : [];
   const etapaActual = ruta.find((e) => e.id === proyecto?.etapa_actual);
+  const etapaIndice = etapaActual ? NOMBRES_ETAPA.indexOf(etapaActual.nombre) : 0;
 
   return (
-    <main className="mx-auto max-w-md">
-      {/* Hero editorial: imagen + eyebrow/título administrables desde
-          /admin/inicio (ver lib/datos.ts:obtenerConfiguracionHome). `main`
-          no tiene padding lateral a propósito: esta imagen sangra hasta
-          los bordes del "teléfono" — el resto del contenido recupera el
-          padding en el div de abajo. */}
-      <div className="relative aspect-[16/11] w-full overflow-hidden">
-        {hero.imagen_url ? (
-          // eslint-disable-next-line @next/next/no-img-element -- viene de Storage
-          <img src={hero.imagen_url} alt="" className="h-full w-full object-cover" />
-        ) : (
-          <div className="h-full w-full bg-gradient-to-br from-acento/50 via-acentoRosa/60 to-acentoCeleste/50" />
+    <main className="mx-auto max-w-md space-y-7 px-5 pb-6 pt-6">
+      {/* Cabecera editorial: eyebrow + título grande (contenido
+          administrable desde /admin/inicio), en vez del banner rectangular
+          de punta a punta que había antes. La foto, si existe, vive como un
+          detalle circular al costado — nunca ocupa todo el ancho. */}
+      <section className="relative space-y-3">
+        {hero.imagen_url && (
+          <FormaDecorativa color="celeste" className="right-0 top-0 h-24 w-24 rotate-6" />
         )}
-        <div className="absolute inset-0 bg-gradient-to-t from-texto/80 via-texto/10 to-transparent" />
-        <div className="absolute inset-x-6 bottom-5 space-y-1.5">
-          {hero.eyebrow && (
-            <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-white/85">{hero.eyebrow}</p>
-          )}
-          {hero.titulo && (
-            <p className="font-display text-[26px] font-semibold leading-tight text-white">{hero.titulo}</p>
+        <p className="text-[15px] font-medium text-texto/60">
+          Hola{nombre ? `, ` : ""}
+          {nombre && <span className="font-script text-xl text-marca">{nombre}</span>}
+        </p>
+        <div className="flex items-start justify-between gap-4">
+          <div className="space-y-1.5">
+            {hero.eyebrow && <Etiqueta>{hero.eyebrow}</Etiqueta>}
+            {hero.titulo && (
+              <h1 className="font-display text-[30px] font-bold leading-[1.05] text-marca">{hero.titulo}</h1>
+            )}
+          </div>
+          {hero.imagen_url && (
+            // eslint-disable-next-line @next/next/no-img-element -- viene de Storage
+            <img
+              src={hero.imagen_url}
+              alt=""
+              className="relative h-20 w-20 shrink-0 rounded-full border-4 border-fondo object-cover shadow-md"
+            />
           )}
         </div>
-      </div>
-
-      <div className="space-y-6 px-6 pb-6 pt-6">
-        {hero.bajada && <Subtitulo>{hero.bajada}</Subtitulo>}
-
-        <div className="flex items-center justify-between">
-          <p className="text-[15px] font-medium text-texto/70">Hola{nombre ? `, ${nombre}` : ""}</p>
+        {hero.bajada && (
+          <NotaManuscrita color="celeste" className="max-w-[85%]">
+            {hero.bajada}
+          </NotaManuscrita>
+        )}
+        <div>
           <Badge tipo={esPremium ? "membresia" : "gratis"} />
         </div>
+      </section>
 
-        {!sueno && (
-        <Tarjeta variante="destacada" className="space-y-3">
-          <Subtitulo>Todavía no empezaste tu recorrido. Son tres clases cortas y termina con tu sueño declarado.</Subtitulo>
-          <EnlacePrimario href={siguiente ? `/experiencias/${siguiente.id}` : "/mi-sueno"}>
-            Empezar Mi Sueño
-          </EnlacePrimario>
-        </Tarjeta>
+      {!sueno && (
+        <TarjetaInvitacion
+          eyebrow="Empezar"
+          texto="Todavía no empezaste tu recorrido."
+          subtexto="Son tres clases cortas y termina con tu sueño declarado."
+          cta="Empezar Mi Sueño"
+          href={siguiente ? `/experiencias/${siguiente.id}` : "/mi-sueno"}
+          color="rosa"
+          icono="estrella"
+        />
       )}
 
       {sueno && (
-        <Tarjeta className="space-y-1">
-          <p className="text-xs uppercase tracking-wide text-texto/45">Tu sueño</p>
-          <p className="text-[17px] font-medium leading-snug">{sueno.descripcion}</p>
-          <p className="text-xs text-texto/45">Declarado hace {diasDesde(sueno.fecha_creado)} días</p>
-          <Link href="/mi-sueno" className="inline-block pt-1 text-sm font-medium text-marca">
-            Ver mi ruta →
-          </Link>
-        </Tarjeta>
+        <TarjetaSueno descripcion={sueno.descripcion} href="/mi-sueno" cta="Ver mi ruta" />
       )}
 
       {sueno && !recorridoTerminado && (
-        <Tarjeta className="space-y-3">
-          <Badge tipo="gratis" />
-          <p className="font-medium">
-            Tomate tus sueños <Marcador>en serio</Marcador>
-          </p>
-          <p className="text-sm text-texto/55">
-            {recorrido.filter((e) => e.completada).length} de {recorrido.length} clases hechas
-          </p>
-          <EnlacePrimario href={siguiente ? `/experiencias/${siguiente.id}` : "/mi-sueno"}>
-            Seguir el recorrido
-          </EnlacePrimario>
-        </Tarjeta>
+        <TarjetaInvitacion
+          eyebrow="Tu recorrido"
+          texto="Tomate tus sueños en serio"
+          subtexto={`${recorrido.filter((e) => e.completada).length} de ${recorrido.length} clases hechas`}
+          cta="Seguir el recorrido"
+          href={siguiente ? `/experiencias/${siguiente.id}` : "/mi-sueno"}
+          color="lima"
+          icono="pasos"
+        />
       )}
 
       {sueno && recorridoTerminado && !esPremium && (
-        <Tarjeta variante="destacada" className="space-y-3">
-          <p className="text-xs uppercase tracking-wide text-marca">El próximo paso</p>
-          <p className="text-[17px] font-medium leading-snug">
-            Ya elegiste el sueño. Ahora convertilo en un Proyecto de Valentía.
-          </p>
-          <Subtitulo>
-            Noventa días con método, ruta completa, hitos y revisiones. Con acompañamiento de Melisa y la comunidad.
-          </Subtitulo>
-          <EnlacePrimario href="/membresia">Empezar mis 90 días</EnlacePrimario>
-        </Tarjeta>
+        <TarjetaInvitacion
+          eyebrow="El próximo paso"
+          texto="Ya elegiste el sueño. Ahora convertilo en un Proyecto de Valentía."
+          subtexto="Noventa días con método, ruta completa, hitos y revisiones."
+          cta="Empezar mis 90 días"
+          href="/membresia"
+          color="lila"
+          icono="corona"
+        />
       )}
 
       {esPremium && proyecto && (
-        <Tarjeta variante="destacada" className="space-y-1">
-          <p className="text-xs uppercase tracking-wide text-marca">Tu Proyecto de Valentía</p>
-          <p className="text-[17px] font-medium leading-snug">
-            Día {diaDelProyecto(proyecto.fecha_inicio)} de 90{etapaActual ? ` · ${etapaActual.nombre}` : ""}
-          </p>
-          <Link href="/mi-proyecto" className="inline-block pt-1 text-sm font-medium text-marca">
-            Ver mi Proyecto →
-          </Link>
-        </Tarjeta>
+        <TarjetaProyecto
+          dia={diaDelProyecto(proyecto.fecha_inicio)}
+          etapaNombre={etapaActual?.nombre}
+          etapaIndice={Math.max(0, etapaIndice)}
+          href="/mi-proyecto"
+        />
       )}
 
-      {sueno && (
-        <section className="space-y-2">
-          <h2 className="font-display text-lg font-semibold text-marca">Tu movimiento de esta semana</h2>
-          {movimiento ? (
-            <Tarjeta variante="suave" className="space-y-1">
-              <p className="text-[15px]">{movimiento.descripcion}</p>
-              <p className="text-xs text-texto/45">
-                {movimiento.estado === "cumplido" ? "Ya registraste evidencia" : "El viernes te recordamos registrar qué pasó."}
-              </p>
-            </Tarjeta>
-          ) : (
-            <Tarjeta variante="suave" className="space-y-2">
-              <Subtitulo>Todavía no elegiste tu movimiento de esta semana.</Subtitulo>
-            </Tarjeta>
-          )}
-          <Link href="/movimiento" className="inline-block text-sm font-medium text-marca">
-            Ir a mi ritual semanal →
-          </Link>
-        </section>
-      )}
-
-        <section className="space-y-2">
-          <h2 className="font-display text-lg font-semibold text-marca">Comunidad</h2>
-          <Tarjeta variante="suave">
-            <Subtitulo>Presentaciones, preguntas y evidencias de la semana.</Subtitulo>
-            <Link href="/comunidad" className="mt-2 inline-block text-sm font-medium text-marca">
-              Entrar a Comunidad →
-            </Link>
-          </Tarjeta>
-        </section>
+      <div className={`grid gap-4 ${sueno ? "grid-cols-2" : "grid-cols-1"}`}>
+        {sueno && (
+          <TarjetaMovimiento
+            descripcion={movimiento?.descripcion ?? null}
+            nota={
+              movimiento
+                ? movimiento.estado === "cumplido"
+                  ? "Ya registraste evidencia"
+                  : "El viernes te recordamos registrar qué pasó."
+                : undefined
+            }
+            href="/movimiento"
+            cta="Ir a mi ritual"
+          />
+        )}
+        <TarjetaComunidad
+          texto="Presentaciones, preguntas y evidencias de la semana."
+          href="/comunidad"
+          cta="Entrar"
+        />
       </div>
     </main>
   );

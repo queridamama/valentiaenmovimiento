@@ -116,12 +116,27 @@ export function Campo({
   );
 }
 
+// Título grande y editorial — la escala es a propósito mucho más grande
+// que un h1 de dashboard: es el recurso #1 de jerarquía de todo el sistema.
 export function Titulo({ children, className = "" }: { children: ReactNode; className?: string }) {
-  return <h1 className={`font-display text-[26px] font-semibold leading-tight text-marca ${className}`}>{children}</h1>;
+  return (
+    <h1 className={`font-display text-[32px] font-bold leading-[1.08] tracking-tight text-marca ${className}`}>
+      {children}
+    </h1>
+  );
 }
 
 export function Subtitulo({ children, className = "" }: { children: ReactNode; className?: string }) {
   return <p className={`text-[15px] leading-relaxed text-texto/65 ${className}`}>{children}</p>;
+}
+
+// Eyebrow chico en mayúsculas — antes se repetía como className suelto en
+// cada página ("text-xs uppercase tracking-wide text-marca/45"), ahora es
+// un solo componente.
+export function Etiqueta({ children, className = "" }: { children: ReactNode; className?: string }) {
+  return (
+    <p className={`text-[11px] font-bold uppercase tracking-[0.14em] text-marca ${className}`}>{children}</p>
+  );
 }
 
 // Resaltado tipo marcador y subrayado a mano — el mismo lenguaje visual de
@@ -143,18 +158,93 @@ export function Subrayado({
   return <span className={`subrayado subrayado-${color} ${className}`}>{children}</span>;
 }
 
-// Barra de progreso simple para recorridos con pasos reales (Mi Ruta,
-// Proyecto). Nunca inventa el total ni el actual — los recibe como props.
-export function BarraProgreso({ actual, total }: { actual: number; total: number }) {
-  const porcentaje = total > 0 ? Math.round((actual / total) * 100) : 0;
+// Nota manuscrita: el bloque rotado, con fondo pastel y fuente script, que
+// aparece como "aside" editorial en las referencias (siempre con texto
+// REAL que ya existe en la pantalla — nunca copy inventado acá adentro).
+export function NotaManuscrita({
+  children,
+  color = "rosa",
+  rotacion = "izq",
+  className = "",
+}: {
+  children: ReactNode;
+  color?: "rosa" | "celeste" | "lila" | "lima";
+  rotacion?: "izq" | "der";
+  className?: string;
+}) {
+  const fondos: Record<string, string> = {
+    rosa: "bg-acentoRosa/70",
+    celeste: "bg-acentoCeleste/50",
+    lila: "bg-acento/20",
+    lima: "bg-acentoLima/30",
+  };
   return (
-    <div className="space-y-1.5">
-      <div className="h-1.5 w-full overflow-hidden rounded-full bg-texto/10">
-        <div className="h-full rounded-full bg-marca transition-all" style={{ width: `${porcentaje}%` }} />
+    <div
+      className={`relative rounded-[28px] px-5 py-4 text-center ${fondos[color]} ${className}`}
+      style={{ transform: `rotate(${rotacion === "izq" ? "-2deg" : "2deg"})` }}
+    >
+      <p className="font-script text-xl leading-snug text-marca">{children}</p>
+    </div>
+  );
+}
+
+// Forma orgánica de fondo (blob), puramente decorativa — para romper la
+// grilla detrás de una foto, un ícono grande o el header de una pantalla.
+export function FormaDecorativa({
+  color = "lila",
+  className = "",
+}: {
+  color?: "lila" | "celeste" | "rosa" | "lima" | "marca";
+  className?: string;
+}) {
+  const fondos: Record<string, string> = {
+    lila: "bg-acento/35",
+    celeste: "bg-acentoCeleste/60",
+    rosa: "bg-acentoRosa",
+    lima: "bg-acentoLima/40",
+    marca: "bg-marca/15",
+  };
+  return (
+    <div
+      aria-hidden="true"
+      className={`absolute -z-10 ${fondos[color]} ${className}`}
+      style={{ borderRadius: "42% 58% 63% 37% / 45% 40% 60% 55%" }}
+    />
+  );
+}
+
+// Progreso real de un recorrido — nunca inventa actual/total, los recibe
+// como props. "puntos" es el riel de círculos + línea (Mi Ruta); "linea"
+// es la barra angosta (para espacios más chicos, ej. dentro de una card).
+export function Progreso({
+  actual,
+  total,
+  variante = "puntos",
+}: {
+  actual: number;
+  total: number;
+  variante?: "puntos" | "linea";
+}) {
+  if (variante === "linea") {
+    const porcentaje = total > 0 ? Math.round((actual / total) * 100) : 0;
+    return (
+      <div className="space-y-1.5">
+        <div className="h-1.5 w-full overflow-hidden rounded-full bg-white/50">
+          <div className="h-full rounded-full bg-marca transition-all" style={{ width: `${porcentaje}%` }} />
+        </div>
       </div>
-      <p className="text-xs text-texto/45">
-        {actual} de {total} completados
-      </p>
+    );
+  }
+  return (
+    <div className="flex items-center">
+      {Array.from({ length: total }).map((_, i) => (
+        <div key={i} className="flex items-center">
+          <span
+            className={`h-3.5 w-3.5 shrink-0 rounded-full ${i < actual ? "bg-marca" : "bg-texto/15"}`}
+          />
+          {i < total - 1 && <span className={`h-[2px] w-6 ${i < actual - 1 ? "bg-marca" : "bg-texto/15"}`} />}
+        </div>
+      ))}
     </div>
   );
 }

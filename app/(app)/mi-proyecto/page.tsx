@@ -8,14 +8,16 @@ import {
   obtenerProyectoActivo,
 } from "@/lib/datos";
 import { diaDelProyecto } from "@/lib/fechas";
-import { Tarjeta, Titulo, Subtitulo } from "@/components/ui";
+import { Titulo, Subtitulo, Etiqueta } from "@/components/ui";
 import type { AreaRespuesta } from "@/lib/tipos";
 
-function Seccion({ titulo, children }: { titulo: string; children: React.ReactNode }) {
+const PASTELES = ["bg-acentoRosa/60", "bg-acentoCeleste/50", "bg-acento/20", "bg-acentoLima/35"];
+
+function Seccion({ titulo, children, color }: { titulo: string; children: React.ReactNode; color?: string }) {
   return (
     <section className="space-y-2">
-      <h2 className="font-display text-lg font-semibold text-marca">{titulo}</h2>
-      {children}
+      <h2 className="font-display text-lg font-bold text-marca">{titulo}</h2>
+      {color ? <div className={`rounded-[22px] ${color} p-4 text-[15px] leading-relaxed text-marca`}>{children}</div> : children}
     </section>
   );
 }
@@ -47,56 +49,38 @@ export default async function MiProyectoPage() {
   );
 
   return (
-    <main className="mx-auto max-w-md space-y-8 px-6 pt-10 pb-10">
-      <div className="space-y-1">
-        <p className="text-xs uppercase tracking-wide text-texto/45">
-          Documento vivo{proyecto ? ` · Día ${diaDelProyecto(proyecto.fecha_inicio)}` : ""}
-        </p>
+    <main className="mx-auto max-w-md space-y-8 px-5 pb-10 pt-6">
+      <div className="space-y-1.5">
+        <Etiqueta>Documento vivo{proyecto ? ` · Día ${diaDelProyecto(proyecto.fecha_inicio)}` : ""}</Etiqueta>
         <Titulo>Mi Proyecto de Valentía</Titulo>
         <Subtitulo>Se escribe solo, con lo que respondés en cada experiencia.</Subtitulo>
       </div>
 
-      <Seccion titulo="Mi sueño">
-        {sueno ? <Tarjeta variante="destacada">{sueno.descripcion}</Tarjeta> : <Vacio texto="Todavía no lo declaraste." />}
+      <Seccion titulo="Mi sueño" color={PASTELES[0]}>
+        {sueno ? sueno.descripcion : <Vacio texto="Todavía no lo declaraste." />}
       </Seccion>
 
-      <Seccion titulo="Mi para qué">
-        {sueno?.por_que_importa ? (
-          <Tarjeta variante="destacada">{sueno.por_que_importa}</Tarjeta>
-        ) : (
-          <Vacio texto="Todavía no lo escribiste." />
-        )}
+      <Seccion titulo="Mi para qué" color={PASTELES[1]}>
+        {sueno?.por_que_importa ?? <Vacio texto="Todavía no lo escribiste." />}
       </Seccion>
 
-      <Seccion titulo="Mi punto de partida">
-        {ultima("punto_partida") ? (
-          <Tarjeta>{ultima("punto_partida")!.respuesta}</Tarjeta>
-        ) : (
-          <Vacio texto="Todavía no hay respuesta." />
-        )}
+      <Seccion titulo="Mi punto de partida" color={PASTELES[2]}>
+        {ultima("punto_partida")?.respuesta ?? <Vacio texto="Todavía no hay respuesta." />}
       </Seccion>
 
-      <Seccion titulo="Resultado a los 90 días">
-        {ultima("resultado_90_dias") ? (
-          <Tarjeta>{ultima("resultado_90_dias")!.respuesta}</Tarjeta>
-        ) : (
-          <Vacio texto="Se completa en la declaración de tu Proyecto." />
-        )}
+      <Seccion titulo="Resultado a los 90 días" color={PASTELES[3]}>
+        {ultima("resultado_90_dias")?.respuesta ?? <Vacio texto="Se completa en la declaración de tu Proyecto." />}
       </Seccion>
 
-      <Seccion titulo="Identidad que estoy practicando">
-        {ultima("identidad") ? (
-          <Tarjeta>{ultima("identidad")!.respuesta}</Tarjeta>
-        ) : (
-          <Vacio texto="Se completa en las experiencias de Construíte (Premium)." />
-        )}
+      <Seccion titulo="Identidad que estoy practicando" color={PASTELES[0]}>
+        {ultima("identidad")?.respuesta ?? <Vacio texto="Se completa en las experiencias de Construíte (Premium)." />}
       </Seccion>
 
       <Seccion titulo="Estándares y decisiones">
         {estandaresYDecisiones.length > 0 ? (
           <ul className="space-y-2">
             {estandaresYDecisiones.map((r, i) => (
-              <li key={i} className="rounded-card border border-texto/10 bg-tarjeta p-4 text-sm">
+              <li key={i} className={`rounded-[20px] ${PASTELES[i % PASTELES.length]} p-4 text-sm text-marca`}>
                 {r.respuesta}
               </li>
             ))}
@@ -110,7 +94,7 @@ export default async function MiProyectoPage() {
         {area("hito").length > 0 ? (
           <ul className="space-y-2">
             {area("hito").map((r, i) => (
-              <li key={i} className="rounded-card border border-texto/10 bg-tarjeta p-4 text-sm">
+              <li key={i} className={`rounded-[20px] ${PASTELES[i % PASTELES.length]} p-4 text-sm text-marca`}>
                 {r.respuesta}
               </li>
             ))}
@@ -120,8 +104,8 @@ export default async function MiProyectoPage() {
         )}
       </Seccion>
 
-      <Seccion titulo="Movimiento de esta semana">
-        {movimiento ? <Tarjeta>{movimiento.descripcion}</Tarjeta> : <Vacio texto="Todavía no elegiste uno." />}
+      <Seccion titulo="Movimiento de esta semana" color={PASTELES[1]}>
+        {movimiento ? movimiento.descripcion : <Vacio texto="Todavía no elegiste uno." />}
       </Seccion>
 
       <Seccion titulo="Evidencias">
@@ -129,8 +113,8 @@ export default async function MiProyectoPage() {
           <>
             <p className="text-sm text-texto/50">{evidencias.length} registradas</p>
             <ul className="space-y-2">
-              {evidencias.map((ev) => (
-                <li key={ev.id} className="rounded-card border border-texto/10 bg-tarjeta p-4 text-sm">
+              {evidencias.map((ev, i) => (
+                <li key={ev.id} className={`rounded-[20px] ${PASTELES[i % PASTELES.length]} p-4 text-sm text-marca`}>
                   {ev.contenido}
                 </li>
               ))}

@@ -2,7 +2,7 @@ import Link from "next/link";
 import { crearClienteServidor } from "@/lib/supabase/server";
 import { obtenerExperienciaConPreguntas, estaCompletada, obtenerSiguienteExperiencia } from "@/lib/datos";
 import { guardarRespuestas } from "@/lib/acciones/experiencias";
-import { Badge, BotonPrimario, Titulo, Subtitulo } from "@/components/ui";
+import { Badge, BotonPrimario, Titulo, Subtitulo, Etiqueta } from "@/components/ui";
 
 export default async function ExperienciaPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -89,12 +89,10 @@ export default async function ExperienciaPage({ params }: { params: Promise<{ id
           </div>
         )}
 
-        <div className="h-px bg-texto/10" />
-
-        <form action={guardar} className="space-y-6">
+        <form action={guardar} className="space-y-6 rounded-[28px] bg-acentoRosa/35 p-6">
           <div className="space-y-1">
-            <p className="text-xs font-semibold uppercase tracking-[0.15em] text-marca">Tu turno</p>
-            <p className="text-sm text-texto/50">Nadie más lee esto. Es para vos.</p>
+            <Etiqueta>Tu turno</Etiqueta>
+            <p className="text-sm text-marca/60">Nadie más lee esto. Es para vos.</p>
           </div>
           <div className="space-y-5">
             {preguntas.map((p) => (
@@ -106,7 +104,7 @@ export default async function ExperienciaPage({ params }: { params: Promise<{ id
                   placeholder={p.placeholder ?? ""}
                   rows={3}
                   required
-                  className="rounded-card border border-texto/12 bg-tarjeta px-4 py-3 text-[15px] leading-relaxed placeholder:text-texto/35 focus:border-marca focus:outline-none"
+                  className="rounded-[18px] border-0 bg-white px-4 py-3 text-[15px] leading-relaxed placeholder:text-texto/35 focus:outline-none focus:ring-2 focus:ring-marca/40"
                 />
               </label>
             ))}

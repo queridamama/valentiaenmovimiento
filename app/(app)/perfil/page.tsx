@@ -24,23 +24,23 @@ export default async function PerfilPage() {
   }
 
   return (
-    <main className="mx-auto max-w-md space-y-6 px-6 pt-10">
+    <main className="mx-auto max-w-md space-y-6 px-5 pt-6">
       <Titulo>Perfil</Titulo>
 
-      <div className="space-y-3 rounded-card border border-texto/10 bg-tarjeta p-5">
-        <p className="text-[17px] font-medium">{perfil?.nombre || user?.email}</p>
+      <div className="space-y-3 rounded-[24px] bg-acento/12 p-5">
+        <p className="text-[17px] font-medium text-marca">{perfil?.nombre || user?.email}</p>
         <Badge tipo={autorizacion?.nivel === "premium" ? "membresia" : "gratis"} />
       </div>
 
       <div className="space-y-2">
-        <Link href="/mi-proyecto" className="block rounded-card border border-texto/10 bg-tarjeta p-4 text-[15px] font-medium">
+        <Link href="/mi-proyecto" className="block rounded-[20px] bg-texto/5 p-4 text-[15px] font-medium text-marca">
           Mi Proyecto →
         </Link>
-        <Link href="/movimiento" className="block rounded-card border border-texto/10 bg-tarjeta p-4 text-[15px] font-medium">
+        <Link href="/movimiento" className="block rounded-[20px] bg-texto/5 p-4 text-[15px] font-medium text-marca">
           Mi ritual semanal →
         </Link>
         {esStaff && (
-          <Link href="/admin" className="block rounded-card border border-marca/30 bg-marca/5 p-4 text-[15px] font-medium text-marca">
+          <Link href="/admin" className="block rounded-[20px] bg-marca/10 p-4 text-[15px] font-medium text-marca">
             Panel de Admin →
           </Link>
         )}

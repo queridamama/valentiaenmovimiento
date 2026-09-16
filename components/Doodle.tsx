@@ -6,7 +6,7 @@ export default function Doodle({
   color = "currentColor",
   className = "",
 }: {
-  tipo: "garabato" | "corazon";
+  tipo: "garabato" | "corazon" | "chispa";
   color?: string;
   className?: string;
 }) {
@@ -17,6 +17,13 @@ export default function Doodle({
           d="M16 25C6 18 2 13 2 8.5 2 4.5 5 2 8.5 2c2.6 0 4.8 1.6 5.9 3.9C15.7 3.6 17.9 2 20.5 2 24 2 27 4.5 27 8.5c0 4.5-4 9.5-14 16.5Z"
           fill={color}
         />
+      </svg>
+    );
+  }
+  if (tipo === "chispa") {
+    return (
+      <svg viewBox="0 0 24 24" className={className} fill="none" aria-hidden="true">
+        <path d="M12 2v6M12 16v6M2 12h6M16 12h6M5 5l4 4M15 15l4 4M19 5l-4 4M9 15l-4 4" stroke={color} strokeWidth="2.2" strokeLinecap="round" />
       </svg>
     );
   }

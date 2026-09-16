@@ -8,7 +8,11 @@ import {
   obtenerProyectoActivo,
   asegurarProyectoActivo,
 } from "@/lib/datos";
-import { Badge, EstadoBadge, Tarjeta, EnlacePrimario, Titulo, Subtitulo, BarraProgreso } from "@/components/ui";
+import { Titulo, Subtitulo, Etiqueta, NotaManuscrita, Progreso } from "@/components/ui";
+import { TarjetaPaso, TarjetaInvitacion, COLORES_PASO } from "@/components/tarjetas";
+import type { TipoIcono } from "@/components/iconos";
+
+const ICONOS_PASO: TipoIcono[] = ["estrella", "corazon", "montana", "documento"];
 
 export default async function MiSuenoPage() {
   const supabase = await crearClienteServidor();
@@ -33,7 +37,7 @@ export default async function MiSuenoPage() {
   const ruta = esPremium ? await obtenerRuta(supabase, user.id) : [];
 
   return (
-    <main className="mx-auto max-w-md space-y-8 px-6 pt-10 pb-6">
+    <main className="mx-auto max-w-md space-y-7 px-5 pb-6 pt-6">
       <div className="space-y-2">
         <Titulo>Mi Ruta</Titulo>
         {!recorridoTerminado ? (
@@ -46,48 +50,40 @@ export default async function MiSuenoPage() {
       </div>
 
       {recorrido.length > 0 && (
-        <section className="space-y-3">
-          <h2 className="font-display text-lg font-semibold text-marca">Tu recorrido</h2>
-          <div className="flex items-center justify-between">
-            <Badge tipo="gratis" />
+        <section className="space-y-5">
+          <div className="space-y-3 rounded-[28px] bg-acentoRosa/60 p-5">
+            <Etiqueta>Tu proceso</Etiqueta>
+            <p className="font-display text-lg font-bold text-marca">
+              {recorrido.filter((e) => e.completada).length} de {recorrido.length} completados
+            </p>
+            <Progreso actual={recorrido.filter((e) => e.completada).length} total={recorrido.length} />
+            <NotaManuscrita color="lima" rotacion="der" className="mt-2">
+              Podés volver a abrir cualquier clase que ya hiciste
+            </NotaManuscrita>
           </div>
-          <BarraProgreso actual={recorrido.filter((e) => e.completada).length} total={recorrido.length} />
-          <p className="font-medium">Tomate tus sueños en serio</p>
-          <Subtitulo>Podés volver a abrir cualquier clase que ya hiciste cuando quieras.</Subtitulo>
-          <div className="space-y-2">
+
+          <div className="space-y-3">
             {recorrido.map((e, i) => {
               const estado = e.completada ? "hecha" : i === primeraPendienteIdx ? "ahora" : "pendiente";
               const clicable = e.completada || i === primeraPendienteIdx;
-              const contenido = (
-                <div
-                  className={`flex items-center gap-3 rounded-card border p-4 ${
-                    estado === "ahora" ? "border-marca bg-marca text-white" : "border-texto/10 bg-tarjeta"
-                  } ${!clicable ? "opacity-50" : ""}`}
-                >
-                  {e.portada_url && (
-                    // eslint-disable-next-line @next/next/no-img-element -- viene de Storage
-                    <img src={e.portada_url} alt="" className="h-11 w-11 shrink-0 rounded-lg object-cover" />
-                  )}
-                  <span
-                    className={`flex-1 text-[15px] font-medium ${estado === "ahora" ? "text-white" : "text-texto"}`}
-                  >
-                    {e.titulo}
-                  </span>
-                  <EstadoBadge estado={estado} />
-                </div>
-              );
-              return clicable ? (
-                <Link key={e.id} href={`/experiencias/${e.id}`}>
-                  {contenido}
-                </Link>
-              ) : (
-                <div key={e.id}>{contenido}</div>
+              return (
+                <TarjetaPaso
+                  key={e.id}
+                  numero={String(i + 1).padStart(2, "0")}
+                  titulo={e.titulo}
+                  descripcion={e.descripcion}
+                  estado={estado}
+                  color={COLORES_PASO[i % COLORES_PASO.length]}
+                  icono={ICONOS_PASO[i % ICONOS_PASO.length]}
+                  href={`/experiencias/${e.id}`}
+                  clicable={clicable}
+                />
               );
             })}
           </div>
 
           {!recorridoTerminado && (
-            <div className="space-y-2 pt-4">
+            <div className="space-y-2 pt-2">
               <p className="text-sm font-medium text-texto/70">Después de esto</p>
               <Subtitulo>La ruta completa del método son cinco etapas y noventa días.</Subtitulo>
               <Subtitulo>
@@ -99,69 +95,59 @@ export default async function MiSuenoPage() {
       )}
 
       {recorridoTerminado && sueno && (
-        <Tarjeta className="space-y-1">
-          <p className="text-xs uppercase tracking-wide text-texto/45">Tu sueño</p>
-          <p className="text-[17px] font-medium leading-snug">{sueno.descripcion}</p>
-        </Tarjeta>
+        <div className="space-y-1.5 rounded-[24px] bg-acentoRosa/50 p-5">
+          <Etiqueta>Tu sueño</Etiqueta>
+          <p className="text-[17px] font-medium leading-snug text-marca">{sueno.descripcion}</p>
+        </div>
       )}
 
       {recorridoTerminado && !esPremium && (
-        <Tarjeta variante="destacada" className="space-y-3">
-          <p className="text-[17px] font-medium leading-snug">Convertí tu sueño en un Proyecto de Valentía</p>
-          <Subtitulo>Noventa días con método, ruta completa, hitos y revisiones.</Subtitulo>
-          <EnlacePrimario href="/membresia">Empezar mis 90 días</EnlacePrimario>
-        </Tarjeta>
+        <TarjetaInvitacion
+          eyebrow="El próximo paso"
+          texto="Convertí tu sueño en un Proyecto de Valentía"
+          subtexto="Noventa días con método, ruta completa, hitos y revisiones."
+          cta="Empezar mis 90 días"
+          href="/membresia"
+          color="lila"
+          icono="corona"
+        />
       )}
 
       {recorridoTerminado && esPremium && (
-        <section className="space-y-3">
+        <section className="space-y-4">
           {ruta.map((etapa) => {
             const esActual = etapa.id === proyecto?.etapa_actual;
             const hechas = etapa.experiencias.filter((e) => e.completada).length;
             return (
-              <div key={etapa.id} className="space-y-2">
-                <div
-                  className={`rounded-card border p-4 ${
-                    esActual ? "border-marca/40 bg-marca/5" : "border-texto/10 bg-tarjeta opacity-70"
-                  }`}
-                >
+              <div key={etapa.id} className="space-y-3">
+                <div className={`rounded-[22px] p-4 ${esActual ? "bg-marca text-white" : "bg-texto/5 opacity-60"}`}>
                   <p className="text-[15px] font-bold tracking-wide">{etapa.nombre}</p>
-                  <p className="text-xs text-texto/50">
+                  <p className={`text-xs ${esActual ? "text-white/70" : "text-texto/50"}`}>
                     {etapa.experiencias.length} experiencia{etapa.experiencias.length === 1 ? "" : "s"}
                     {etapa.experiencias.length > 0 ? ` · ${hechas} hecha${hechas === 1 ? "" : "s"}` : ""}
                   </p>
                 </div>
                 {esActual && etapa.experiencias.length > 0 && (
-                  <div className="space-y-2 pl-3">
-                    {etapa.experiencias.map((e) => {
-                      const estado = e.completada ? "hecha" : "ahora";
-                      return (
-                        <Link
-                          key={e.id}
-                          href={`/experiencias/${e.id}`}
-                          className={`flex items-center gap-3 rounded-card border p-4 ${
-                            estado === "ahora" ? "border-marca bg-marca text-white" : "border-texto/10 bg-tarjeta"
-                          }`}
-                        >
-                          {e.portada_url && (
-                            // eslint-disable-next-line @next/next/no-img-element -- viene de Storage
-                            <img src={e.portada_url} alt="" className="h-11 w-11 shrink-0 rounded-lg object-cover" />
-                          )}
-                          <span
-                            className={`flex-1 text-[15px] font-medium ${estado === "ahora" ? "text-white" : "text-texto"}`}
-                          >
-                            {e.titulo}
-                          </span>
-                          <EstadoBadge estado={estado} />
-                        </Link>
-                      );
-                    })}
+                  <div className="space-y-3 pl-2">
+                    {etapa.experiencias.map((e, i) => (
+                      <TarjetaPaso
+                        key={e.id}
+                        numero={String(i + 1).padStart(2, "0")}
+                        titulo={e.titulo}
+                        descripcion={e.descripcion}
+                        estado={e.completada ? "hecha" : "ahora"}
+                        color={COLORES_PASO[i % COLORES_PASO.length]}
+                        icono={ICONOS_PASO[i % ICONOS_PASO.length]}
+                        href={`/experiencias/${e.id}`}
+                        clicable
+                      />
+                    ))}
                   </div>
                 )}
               </div>
             );
           })}
-          <Link href="/mi-proyecto" className="inline-block pt-2 text-sm font-medium text-marca">
+          <Link href="/mi-proyecto" className="inline-block pt-1 text-sm font-medium text-marca">
             Ver mi Proyecto →
           </Link>
         </section>
