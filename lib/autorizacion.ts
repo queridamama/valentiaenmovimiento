@@ -25,3 +25,26 @@ export async function exigirStaff() {
 
   return { supabase, user, rol: autorizacion.rol as "admin" | "editor" };
 }
+
+// Igual que `exigirStaff`, pero solo para acciones reservadas al rol admin
+// (ej. moderar/eliminar publicaciones de usuarias) — un editor puede
+// gestionar contenido de Meli, pero no esto.
+export async function exigirAdmin() {
+  const supabase = await crearClienteServidor();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) redirect("/login");
+
+  const { data: autorizacion } = await supabase
+    .from("autorizaciones")
+    .select("rol")
+    .eq("usuario_id", user.id)
+    .maybeSingle();
+
+  if (!autorizacion || autorizacion.rol !== "admin") {
+    redirect("/inicio");
+  }
+
+  return { supabase, user };
+}

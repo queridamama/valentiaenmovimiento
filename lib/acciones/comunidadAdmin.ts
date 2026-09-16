@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
-import { exigirStaff } from "@/lib/autorizacion";
+import { exigirStaff, exigirAdmin } from "@/lib/autorizacion";
 
 async function idCategoriaMeli(supabase: Awaited<ReturnType<typeof exigirStaff>>["supabase"]) {
   const { data } = await supabase.from("categorias_comunidad").select("id").eq("nombre", "Meli").maybeSingle();
@@ -45,6 +45,18 @@ export async function guardarPublicacionMeli(publicacionId: string | null, formD
 
 export async function eliminarPublicacionMeli(publicacionId: string) {
   const { supabase } = await exigirStaff();
+  const { error } = await supabase.from("publicaciones_comunidad").delete().eq("id", publicacionId);
+  if (error) throw error;
+  revalidatePath("/admin/comunidad");
+  revalidatePath("/comunidad");
+}
+
+// Moderación de publicaciones de usuarias (no las de Meli): reservada a
+// admin, no a editor. `comentarios` y `reacciones` tienen ON DELETE CASCADE
+// hacia `publicaciones_comunidad` (ver supabase/schema.sql), así que
+// borrar la fila alcanza — no hace falta borrar esas tablas a mano.
+export async function eliminarPublicacionComunidad(publicacionId: string) {
+  const { supabase } = await exigirAdmin();
   const { error } = await supabase.from("publicaciones_comunidad").delete().eq("id", publicacionId);
   if (error) throw error;
   revalidatePath("/admin/comunidad");

@@ -221,7 +221,14 @@ export function TarjetaPaso({
     </div>
   );
   if (!clicable || !href) return contenido;
-  return <Link href={href}>{contenido}</Link>;
+  // `Link` renderiza un <a>, que es inline por default: el margin-top del
+  // gap del padre no hace nada sobre un elemento inline. `block` es lo que
+  // hace que el espacio entre tarjetas exista de verdad.
+  return (
+    <Link href={href} className="block">
+      {contenido}
+    </Link>
+  );
 }
 
 // Una evidencia real, en grilla de a dos — reemplaza la lista blanca plana.

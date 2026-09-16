@@ -263,7 +263,7 @@ export async function obtenerCategorias(supabase: SupabaseClient) {
 // o `reacciones`/`comentarios`, que sí tienen FK directa). Por eso acá se
 // resuelve con una segunda query batcheada y un merge en JS, en vez de
 // embedding.
-async function mapaDeNombres(supabase: SupabaseClient, usuarioIds: string[]) {
+export async function mapaDeNombres(supabase: SupabaseClient, usuarioIds: string[]) {
   const idsUnicos = [...new Set(usuarioIds)];
   if (idsUnicos.length === 0) return new Map<string, string | null>();
   const { data } = await supabase.from("perfiles").select("id, nombre").in("id", idsUnicos);
@@ -286,6 +286,32 @@ export async function obtenerFeedComunidad(supabase: SupabaseClient, categoriaId
   const posts = data ?? [];
   const nombres = await mapaDeNombres(supabase, posts.map((p) => p.usuario_id));
   return posts.map((p) => ({ ...p, perfiles: { nombre: nombres.get(p.usuario_id) ?? null } }));
+}
+
+// Para /admin/comunidad: todas las publicaciones de usuarias (todo lo que
+// NO es de la categoría "Meli", que ya tiene su propia sección de
+// administración). Corre con la sesión de quien está logueada en /admin
+// (nunca service role), así que un editor la ve también — pero como
+// `es_staff()` bypassea la policy de select, acá aparecen TODAS las
+// publicaciones reales, incluidas las que una cuenta normal no vería por
+// estar en una categoría solo-premium — no hace falta duplicar ese filtro.
+export async function obtenerPublicacionesUsuariasAdmin(supabase: SupabaseClient) {
+  const { data: categoriaMeli } = await supabase
+    .from("categorias_comunidad")
+    .select("id")
+    .eq("nombre", "Meli")
+    .maybeSingle();
+
+  let query = supabase
+    .from("publicaciones_comunidad")
+    .select("id, contenido, fecha_creado, categoria_id, usuario_id, categorias_comunidad(nombre)")
+    .order("fecha_creado", { ascending: false });
+  if (categoriaMeli) query = query.neq("categoria_id", categoriaMeli.id);
+
+  const { data } = await query;
+  const posts = data ?? [];
+  const nombres = await mapaDeNombres(supabase, posts.map((p) => p.usuario_id));
+  return posts.map((p) => ({ ...p, nombreAutora: nombres.get(p.usuario_id) ?? "Alguien de la comunidad" }));
 }
 
 export async function obtenerPublicacionDetalle(supabase: SupabaseClient, publicacionId: string) {
