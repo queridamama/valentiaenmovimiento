@@ -136,7 +136,7 @@ export const meli = {
   rol: "Coach · Conferencista · Productora · Entrenadora de coaches · Mamá de gemelas",
   parrafos: [
     "Meli construyó Valentía a partir de su propia experiencia de atravesar procesos, tomar decisiones incómodas, revisar identidad, sostener sueños y crear una vida elegida dentro de una vida real.",
-    "Su historia incluye haber sido sorda, haber hecho fonoaudiología durante años y haber atravesado procesos personales que marcaron su relación con identidad, valentía y construcción.",
+    "Su historia incluye ser sorda, haber hecho fonoaudiología durante años y atravesar procesos que marcaron profundamente su relación con la identidad, la valentía y la construcción de su propia vida.",
     "No acompaña desde una supuesta montaña a la que ya llegó. Está construyendo también.",
   ],
   frase: [
@@ -169,7 +169,7 @@ export const faq = {
     {
       pregunta: "¿Es solamente para emprendedoras?",
       respuesta:
-        "No. Tu Proyecto de Valentía puede estar relacionado con trabajo, un proyecto personal, aprendizaje, una decisión o cualquier cosa importante que quieras empezar a construir.",
+        "No. Tu sueño puede estar relacionado con trabajo, un proyecto personal, aprendizaje, una decisión o cualquier cosa importante que quieras empezar a construir.",
     },
     {
       pregunta: "¿Qué diferencia hay entre Gratis y Premium?",
