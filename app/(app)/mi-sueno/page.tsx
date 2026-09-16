@@ -60,7 +60,7 @@ export default async function MiSuenoPage() {
             <p className="text-xs text-marca/50">Las clases completadas quedan disponibles para volver a verlas.</p>
           </div>
 
-          <div className="space-y-5">
+          <div className="space-y-6">
             {recorrido.map((e, i) => {
               const estado = e.completada ? "hecha" : i === primeraPendienteIdx ? "ahora" : "pendiente";
               const clicable = e.completada || i === primeraPendienteIdx;
@@ -161,7 +161,7 @@ export default async function MiSuenoPage() {
                   </p>
                 </div>
                 {esActual && etapa.experiencias.length > 0 && (
-                  <div className="space-y-5 pl-2">
+                  <div className="space-y-6 pl-2">
                     {etapa.experiencias.map((e, i) => (
                       <TarjetaPaso
                         key={e.id}

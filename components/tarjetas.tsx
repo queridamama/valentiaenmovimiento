@@ -147,6 +147,16 @@ function FormaEsquina() {
   );
 }
 
+// Triángulo de play chico, para el CTA "Ver clase" — nunca "hacé click acá",
+// porque en celular no se hace click.
+function IconoPlayChico() {
+  return (
+    <svg viewBox="0 0 24 24" width="10" height="10" fill="currentColor" aria-hidden="true">
+      <path d="M7 5.5v13l11-6.5-11-6.5Z" />
+    </svg>
+  );
+}
+
 const COLORES_PASO = ["rosa", "celeste", "lima", "lila"] as const;
 export type ColorPaso = (typeof COLORES_PASO)[number];
 export { COLORES_PASO };
@@ -200,9 +210,14 @@ export function TarjetaPaso({
           </p>
         )}
         {estado === "ahora" && <Etiqueta className="!text-[10px] text-marca/60">Ahora</Etiqueta>}
+        {clicable && (
+          <span className="mt-1 inline-flex w-fit items-center gap-1.5 rounded-full bg-white/85 px-3 py-1.5 text-[12px] font-semibold text-marca">
+            <IconoPlayChico />
+            {estado === "hecha" ? "Volver a ver" : "Ver clase"}
+          </span>
+        )}
       </div>
       <IconoPastel tipo={icono} color={pendiente ? "marca" : "blanco"} className={`shrink-0 ${pendiente ? "opacity-40" : ""}`} />
-      {clicable && <span className="self-center text-marca/40">›</span>}
     </div>
   );
   if (!clicable || !href) return contenido;
