@@ -1,6 +1,7 @@
 import Link from "next/link";
 
 const SECCIONES = [
+  { href: "/admin/inicio", titulo: "Portada del Home", texto: "Imagen, eyebrow, título y bajada que ven las alumnas al entrar." },
   { href: "/admin/experiencias", titulo: "Experiencias", texto: "El recorrido de Mi Sueño y las clases de cada etapa Premium." },
   { href: "/admin/biblioteca", titulo: "Biblioteca", texto: "Clases, meditaciones, audios, plantillas, recursos y talleres grabados." },
   { href: "/admin/cursos", titulo: "Cursos", texto: "Cursos con sus módulos, armados con contenidos de la Biblioteca." },

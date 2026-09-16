@@ -37,72 +37,99 @@ export default async function ExperienciaPage({ params }: { params: Promise<{ id
   const tieneTexto = Boolean((experiencia.texto_intro ?? "").trim());
 
   return (
-    <main className="mx-auto max-w-md space-y-6 px-6 py-10">
-      <Link href="/mi-sueno" className="text-sm text-texto/50">
-        ← Atrás
-      </Link>
-
-      <div className="space-y-2">
-        <Badge tipo={esPremium ? "membresia" : "gratis"} />
-        <Titulo>{experiencia.titulo}</Titulo>
-        {experiencia.descripcion && <Subtitulo>{experiencia.descripcion}</Subtitulo>}
-      </div>
-
-      {experiencia.video_url ? (
-        <video src={experiencia.video_url} controls className="w-full rounded-card bg-black" />
-      ) : (
-        tieneTexto && (
-          <div className="rounded-card border border-texto/10 bg-tarjeta p-5 text-sm text-texto/40">
-            Todavía no hay video para esta clase — podés seguir con el texto.
+    <main className="mx-auto max-w-md pb-10">
+      {experiencia.portada_url && (
+        <div className="relative aspect-[16/10] w-full overflow-hidden">
+          {/* eslint-disable-next-line @next/next/no-img-element -- viene de Storage */}
+          <img src={experiencia.portada_url} alt="" className="h-full w-full object-cover" />
+          <div className="absolute inset-0 bg-gradient-to-t from-texto/50 via-transparent to-transparent" />
+          <div className="absolute left-6 top-5">
+            <Link
+              href="/mi-sueno"
+              className="rounded-full bg-white/90 px-3 py-1.5 text-xs font-semibold text-texto backdrop-blur"
+            >
+              ← Atrás
+            </Link>
           </div>
-        )
-      )}
-
-      {tieneTexto && (
-        <div className="contenido-enriquecido" dangerouslySetInnerHTML={{ __html: experiencia.texto_intro ?? "" }} />
-      )}
-
-      {completada && (
-        <div className="rounded-card border border-acentoLima/50 bg-acentoLima/10 p-4">
-          <p className="text-sm font-medium">
-            ✓ {esPremium ? "Esto ya forma parte de tu Proyecto de Valentía." : "Completada — ya es parte de tu recorrido."}
-          </p>
         </div>
       )}
 
-      <form action={guardar} className="space-y-5">
-        <p className="text-xs uppercase tracking-wide text-texto/45">Tus respuestas</p>
-        {preguntas.map((p) => (
-          <label key={p.id} className="flex flex-col gap-2">
-            <span className="text-[15px] font-medium text-texto">{p.texto}</span>
-            <textarea
-              name={`pregunta_${p.id}`}
-              defaultValue={p.respuestaActual}
-              placeholder={p.placeholder ?? ""}
-              rows={3}
-              required
-              className="rounded-card border border-texto/12 bg-tarjeta px-4 py-3 text-[15px] leading-relaxed placeholder:text-texto/35 focus:border-acento focus:outline-none"
-            />
-          </label>
-        ))}
-        <BotonPrimario type="submit">
-          {completada ? "Guardar cambios" : esPremium ? "Guardar en mi Proyecto" : "Guardar mis respuestas"}
-        </BotonPrimario>
-      </form>
+      <div className="space-y-8 px-6 pt-6">
+        {!experiencia.portada_url && (
+          <Link href="/mi-sueno" className="text-sm text-texto/50">
+            ← Atrás
+          </Link>
+        )}
 
-      {completada &&
-        (siguiente ? (
-          <Link
-            href={`/experiencias/${siguiente.id}`}
-            className="block rounded-full border border-texto/15 px-6 py-3 text-center text-sm font-semibold text-texto"
-          >
-            Siguiente: {siguiente.titulo} →
-          </Link>
+        <div className="space-y-2.5">
+          <Badge tipo={esPremium ? "membresia" : "gratis"} />
+          <Titulo>{experiencia.titulo}</Titulo>
+          {experiencia.descripcion && <Subtitulo>{experiencia.descripcion}</Subtitulo>}
+        </div>
+
+        {experiencia.video_url ? (
+          <video src={experiencia.video_url} controls className="w-full rounded-card bg-black" />
         ) : (
-          <Link href="/mi-sueno" className="block text-center text-sm font-medium text-acento">
-            Volver a mi ruta →
-          </Link>
-        ))}
+          tieneTexto && (
+            <div className="rounded-card border border-dashed border-texto/15 bg-tarjeta p-5 text-sm text-texto/40">
+              Todavía no hay video para esta clase — podés seguir con el texto.
+            </div>
+          )
+        )}
+
+        {tieneTexto && (
+          <div className="contenido-enriquecido" dangerouslySetInnerHTML={{ __html: experiencia.texto_intro ?? "" }} />
+        )}
+
+        {completada && (
+          <div className="rounded-card border border-acentoLima/50 bg-acentoLima/10 p-4">
+            <p className="text-sm font-medium">
+              ✓ {esPremium ? "Esto ya forma parte de tu Proyecto de Valentía." : "Completada — ya es parte de tu recorrido."}
+            </p>
+          </div>
+        )}
+
+        <div className="h-px bg-texto/10" />
+
+        <form action={guardar} className="space-y-6">
+          <div className="space-y-1">
+            <p className="text-xs font-semibold uppercase tracking-[0.15em] text-texto/45">Tu turno</p>
+            <p className="text-sm text-texto/50">Nadie más lee esto. Es para vos.</p>
+          </div>
+          <div className="space-y-5">
+            {preguntas.map((p) => (
+              <label key={p.id} className="flex flex-col gap-2">
+                <span className="text-[15px] font-medium text-texto">{p.texto}</span>
+                <textarea
+                  name={`pregunta_${p.id}`}
+                  defaultValue={p.respuestaActual}
+                  placeholder={p.placeholder ?? ""}
+                  rows={3}
+                  required
+                  className="rounded-card border border-texto/12 bg-tarjeta px-4 py-3 text-[15px] leading-relaxed placeholder:text-texto/35 focus:border-acento focus:outline-none"
+                />
+              </label>
+            ))}
+          </div>
+          <BotonPrimario type="submit">
+            {completada ? "Guardar cambios" : esPremium ? "Guardar en mi Proyecto" : "Guardar mis respuestas"}
+          </BotonPrimario>
+        </form>
+
+        {completada &&
+          (siguiente ? (
+            <Link
+              href={`/experiencias/${siguiente.id}`}
+              className="block rounded-full border border-texto/15 px-6 py-3 text-center text-sm font-semibold text-texto"
+            >
+              Siguiente: {siguiente.titulo} →
+            </Link>
+          ) : (
+            <Link href="/mi-sueno" className="block text-center text-sm font-medium text-acento">
+              Volver a mi ruta →
+            </Link>
+          ))}
+      </div>
     </main>
   );
 }

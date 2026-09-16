@@ -54,6 +54,7 @@ export async function guardarExperiencia(experienciaId: string | null, formData:
   const descripcion = String(formData.get("descripcion") ?? "").trim() || null;
   const textoIntro = String(formData.get("texto_intro") ?? "").trim() || null;
   const videoUrl = String(formData.get("video_url") ?? "").trim() || null;
+  const portadaUrl = String(formData.get("portada_url") ?? "").trim() || null;
   const etapaId = String(formData.get("etapa_id") ?? "").trim() || null;
   const nivelAcceso = String(formData.get("nivel_acceso") ?? "gratis");
   const estado = String(formData.get("estado") ?? "borrador");
@@ -73,6 +74,7 @@ export async function guardarExperiencia(experienciaId: string | null, formData:
     descripcion,
     texto_intro: textoIntro,
     video_url: videoUrl,
+    portada_url: portadaUrl,
     etapa_id: etapaId,
     nivel_acceso: nivelAcceso,
     estado,
@@ -147,6 +149,7 @@ export async function duplicarExperiencia(experienciaId: string) {
       descripcion: original.descripcion,
       texto_intro: original.texto_intro,
       video_url: original.video_url,
+      portada_url: original.portada_url,
       nivel_acceso: original.nivel_acceso,
       estado: "borrador",
       orden: original.orden,

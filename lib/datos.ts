@@ -34,11 +34,26 @@ export async function obtenerSuenoActivo(supabase: SupabaseClient, userId: strin
   return data;
 }
 
+// Hero editable del Home (ver 0006_hero_portadas.sql). Siempre hay una
+// fila (se precarga en la migración), pero por las dudas se cubre el caso
+// sin fila con valores por default razonables.
+export async function obtenerConfiguracionHome(supabase: SupabaseClient) {
+  const { data } = await supabase.from("configuracion_home").select("*").eq("id", "home").maybeSingle();
+  return (
+    data ?? {
+      eyebrow: "Valentía en Movimiento",
+      titulo: "Tomate tus sueños en serio",
+      bajada: "Un lugar para volver cada semana.",
+      imagen_url: null as string | null,
+    }
+  );
+}
+
 // Recorrido de entrada: experiencias sin etapa (etapa_id is null), en orden.
 export async function obtenerRecorridoEntrada(supabase: SupabaseClient, userId: string) {
   const { data: experiencias } = await supabase
     .from("experiencias")
-    .select("id, titulo, descripcion, texto_intro, video_url, nivel_acceso, estado, orden")
+    .select("id, titulo, descripcion, texto_intro, video_url, portada_url, nivel_acceso, estado, orden")
     .is("etapa_id", null)
     .eq("estado", "publicado")
     .order("orden", { ascending: true });
@@ -62,7 +77,7 @@ export async function obtenerRuta(supabase: SupabaseClient, userId: string) {
 
   const { data: experiencias } = await supabase
     .from("experiencias")
-    .select("id, etapa_id, titulo, descripcion, video_url, nivel_acceso, estado, orden")
+    .select("id, etapa_id, titulo, descripcion, video_url, portada_url, nivel_acceso, estado, orden")
     .not("etapa_id", "is", null)
     .eq("estado", "publicado")
     .order("orden", { ascending: true });
@@ -84,7 +99,7 @@ export async function obtenerRuta(supabase: SupabaseClient, userId: string) {
 export async function obtenerExperienciaConPreguntas(supabase: SupabaseClient, experienciaId: string, userId: string) {
   const { data: experiencia } = await supabase
     .from("experiencias")
-    .select("id, etapa_id, titulo, descripcion, texto_intro, video_url, nivel_acceso, estado, orden")
+    .select("id, etapa_id, titulo, descripcion, texto_intro, video_url, portada_url, nivel_acceso, estado, orden")
     .eq("id", experienciaId)
     .maybeSingle();
   if (!experiencia) return null;

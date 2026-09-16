@@ -86,6 +86,7 @@ export interface Experiencia {
   descripcion: string | null;
   texto_intro: string | null;
   video_url: string | null;
+  portada_url: string | null;
   nivel_acceso: NivelAcceso;
   estado: EstadoExperiencia;
   orden: number;

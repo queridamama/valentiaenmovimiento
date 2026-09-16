@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { AREAS_RESPUESTA, ETIQUETA_AREA, type AreaRespuesta } from "@/lib/tipos";
 import EditorEnriquecido from "@/components/admin/EditorEnriquecido";
+import CampoArchivo from "@/components/admin/CampoArchivo";
 
 interface PreguntaEditable {
   id?: string;
@@ -20,6 +21,7 @@ interface Props {
     descripcion: string;
     texto_intro: string;
     video_url: string;
+    portada_url: string;
     etapa_id: string | null;
     nivel_acceso: string;
     estado: string;
@@ -74,6 +76,15 @@ export default function FormularioExperiencia({ accion, etapas, inicial, pregunt
             className="rounded-lg border border-texto/15 px-3 py-2"
           />
         </label>
+
+        <CampoArchivo
+          label="Portada (opcional)"
+          name="portada_url"
+          destino="portada"
+          accept="image/*"
+          tipo="imagen"
+          valorInicial={inicial?.portada_url ?? ""}
+        />
 
         <EditorEnriquecido name="texto_intro" label="Texto introductorio" contenidoInicial={inicial?.texto_intro ?? ""} />
 

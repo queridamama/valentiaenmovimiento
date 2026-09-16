@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { crearClienteServidor } from "@/lib/supabase/server";
 
 const DESTINOS = [
+  { href: "/admin/inicio", label: "Portada del Home" },
   { href: "/admin/experiencias", label: "Experiencias" },
   { href: "/admin/biblioteca", label: "Biblioteca" },
   { href: "/admin/cursos", label: "Cursos" },

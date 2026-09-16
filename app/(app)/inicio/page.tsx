@@ -8,9 +8,10 @@ import {
   obtenerProyectoActivo,
   asegurarProyectoActivo,
   obtenerRuta,
+  obtenerConfiguracionHome,
 } from "@/lib/datos";
 import { diasDesde, diaDelProyecto } from "@/lib/fechas";
-import { Badge, Tarjeta, EnlacePrimario, Titulo, Subtitulo } from "@/components/ui";
+import { Badge, Tarjeta, EnlacePrimario, Subtitulo } from "@/components/ui";
 
 export default async function InicioPage() {
   const supabase = await crearClienteServidor();
@@ -20,11 +21,12 @@ export default async function InicioPage() {
   if (!user) return null;
 
   const nombre = (user.user_metadata?.nombre as string | undefined) ?? "";
-  const [autorizacion, sueno, recorrido, movimiento] = await Promise.all([
+  const [autorizacion, sueno, recorrido, movimiento, hero] = await Promise.all([
     obtenerAutorizacion(supabase, user.id),
     obtenerSuenoActivo(supabase, user.id),
     obtenerRecorridoEntrada(supabase, user.id),
     obtenerMovimientoActual(supabase, user.id),
+    obtenerConfiguracionHome(supabase),
   ]);
 
   const esPremium = autorizacion.nivel === "premium";
@@ -39,13 +41,39 @@ export default async function InicioPage() {
   const etapaActual = ruta.find((e) => e.id === proyecto?.etapa_actual);
 
   return (
-    <main className="mx-auto max-w-md space-y-6 px-6 pt-10">
-      <div className="flex items-center justify-between">
-        <Titulo>Hola{nombre ? `, ${nombre}` : ""}</Titulo>
-        <Badge tipo={esPremium ? "membresia" : "gratis"} />
+    <main className="mx-auto max-w-md">
+      {/* Hero editorial: imagen + eyebrow/título administrables desde
+          /admin/inicio (ver lib/datos.ts:obtenerConfiguracionHome). `main`
+          no tiene padding lateral a propósito: esta imagen sangra hasta
+          los bordes del "teléfono" — el resto del contenido recupera el
+          padding en el div de abajo. */}
+      <div className="relative aspect-[16/11] w-full overflow-hidden">
+        {hero.imagen_url ? (
+          // eslint-disable-next-line @next/next/no-img-element -- viene de Storage
+          <img src={hero.imagen_url} alt="" className="h-full w-full object-cover" />
+        ) : (
+          <div className="h-full w-full bg-gradient-to-br from-acento/50 via-acentoRosa/60 to-acentoCeleste/50" />
+        )}
+        <div className="absolute inset-0 bg-gradient-to-t from-texto/80 via-texto/10 to-transparent" />
+        <div className="absolute inset-x-6 bottom-5 space-y-1.5">
+          {hero.eyebrow && (
+            <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-white/85">{hero.eyebrow}</p>
+          )}
+          {hero.titulo && (
+            <p className="font-display text-[26px] font-semibold leading-tight text-white">{hero.titulo}</p>
+          )}
+        </div>
       </div>
 
-      {!sueno && (
+      <div className="space-y-6 px-6 pb-6 pt-6">
+        {hero.bajada && <Subtitulo>{hero.bajada}</Subtitulo>}
+
+        <div className="flex items-center justify-between">
+          <p className="text-[15px] font-medium text-texto/70">Hola{nombre ? `, ${nombre}` : ""}</p>
+          <Badge tipo={esPremium ? "membresia" : "gratis"} />
+        </div>
+
+        {!sueno && (
         <Tarjeta className="space-y-3">
           <Subtitulo>Todavía no empezaste tu recorrido. Son tres clases cortas y termina con tu sueño declarado.</Subtitulo>
           <EnlacePrimario href={siguiente ? `/experiencias/${siguiente.id}` : "/mi-sueno"}>
@@ -124,15 +152,16 @@ export default async function InicioPage() {
         </section>
       )}
 
-      <section className="space-y-2 pb-6">
-        <h2 className="font-display text-lg font-semibold">Comunidad</h2>
-        <Tarjeta>
-          <Subtitulo>Presentaciones, preguntas y evidencias de la semana.</Subtitulo>
-          <Link href="/comunidad" className="mt-2 inline-block text-sm font-medium text-acento">
-            Entrar a Comunidad →
-          </Link>
-        </Tarjeta>
-      </section>
+        <section className="space-y-2">
+          <h2 className="font-display text-lg font-semibold">Comunidad</h2>
+          <Tarjeta>
+            <Subtitulo>Presentaciones, preguntas y evidencias de la semana.</Subtitulo>
+            <Link href="/comunidad" className="mt-2 inline-block text-sm font-medium text-acento">
+              Entrar a Comunidad →
+            </Link>
+          </Tarjeta>
+        </section>
+      </div>
     </main>
   );
 }

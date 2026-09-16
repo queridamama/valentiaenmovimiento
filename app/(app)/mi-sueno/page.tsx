@@ -62,11 +62,17 @@ export default async function MiSuenoPage() {
               const clicable = e.completada || i === primeraPendienteIdx;
               const contenido = (
                 <div
-                  className={`flex items-center justify-between gap-3 rounded-card border p-4 ${
+                  className={`flex items-center gap-3 rounded-card border p-4 ${
                     estado === "ahora" ? "border-texto bg-texto text-white" : "border-texto/10 bg-tarjeta"
                   } ${!clicable ? "opacity-50" : ""}`}
                 >
-                  <span className={`text-[15px] font-medium ${estado === "ahora" ? "text-white" : "text-texto"}`}>
+                  {e.portada_url && (
+                    // eslint-disable-next-line @next/next/no-img-element -- viene de Storage
+                    <img src={e.portada_url} alt="" className="h-11 w-11 shrink-0 rounded-lg object-cover" />
+                  )}
+                  <span
+                    className={`flex-1 text-[15px] font-medium ${estado === "ahora" ? "text-white" : "text-texto"}`}
+                  >
                     {e.titulo}
                   </span>
                   <EstadoBadge estado={estado} />
@@ -135,11 +141,17 @@ export default async function MiSuenoPage() {
                         <Link
                           key={e.id}
                           href={`/experiencias/${e.id}`}
-                          className={`flex items-center justify-between gap-3 rounded-card border p-4 ${
+                          className={`flex items-center gap-3 rounded-card border p-4 ${
                             estado === "ahora" ? "border-texto bg-texto text-white" : "border-texto/10 bg-tarjeta"
                           }`}
                         >
-                          <span className={`text-[15px] font-medium ${estado === "ahora" ? "text-white" : "text-texto"}`}>
+                          {e.portada_url && (
+                            // eslint-disable-next-line @next/next/no-img-element -- viene de Storage
+                            <img src={e.portada_url} alt="" className="h-11 w-11 shrink-0 rounded-lg object-cover" />
+                          )}
+                          <span
+                            className={`flex-1 text-[15px] font-medium ${estado === "ahora" ? "text-white" : "text-texto"}`}
+                          >
                             {e.titulo}
                           </span>
                           <EstadoBadge estado={estado} />

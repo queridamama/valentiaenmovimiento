@@ -11,7 +11,7 @@ export default async function EditarExperienciaPage({ params }: { params: Promis
     supabase.from("etapas_ruta").select("id, nombre").order("orden"),
     supabase
       .from("experiencias")
-      .select("titulo, descripcion, texto_intro, video_url, etapa_id, nivel_acceso, estado, orden")
+      .select("titulo, descripcion, texto_intro, video_url, portada_url, etapa_id, nivel_acceso, estado, orden")
       .eq("id", id)
       .maybeSingle(),
     supabase
@@ -38,6 +38,7 @@ export default async function EditarExperienciaPage({ params }: { params: Promis
           descripcion: experiencia.descripcion ?? "",
           texto_intro: experiencia.texto_intro ?? "",
           video_url: experiencia.video_url ?? "",
+          portada_url: experiencia.portada_url ?? "",
           etapa_id: experiencia.etapa_id,
           nivel_acceso: experiencia.nivel_acceso,
           estado: experiencia.estado,
