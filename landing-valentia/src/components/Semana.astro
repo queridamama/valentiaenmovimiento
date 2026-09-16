@@ -8,6 +8,8 @@ import { semana } from "../content/valentia";
       {semana.titulo}
     </h2>
 
+    <p class="reveal mx-auto mt-4 max-w-lg text-center text-[16px] leading-relaxed text-texto/70">{semana.intro}</p>
+
     <div class="mt-12 grid gap-4 sm:mt-14 sm:grid-cols-3">
       {semana.momentos.map((momento) => (
         <div class="reveal space-y-2 rounded-[20px] bg-tarjeta p-6 text-center">
@@ -17,7 +19,9 @@ import { semana } from "../content/valentia";
       ))}
     </div>
 
-    <p class="reveal mt-12 text-center font-display text-xl font-semibold text-marca sm:text-2xl">
+    <p class="reveal mx-auto mt-10 max-w-lg text-center text-[15px] text-texto/60">{semana.comunidad}</p>
+
+    <p class="reveal balance mx-auto mt-8 max-w-xl text-center font-display text-xl font-semibold leading-snug text-marca sm:text-2xl">
       {semana.frase}
     </p>
   </div>

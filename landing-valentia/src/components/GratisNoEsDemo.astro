@@ -9,7 +9,7 @@ import { REGISTER_URL } from "../config/site";
       <h2 class="balance font-display text-[26px] font-semibold leading-tight text-marca sm:text-[34px]">
         {gratisNoEsDemo.titulo}
       </h2>
-      <p class="text-[17px] font-medium italic text-marca">{gratisNoEsDemo.frase}</p>
+      <p class="text-[16px] leading-relaxed text-texto/70">{gratisNoEsDemo.intro}</p>
       <a
         href={REGISTER_URL}
         data-analytics="click-empezar-gratis-seccion"
@@ -28,7 +28,9 @@ import { REGISTER_URL } from "../config/site";
           </li>
         ))}
       </ul>
-      <p class="pt-2 text-[15px] font-medium text-texto">{gratisNoEsDemo.cierre}</p>
+      <p class="subrayado subrayado-marca inline-block pt-2 text-[15px] font-semibold uppercase tracking-tight text-marca">
+        {gratisNoEsDemo.frase}
+      </p>
     </div>
   </div>
 </section>

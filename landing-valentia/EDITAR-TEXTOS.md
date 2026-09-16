@@ -20,14 +20,15 @@ También podés simplemente pedirle a tu asistente: *"cambiá esta frase por est
 | `nav` | El menú de arriba de todo (Header): los links "Qué es", "Cómo funciona", etc., y los botones "Ya soy parte" / "Empezar gratis" |
 | `hero` | Lo primero que se ve al entrar a la página: el título grande, el texto de abajo y los botones |
 | `algunDia` | La sección oscura de "Algún día también puede durar años" |
-| `tesis` | "Los sueños no se cumplen solamente deseándolos. Se construyen." y la fórmula (Intención + Valentía + Estrategia + Acción) |
-| `recorrido` | "Cómo funciona": los 5 pasos numerados (Elegí un sueño, Encontrá tu para qué, etc.) |
+| `tesis` | "Los sueños se construyen": el título, el texto, el cierre y la fórmula (Intención + Valentía + Estrategia + Acción) |
+| `estrategia` | "Los sueños también necesitan estrategia": la mirada personal de Meli sobre construir con estrategia sin perder la conexión con una misma |
+| `recorrido` | "Empezás por un sueño": la introducción y los 5 pasos numerados (Elegís tu sueño, Encontrás tu para qué, etc.) |
 | `appShowcase` | "Tu espacio dentro de Valentía": el texto arriba de las capturas de pantalla |
-| `semana` | "Tu sueño también necesita un lugar en tu semana": lunes / durante la semana / viernes |
-| `gratisNoEsDemo` | La sección **Gratis** (el recuadro verde lima con la lista de lo que incluye) |
+| `semana` | "Una semana en movimiento": lunes / durante la semana / viernes, y las dos frases de cierre |
+| `gratisNoEsDemo` | La sección **Valentía Gratis** (el recuadro verde lima con la lista de lo que incluye) |
 | `evidencia` | La sección oscura "Mirá todo eso que antes no existía" con la lista de ejemplos |
-| `premium` | La sección **Premium** completa: título, las 5 etapas, "esto no es / esto sí es", y la comparación Gratis vs Premium |
-| `meli` | **Sobre Meli**: su presentación, biografía y la frase final |
+| `premium` | La sección **Premium** completa: título, las 5 etapas, los dos recuadros ("Cosas que probablemente ya no te sirven" / "Lo que vamos a trabajar") y la comparación Gratis vs Premium |
+| `meli` | **Sobre Meli**: su presentación en primera persona y la frase final |
 | `paraQuienEs` | "Esto puede ser para vos si..." |
 | `faq` | Preguntas frecuentes |
 | `cierre` | El cierre final de la página, con el último botón "Empezar gratis" |

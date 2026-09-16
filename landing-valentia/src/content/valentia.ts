@@ -25,26 +25,26 @@ export const hero = {
   headline: marca.territorio,
   copy: [
     "Hay cosas que no querés seguir dejando para “algún día”.",
-    "Elegí algo importante para vos, dale un lugar en tu vida y empezá a moverte junto a otras mujeres que están construyendo lo mismo.",
+    "Elegí eso que querés hacer realidad, dale un lugar en tu vida y empezá a ponerlo en movimiento.",
   ],
   ctaPrincipal: "Empezar gratis",
   ctaSecundario: "Ya soy parte · Entrar",
-  microfrase: "Gratis. Sin límite de tiempo. Sos parte desde el día uno.",
+  microfrase: "Gratis. Sin límite de tiempo.",
 };
 
 export const algunDia = {
   frase: "“Algún día” también puede durar años.",
   parrafos: [
-    "Hay sueños que no abandonamos. Simplemente los vamos postergando.",
-    "Cuando tenga más tiempo. Cuando tenga más plata. Cuando esté lista. Cuando se ordene todo.",
-    "Y mientras tanto, la vida sigue.",
+    "Hay sueños que nos acompañan durante años. Los pensamos, los imaginamos, volvemos a ellos cada tanto… pero la vida cotidiana siempre termina ocupando primero el lugar.",
   ],
-  cierre: "Valentía nace para que eso que te importa vuelva a tener un lugar.",
+  cierre: "Para eso nace Valentía: para empezar a construir eso que hace tiempo viene dando vueltas en vos.",
 };
 
 export const tesis = {
-  titulo: ["LOS SUEÑOS NO SE CUMPLEN", "SOLAMENTE DESEÁNDOLOS.", "SE CONSTRUYEN."],
-  texto: "Soñar importa. Pero también importan las decisiones que tomás después.",
+  titulo: ["LOS SUEÑOS", "SE CONSTRUYEN."],
+  texto:
+    "Soñar te muestra hacia dónde querés ir. Después empieza otra parte: descubrir cómo acercarte, qué necesitás aprender y qué movimientos pueden llevarte hacia ahí.",
+  cierre: "En Valentía trabajamos ese camino.",
   formula: ["INTENCIÓN", "VALENTÍA", "ESTRATEGIA", "ACCIÓN"],
 };
 
@@ -56,19 +56,24 @@ export const estrategia = {
     "Pero también aprendí que quiero estar presente mientras construyo esa vida, disfrutarla, escucharme y seguir conectada con lo que realmente quiero.",
   ],
   pivote: "En Valentía conviven esas dos miradas.",
-  frase: "TOMARTE UN SUEÑO EN SERIO COMO TOMARÍAS EN SERIO UNA EMPRESA, SIN CONVERTIR TU VIDA EN UNA EMPRESA.",
+  frase: "CONSTRUIR LO QUE SOÑÁS Y ESTAR PRESENTE EN LA VIDA QUE YA TENÉS.",
   cierre:
     "En el recorrido vas a encontrarte con preguntas de coaching, ejercicios para mirar tus propios patrones, meditaciones y herramientas que fui usando durante años para tomar decisiones, atravesar procesos y volver a conectarme con lo que quiero.",
 };
 
 export const recorrido = {
-  titulo: ["No necesitás saber cómo llegar.", "Necesitás empezar."],
+  titulo: ["EMPEZÁS POR UN SUEÑO."],
+  intro: [
+    "Cuando entrás a Valentía elegís qué querés trabajar.",
+    "A partir de ahí vas dejando registro de lo que pensás, lo que descubrís y los movimientos que querés hacer.",
+    "Tu recorrido queda guardado para que puedas volver cuando necesites, mirar lo que ya hiciste y seguir desde ahí.",
+  ],
   pasos: [
-    { numero: "01", titulo: "Elegí un sueño", texto: "¿Qué querés dejar de seguir postergando?" },
-    { numero: "02", titulo: "Encontrá tu para qué", texto: "¿Por qué esto realmente importa para vos?" },
-    { numero: "03", titulo: "Mirá dónde estás", texto: "Sin juicio. Desde la realidad." },
-    { numero: "04", titulo: "Elegí un movimiento", texto: "Algo concreto que puedas hacer ahora." },
-    { numero: "05", titulo: "Registrá evidencia", texto: "Empezá a mirar todo eso que antes no existía." },
+    { numero: "01", titulo: "ELEGÍS TU SUEÑO", texto: "¿Qué querés dejar de seguir postergando?" },
+    { numero: "02", titulo: "ENCONTRÁS TU PARA QUÉ", texto: "¿Por qué esto realmente importa para vos?" },
+    { numero: "03", titulo: "MIRÁS DÓNDE ESTÁS HOY", texto: "Sin juicio. Desde la realidad." },
+    { numero: "04", titulo: "ELEGÍS TU PRÓXIMO MOVIMIENTO", texto: "Algo concreto que puedas hacer ahora." },
+    { numero: "05", titulo: "REGISTRÁS LO QUE VA PASANDO", texto: "Para poder reconocer tu propio recorrido." },
   ],
   cta: "Empezar mi recorrido",
 };
@@ -76,7 +81,9 @@ export const recorrido = {
 export const appShowcase = {
   eyebrow: "TU ESPACIO DENTRO DE VALENTÍA",
   titulo: "Un lugar para volver a tu sueño",
-  texto: "Para registrar tu movimiento y guardar evidencia — parte de una comunidad que se mueve con vos, no una app más en tu celular.",
+  texto:
+    "Ahí queda tu recorrido, tus respuestas, tus movimientos y lo que vas registrando, para que puedas volver cuando quieras y seguir desde donde estás.",
+  textoComunidad: "Valentía también vive en los encuentros, los grupos y el vínculo con otras mujeres.",
   pantallas: [
     { archivo: "home.webp", alt: "Inicio de tu espacio en Valentía en Movimiento, con el sueño activo y el próximo movimiento" },
     { archivo: "mi-sueno.webp", alt: "Recorrido de Mi Sueño dentro de tu espacio de Valentía" },
@@ -87,46 +94,45 @@ export const appShowcase = {
 };
 
 export const semana = {
-  titulo: "Tu sueño también necesita un lugar en tu semana.",
+  titulo: "UNA SEMANA EN MOVIMIENTO",
+  intro:
+    "La idea es que tu sueño no quede guardado hasta que tengas tiempo. Cada semana volvés a él, elegís un movimiento y ves qué pasa cuando empezás a hacerlo parte de tu vida.",
   momentos: [
-    { dia: "LUNES", texto: "¿Qué movimiento voy a hacer?" },
+    { dia: "LUNES", texto: "¿Qué movimiento voy a hacer esta semana?" },
     { dia: "DURANTE LA SEMANA", texto: "Me muevo." },
-    { dia: "VIERNES", texto: "¿Qué existe hoy que antes no existía?" },
+    { dia: "VIERNES", texto: "¿Qué pasó esta semana?" },
   ],
-  frase: "Acá celebramos movimiento, no perfección.",
+  comunidad: "Mientras vos movés tu sueño, hay otras mujeres haciendo lo mismo con el suyo.",
+  frase: "A veces necesitás mirar todo lo que sí estás logrando para darte cuenta de que estás acercándote a tu sueño.",
 };
 
 export const gratisNoEsDemo = {
-  titulo: "GRATIS NO SIGNIFICA “DE PRUEBA”.",
+  titulo: "VALENTÍA GRATIS",
+  intro: "Podés empezar gratis y quedarte todo el tiempo que quieras.",
   bullets: [
-    "Podés quedarte.",
-    "Podés volver cada semana.",
-    "Podés cambiar de movimiento.",
-    "Registrar evidencia.",
-    "Volver a tus experiencias.",
-    "Ser parte de la comunidad.",
-    "Seguir construyendo, acompañada.",
+    "Tu espacio dentro de Valentía para elegir tu sueño y hacer el recorrido inicial.",
+    "Tu movimiento semanal para seguir avanzando.",
+    "Un lugar donde registrar lo que vas viviendo y mirar todo lo que ya hiciste.",
+    "Acceso a contenidos y recursos gratuitos.",
+    "La comunidad gratuita.",
+    "El grupo de WhatsApp, con novedades, encuentros abiertos, preguntas y recordatorios para volver a tu sueño.",
   ],
-  cierre: "Tu sueño no vence a los siete días.",
-  frase: "En Valentía Gratis mantenés tu sueño en movimiento.",
+  frase: "TU SUEÑO NO VENCE A LOS SIETE DÍAS.",
   cta: "Quiero empezar",
 };
 
 export const evidencia = {
-  titulo: "Mirá todo eso que antes no existía.",
-  intro: "No se trata solamente de celebrar grandes resultados.",
+  titulo: "MIRÁ TODO ESO QUE ANTES NO EXISTÍA.",
+  intro: "Durante el proceso vas registrando pequeñas y grandes cosas que empiezan a pasar porque te pusiste en movimiento.",
   ejemplos: [
-    "mandaste ese mensaje",
-    "pediste ayuda",
-    "empezaste",
-    "dijiste que no",
-    "investigaste",
-    "reservaste tiempo",
-    "mostraste tu trabajo",
-    "terminaste algo",
-    "tomaste una decisión",
+    "Tomaste una decisión que venías postergando",
+    "Tuviste una conversación que necesitabas tener",
+    "Te animaste a hacer algo por primera vez",
+    "Una idea empezó a tomar forma",
+    "Terminaste algo que venías dejando a medias",
+    "Hoy existe algo que antes estaba solo en tu cabeza",
   ],
-  frase: "TODO ESTO ANTES NO EXISTÍA.",
+  cierre: "Guardarlo también te ayuda a reconocer tu propio recorrido.",
 };
 
 export const premium = {
@@ -135,32 +141,72 @@ export const premium = {
   subtitulo: "Convertí tu sueño en un Proyecto de Valentía.",
   texto: "Premium es una experiencia de 90 días para transformar un sueño en un proyecto real.",
   etapas: ["DEFINÍ", "CONSTRUÍTE", "DISEÑÁ", "MOVETE", "SOSTENÉ"],
-  frase: ["El sueño marca el rumbo.", "La identidad sostiene el camino."],
-  etiquetaNoEs: "Esto no es",
-  noEs: ["Más videos para acumular.", "Motivación vacía.", "Una carrera por hacer todo perfecto."],
-  etiquetaSiEs: "Esto sí es",
-  siEs: ["Una ruta.", "Decisiones.", "Estrategia.", "Identidad.", "Movimiento.", "Evidencia.", "Acompañamiento."],
+  frase: ["A medida que tu sueño toma forma, vos también vas cambiando con él."],
+  tituloCajas: "PREMIUM TE DA UNA FORMA DE TRABAJAR TU SUEÑO",
+  etiquetaNoEs: "COSAS QUE PROBABLEMENTE YA NO TE SIRVEN",
+  noEs: [
+    "Acumular contenido que después no usás.",
+    "Esperar a sentirte motivada para avanzar.",
+    "Exigirte hacerlo todo perfecto.",
+    "Sentir que tenés que resolver todo sola.",
+  ],
+  etiquetaSiEs: "LO QUE VAMOS A TRABAJAR",
+  siEs: [
+    "Una ruta para tu sueño.",
+    "Decisiones concretas.",
+    "Tu identidad y la forma en que querés sostener este proceso.",
+    "Movimientos que puedas llevar a tu vida.",
+    "Espacios para revisar y ajustar.",
+    "Acompañamiento durante los 90 días.",
+  ],
   comparacion: {
-    gratis: { titulo: "GRATIS", texto: "Mantené tu sueño en movimiento, dentro de la comunidad." },
-    premium: { titulo: "PREMIUM", texto: "Construílo como un Proyecto de Valentía, con acompañamiento cercano." },
+    titulo: "DOS FORMAS DE VIVIR VALENTÍA",
+    intro:
+      "Podés quedarte en Gratis todo el tiempo que quieras. Si en algún momento querés trabajar tu sueño con más profundidad, está Premium.",
+    gratis: {
+      titulo: "VALENTÍA GRATIS",
+      items: [
+        "Elegís tu sueño y hacés el recorrido inicial.",
+        "Elegís tu movimiento semanal.",
+        "Registrás lo que vas logrando.",
+        "Acceso a contenidos y recursos gratuitos.",
+        "Comunidad dentro de Valentía.",
+        "Grupo gratuito de WhatsApp.",
+        "Avisos, propuestas y encuentros abiertos.",
+      ],
+    },
+    premium: {
+      titulo: "VALENTÍA PREMIUM",
+      items: [
+        "Convertís tu sueño en un Proyecto de Valentía de 90 días.",
+        "Trabajás las cinco etapas: Definí · Construíte · Diseñá · Movete · Sostené.",
+        "Tenés una ruta más profunda para trabajar tu sueño.",
+        "Acceso a contenidos y recursos Premium.",
+        "Comunidad Premium.",
+        "Grupo privado de WhatsApp.",
+        "1 encuentro en vivo por mes.",
+        "3 meditaciones nuevas por mes.",
+        "Acompañamiento durante todo el proceso.",
+      ],
+    },
+    cierre: "Podés empezar gratis y pasar a Premium cuando sientas que querés dedicarle un proceso más profundo a tu sueño.",
   },
   cta: "Conocer Premium",
   microfrase: "Empezás gratis — Premium se activa cuando quieras dar el salto.",
 };
 
 export const meli = {
-  titulo: "Yo también estoy construyendo.",
+  titulo: "YO TAMBIÉN ESTOY CONSTRUYENDO.",
   nombre: "MELISA DÍAZ",
   rol: "Coach · Conferencista · Productora · Entrenadora de coaches · Mamá de gemelas",
   parrafos: [
-    "Meli construyó Valentía a partir de su propia experiencia de atravesar procesos, tomar decisiones incómodas, revisar identidad, sostener sueños y crear una vida elegida dentro de una vida real.",
-    "Su historia incluye ser sorda, haber hecho fonoaudiología durante años y atravesar procesos que marcaron profundamente su relación con la identidad, la valentía y la construcción de su propia vida.",
-    "No acompaña desde una supuesta montaña a la que ya llegó. Está construyendo también.",
+    "Soy Melisa Díaz. Soy coach, conferencista, productora, entrenadora de coaches y mamá de gemelas.",
+    "Valentía tiene mucho de mi propia historia. Soy sorda, hice fonoaudiología durante años y crecí atravesando procesos que me llevaron muchas veces a preguntarme quién quería ser y cómo quería vivir.",
+    "Después llegaron los proyectos, las empresas, decisiones incómodas, cambios de rumbo y aprendizajes que hoy forman parte de la manera en la que acompaño.",
+    "Con el tiempo, la autenticidad y la presencia se volvieron dos valores muy importantes para mí. Quiero que lo que construyo se parezca a quien soy y poder estar presente mientras esa vida sucede.",
+    "Yo también sigo teniendo sueños, dudas, decisiones y procesos abiertos. Valentía se construye desde ahí.",
   ],
-  frase: [
-    "“No quiero enseñarte a tener una vida perfecta.",
-    "Quiero acompañarte a tomarte en serio la vida que querés construir.”",
-  ],
+  frase: "CREAR LA VIDA QUE SUEÑO SIN DEJAR DE ESTAR PRESENTE EN LA VIDA QUE YA TENGO.",
 };
 
 export const paraQuienEs = {
@@ -178,41 +224,54 @@ export const faq = {
   items: [
     {
       pregunta: "¿Valentía Gratis es realmente gratis?",
-      respuesta: "Sí. Podés crear tu cuenta y mantener tu sueño en movimiento sin límite de tiempo.",
-    },
-    {
-      pregunta: "¿Necesito saber cuál es mi gran sueño antes de entrar?",
-      respuesta: "No. El recorrido inicial también está pensado para ayudarte a darle claridad.",
-    },
-    {
-      pregunta: "¿Es solamente para emprendedoras?",
       respuesta:
-        "No. Tu sueño puede estar relacionado con trabajo, un proyecto personal, aprendizaje, una decisión o cualquier cosa importante que quieras empezar a construir.",
+        "Sí. Podés crear tu cuenta, hacer el recorrido inicial, trabajar con tu sueño y seguir usando tu espacio sin límite de tiempo.",
+    },
+    {
+      pregunta: "¿Y si todavía no sé bien cuál es mi sueño?",
+      respuesta:
+        "Podés entrar igual. Parte del recorrido inicial está pensado para ayudarte a ordenar eso que viene dando vueltas y entender qué querés empezar a trabajar.",
+    },
+    {
+      pregunta: "¿Valentía es solamente para emprendedoras?",
+      respuesta:
+        "No. Tu sueño puede tener que ver con un proyecto, un cambio personal, algo que querés aprender, una decisión pendiente, tu trabajo o cualquier cosa que quieras empezar a hacer realidad.",
     },
     {
       pregunta: "¿Qué diferencia hay entre Gratis y Premium?",
       respuesta:
-        "Gratis te ayuda a mantener tu sueño en movimiento. Premium te acompaña a convertirlo en un Proyecto de Valentía y construirlo durante 90 días con una ruta más profunda.",
+        "En Gratis tenés tu espacio, el recorrido inicial, tu movimiento semanal, recursos y la comunidad gratuita. En Premium elegís un sueño para trabajarlo como un Proyecto de Valentía durante 90 días, con las cinco etapas del método y un acompañamiento más cercano.",
     },
     {
-      pregunta: "¿Necesito instalar una app?",
-      respuesta: "No para empezar. Entrás desde el navegador, a tu espacio dentro de la comunidad de Valentía. Más adelante podés agregarlo a la pantalla de inicio de tu celular si querés.",
+      pregunta: "¿Cómo es la comunidad y el acompañamiento?",
+      respuesta:
+        "Hay un grupo gratuito de WhatsApp y también una comunidad privada para Premium. En Premium tenemos además un encuentro en vivo por mes. También pueden aparecer propuestas y encuentros abiertos para toda la comunidad.",
     },
     {
-      pregunta: "¿Tengo que hacer algo todos los días?",
-      respuesta: "No. La experiencia está pensada para vivir dentro de una vida real.",
+      pregunta: "¿Qué tipo de herramientas voy a encontrar?",
+      respuesta:
+        "Hay ejercicios de coaching, meditaciones, preguntas para trabajar identidad, decisiones y patrones, además de herramientas que fui sumando desde mi experiencia personal y creando proyectos y empresas.",
+    },
+    {
+      pregunta: "¿Necesito instalar algo?",
+      respuesta:
+        "No. Podés entrar desde el navegador del celular o la computadora. Después, si querés, podés agregar Valentía a la pantalla de inicio de tu celular para tenerla más a mano.",
+    },
+    {
+      pregunta: "¿Tengo que entrar todos los días?",
+      respuesta:
+        "No. Valentía está pensada para acompañarte dentro de la vida que ya tenés. Cada semana volvés a tu sueño, elegís un movimiento y seguís desde ahí.",
     },
   ],
 };
 
 export const cierre = {
-  headline: [
-    "TU SUEÑO NO NECESITA",
-    "QUE HOY SEPAS CÓMO LLEGAR.",
-    "NECESITA QUE DEJES",
-    "DE DEJARLO PARA DESPUÉS.",
+  headline: ["ESO QUE QUERÉS TAMBIÉN MERECE", "EMPEZAR."],
+  texto: [
+    "Puede que todavía no sepas cómo vas a llegar.",
+    "Empezá por algo más simple: dejar de dejarlo para después.",
+    "Valentía puede ser el lugar donde empieces a moverlo, acompañada por otras mujeres que también están haciendo su camino.",
   ],
-  texto: ["Elegí algo importante.", "Dale un lugar.", "Hacé el primer movimiento.", "No lo vas a hacer sola."],
   cta: "Empezar gratis",
   ctaSecundario: "Ya soy parte · Entrar",
 };
@@ -220,5 +279,5 @@ export const cierre = {
 export const seo = {
   title: "Valentía en Movimiento | Tomate tus sueños en serio",
   description:
-    "Un espacio para elegir un sueño, ponerlo en movimiento y empezar a construirlo en tu vida real. Empezá gratis.",
+    "Una comunidad de mujeres que decidieron darle un lugar real a sus sueños y empezar a ponerlos en movimiento. Podés empezar gratis.",
 };

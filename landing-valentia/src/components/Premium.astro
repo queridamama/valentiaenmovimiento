@@ -44,7 +44,11 @@ const bgEtapa: Record<(typeof coloresEtapa)[number], string> = {
       {premium.frase.map((linea) => <span class="block">{linea}</span>)}
     </p>
 
-    <div class="reveal mt-14 grid gap-4 sm:mt-16 sm:grid-cols-2">
+    <p class="reveal mx-auto mt-14 max-w-md text-center text-xs font-semibold uppercase tracking-[0.2em] text-marca sm:mt-16">
+      {premium.tituloCajas}
+    </p>
+
+    <div class="reveal mt-5 grid gap-4 sm:grid-cols-2">
       <div class="space-y-3 rounded-[20px] bg-texto/5 p-6 sm:p-7">
         <p class="text-xs font-semibold uppercase tracking-wide text-texto/45">{premium.etiquetaNoEs}</p>
         <ul class="space-y-2">
@@ -58,28 +62,40 @@ const bgEtapa: Record<(typeof coloresEtapa)[number], string> = {
           <p class="text-xs font-semibold uppercase tracking-wide text-marca">{premium.etiquetaSiEs}</p>
           <Doodle tipo="corazon" color="var(--color-acento)" class="h-3.5 w-3.5" />
         </div>
-        <ul class="flex flex-wrap gap-2">
-          {premium.siEs.map((s, i) => (
-            <li
-              class="rounded-full bg-tarjeta px-3.5 py-1.5 text-[14px] font-medium text-marca"
-              style={`transform: rotate(${i % 2 === 0 ? "-1deg" : "1deg"});`}
-            >
-              {s}
-            </li>
+        <ul class="space-y-2">
+          {premium.siEs.map((s) => (
+            <li class="text-[15px] text-marca">{s}</li>
           ))}
         </ul>
       </div>
     </div>
 
-    <div class="reveal mt-10 grid gap-4 sm:grid-cols-2">
-      <div class="space-y-1.5 rounded-[20px] border border-texto/10 bg-tarjeta p-6 text-center">
-        <p class="text-xs font-semibold uppercase tracking-wide text-texto/45">{premium.comparacion.gratis.titulo}</p>
-        <p class="text-[16px] font-medium text-marca">{premium.comparacion.gratis.texto}</p>
+    <div class="reveal mt-14 space-y-6 sm:mt-16">
+      <div class="mx-auto max-w-lg space-y-2 text-center">
+        <p class="text-xs font-semibold uppercase tracking-[0.2em] text-marca">{premium.comparacion.titulo}</p>
+        <p class="text-[15px] text-texto/60">{premium.comparacion.intro}</p>
       </div>
-      <div class="space-y-1.5 rounded-[20px] border border-acento/40 bg-acento/10 p-6 text-center">
-        <p class="text-xs font-semibold uppercase tracking-wide text-marca">{premium.comparacion.premium.titulo}</p>
-        <p class="text-[16px] font-medium text-marca">{premium.comparacion.premium.texto}</p>
+
+      <div class="grid gap-4 sm:grid-cols-2">
+        <div class="space-y-3 rounded-[20px] border border-texto/10 bg-tarjeta p-6 sm:p-7">
+          <p class="text-xs font-semibold uppercase tracking-wide text-texto/45">{premium.comparacion.gratis.titulo}</p>
+          <ul class="space-y-2">
+            {premium.comparacion.gratis.items.map((item) => (
+              <li class="text-[14px] leading-relaxed text-texto/70">{item}</li>
+            ))}
+          </ul>
+        </div>
+        <div class="space-y-3 rounded-[20px] border border-acento/40 bg-acento/10 p-6 sm:p-7">
+          <p class="text-xs font-semibold uppercase tracking-wide text-marca">{premium.comparacion.premium.titulo}</p>
+          <ul class="space-y-2">
+            {premium.comparacion.premium.items.map((item) => (
+              <li class="text-[14px] leading-relaxed text-marca/90">{item}</li>
+            ))}
+          </ul>
+        </div>
       </div>
+
+      <p class="mx-auto max-w-lg text-center text-[15px] font-medium text-texto/70">{premium.comparacion.cierre}</p>
     </div>
 
     <div class="reveal mt-12 text-center">
