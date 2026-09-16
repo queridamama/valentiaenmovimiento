@@ -32,7 +32,7 @@ export function EstadoBadge({ estado }: { estado: "hecha" | "ahora" | "pendiente
     ahora: "bg-texto/10 text-texto/70",
     pendiente: "bg-texto/5 text-texto/40",
   };
-  const etiquetas: Record<string, string> = { hecha: "Hecha", ahora: "Ahora", pendiente: "Pendiente" };
+  const etiquetas: Record<string, string> = { hecha: "Completada ✓", ahora: "Ahora", pendiente: "Pendiente" };
   return (
     <span className={`inline-block rounded-full px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wider ${estilos[estado]}`}>
       {etiquetas[estado]}

@@ -45,8 +45,9 @@ export default async function MiSuenoPage() {
         )}
       </div>
 
-      {!recorridoTerminado && (
+      {recorrido.length > 0 && (
         <section className="space-y-3">
+          <h2 className="font-display text-lg font-semibold">Tu recorrido</h2>
           <div className="flex items-center justify-between">
             <Badge tipo="gratis" />
             <span className="text-xs text-texto/45">
@@ -54,6 +55,7 @@ export default async function MiSuenoPage() {
             </span>
           </div>
           <p className="font-medium">Tomate tus sueños en serio</p>
+          <Subtitulo>Podés volver a abrir cualquier clase que ya hiciste cuando quieras.</Subtitulo>
           <div className="space-y-2">
             {recorrido.map((e, i) => {
               const estado = e.completada ? "hecha" : i === primeraPendienteIdx ? "ahora" : "pendiente";
@@ -80,13 +82,15 @@ export default async function MiSuenoPage() {
             })}
           </div>
 
-          <div className="space-y-2 pt-4">
-            <p className="text-sm font-medium text-texto/70">Después de esto</p>
-            <Subtitulo>La ruta completa del método son cinco etapas y noventa días.</Subtitulo>
-            <Subtitulo>
-              Definí, Construíte, Diseñá, Movete y Sostené: se abren cuando empezás tu Proyecto de Valentía.
-            </Subtitulo>
-          </div>
+          {!recorridoTerminado && (
+            <div className="space-y-2 pt-4">
+              <p className="text-sm font-medium text-texto/70">Después de esto</p>
+              <Subtitulo>La ruta completa del método son cinco etapas y noventa días.</Subtitulo>
+              <Subtitulo>
+                Definí, Construíte, Diseñá, Movete y Sostené: se abren cuando empezás tu Proyecto de Valentía.
+              </Subtitulo>
+            </div>
+          )}
         </section>
       )}
 
