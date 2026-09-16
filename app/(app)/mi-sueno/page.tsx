@@ -60,7 +60,7 @@ export default async function MiSuenoPage() {
             <p className="text-xs text-marca/50">Las clases completadas quedan disponibles para volver a verlas.</p>
           </div>
 
-          <div className="space-y-4">
+          <div className="space-y-5">
             {recorrido.map((e, i) => {
               const estado = e.completada ? "hecha" : i === primeraPendienteIdx ? "ahora" : "pendiente";
               const clicable = e.completada || i === primeraPendienteIdx;
@@ -128,13 +128,21 @@ export default async function MiSuenoPage() {
               icono="gente"
             />
           </div>
-          <p className="pt-1 text-center text-xs text-texto/40">
-            Cuando quieras ir más profundo, existe{" "}
-            <Link href="/membresia" className="font-medium text-marca underline decoration-marca/30 underline-offset-4">
-              Premium
+
+          <div className="space-y-3 rounded-[26px] bg-marca p-6 text-white">
+            <Etiqueta className="!text-white/70">Premium</Etiqueta>
+            <p className="font-display text-[18px] font-bold leading-snug">¿Querés trabajar este sueño más en profundidad?</p>
+            <p className="text-[13.5px] leading-relaxed text-white/75">
+              En Premium convertís tu sueño en un Proyecto de Valentía de 90 días, con una ruta más profunda,
+              encuentros y acompañamiento.
+            </p>
+            <Link
+              href="/membresia"
+              className="inline-flex items-center gap-1.5 rounded-full bg-acentoLima px-5 py-2.5 text-[13px] font-semibold text-marca"
+            >
+              Sumarme a Premium <span aria-hidden="true">→</span>
             </Link>
-            .
-          </p>
+          </div>
         </section>
       )}
 
@@ -153,7 +161,7 @@ export default async function MiSuenoPage() {
                   </p>
                 </div>
                 {esActual && etapa.experiencias.length > 0 && (
-                  <div className="space-y-4 pl-2">
+                  <div className="space-y-5 pl-2">
                     {etapa.experiencias.map((e, i) => (
                       <TarjetaPaso
                         key={e.id}
@@ -172,8 +180,11 @@ export default async function MiSuenoPage() {
               </div>
             );
           })}
-          <Link href="/mi-proyecto" className="inline-block pt-1 text-sm font-medium text-marca">
-            Ver mi Proyecto →
+          <Link
+            href="/mi-proyecto"
+            className="block rounded-[22px] bg-marca px-5 py-4 text-center text-[14px] font-semibold text-white"
+          >
+            Ver mi Proyecto de Valentía →
           </Link>
         </section>
       )}

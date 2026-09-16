@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { crearClienteServidor } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
-import { Badge, Titulo, BotonSecundario } from "@/components/ui";
+import { Badge, Titulo, Etiqueta, BotonSecundario } from "@/components/ui";
 
 export default async function PerfilPage() {
   const supabase = await crearClienteServidor();
@@ -15,6 +15,7 @@ export default async function PerfilPage() {
   ]);
 
   const esStaff = autorizacion?.rol === "admin" || autorizacion?.rol === "editor";
+  const esPremium = autorizacion?.nivel === "premium";
 
   async function cerrarSesion() {
     "use server";
@@ -29,8 +30,30 @@ export default async function PerfilPage() {
 
       <div className="space-y-3 rounded-[24px] bg-acento/12 p-5">
         <p className="text-[17px] font-medium text-marca">{perfil?.nombre || user?.email}</p>
-        <Badge tipo={autorizacion?.nivel === "premium" ? "membresia" : "gratis"} />
+        <Badge tipo={esPremium ? "membresia" : "gratis"} />
       </div>
+
+      {esPremium ? (
+        <div className="space-y-2.5 rounded-[24px] bg-marca p-5 text-white">
+          <Etiqueta className="!text-white/70">Tu cuenta</Etiqueta>
+          <p className="text-[15px] font-semibold">Premium activo</p>
+          <Link href="/mi-proyecto" className="inline-block rounded-full bg-acentoLima px-5 py-2.5 text-[13px] font-semibold text-marca">
+            Ver mi Proyecto →
+          </Link>
+        </div>
+      ) : (
+        <div className="space-y-2.5 rounded-[24px] bg-texto/5 p-5">
+          <Etiqueta>Tu cuenta</Etiqueta>
+          <p className="text-[15px] font-semibold text-marca">Valentía Gratis</p>
+          <p className="text-[13px] leading-relaxed text-texto/60">
+            Si querés trabajar un sueño como Proyecto de Valentía durante 90 días, podés pasar a Premium cuando
+            quieras.
+          </p>
+          <Link href="/membresia" className="inline-block rounded-full bg-marca px-5 py-2.5 text-[13px] font-semibold text-white">
+            Sumarme a Premium →
+          </Link>
+        </div>
+      )}
 
       <div className="space-y-2">
         <Link href="/mi-proyecto" className="block rounded-[20px] bg-texto/5 p-4 text-[15px] font-medium text-marca">

@@ -65,7 +65,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
 
   return (
     <div className="flex min-h-screen flex-col bg-fondo pb-28">
-      <header className="sticky top-0 z-40 flex justify-center bg-fondo/90 py-3 backdrop-blur-sm">
+      <header className="sticky top-0 z-40 flex justify-center bg-fondo/90 py-2.5 backdrop-blur-sm">
         <Link href="/inicio" aria-label="Valentía en Movimiento — Inicio">
           <Logo tamano="grande" />
         </Link>
