@@ -17,31 +17,39 @@ const ETAPAS: { nombre: string; texto: string; icono: TipoIcono }[] = [
 
 const PASTELES = ["bg-acento/20", "bg-acentoLima/30", "bg-acentoCeleste/45", "bg-acentoRosa", "bg-acento/20"];
 
-const INCLUYE: { title: string; meta: string; icono: TipoIcono }[] = [
-  { title: "Tu Proyecto de Valentía de 90 días", meta: "Sueño, para qué, resultado e hitos en un documento vivo", icono: "documento" },
-  { title: "La ruta completa del método", meta: "Etapas, módulos y experiencias — clases en video y meditaciones", icono: "pasos" },
-  { title: "Preguntas de integración", meta: "Registro de tu proceso, decisiones y movimiento semanal", icono: "estrella" },
-  { title: "Revisiones de los días 30, 60 y 90", meta: "Para ver el paso del tiempo con datos tuyos", icono: "calendario" },
-  { title: "Comunidad Premium y grupo de WhatsApp", meta: "Encuentros en vivo y biblioteca de recursos Premium", icono: "gente" },
+// Sin promesas de frecuencia (nada de "1 encuentro por mes" ni "3
+// meditaciones nuevas") — la propuesta es el método y el acompañamiento,
+// no una cantidad fija de contenido.
+const LO_QUE_VAMOS_A_TRABAJAR: { texto: string; icono: TipoIcono }[] = [
+  { texto: "Convertir tu sueño en un Proyecto de Valentía de 90 días.", icono: "documento" },
+  { texto: "Diseñar una ruta concreta.", icono: "pasos" },
+  { texto: "Trabajar la identidad que necesitás practicar para sostenerlo.", icono: "corazon" },
+  { texto: "Tomar decisiones y definir hitos.", icono: "estrella" },
+  { texto: "Elegir movimientos semanales posibles en tu vida real.", icono: "montana" },
+  { texto: "Registrar evidencias de avance.", icono: "calendario" },
+  { texto: "Revisar, ajustar y seguir construyendo.", icono: "corona" },
 ];
 
 const GRATIS_BULLETS = [
-  "Declarar mi sueño",
-  "Recorrido inicial",
-  "Movimiento de la semana",
-  "Biblioteca gratuita",
-  "Comunidad abierta",
-  "Novedades y contenidos abiertos",
+  "Elegís tu sueño y hacés el recorrido inicial.",
+  "Definís tu movimiento de la semana.",
+  "Registrás lo que vas logrando.",
+  "Biblioteca y recursos gratuitos.",
+  "Comunidad abierta dentro de Valentía.",
+  "Grupo gratuito de WhatsApp.",
+  "Novedades, propuestas y encuentros abiertos.",
 ];
 const PREMIUM_BULLETS = [
-  "Todo lo de Gratis",
-  "Proyecto de Valentía de 90 días",
-  "Ruta completa: etapas y módulos",
-  "Clases y meditaciones Premium",
-  "Preguntas y registro del proceso",
-  "Evidencias y revisiones 30 / 60 / 90",
-  "Comunidad Premium y grupo de WhatsApp",
-  "Encuentros y recursos Premium",
+  "Todo lo de Gratis.",
+  "Convertís tu sueño en un Proyecto de Valentía de 90 días.",
+  "Ruta completa: Definí · Construíte · Diseñá · Movete · Sostené.",
+  "Estrategia, hitos y decisiones.",
+  "Trabajo de identidad.",
+  "Clases, meditaciones y preguntas de integración del método.",
+  "Registro de movimientos y evidencias del proceso.",
+  "Comunidad Premium y grupo privado de WhatsApp.",
+  "Encuentros y recursos Premium.",
+  "Acompañamiento para implementar, revisar y ajustar tu proyecto.",
 ];
 
 const NO_ES = ["Solo más contenido para mirar", "Una academia de videos", "Motivación vacía"];
@@ -142,15 +150,12 @@ export default async function MembresiaPage() {
           </section>
 
           <section className="space-y-3">
-            <h2 className="font-display text-lg font-bold text-marca">Qué incluye Premium</h2>
+            <h2 className="font-display text-lg font-bold text-marca">Lo que vamos a trabajar</h2>
             <ul className="space-y-2.5">
-              {INCLUYE.map((item, i) => (
-                <li key={item.title} className={`flex items-start gap-3 rounded-[22px] ${PASTELES[i % PASTELES.length]} p-4`}>
+              {LO_QUE_VAMOS_A_TRABAJAR.map((item, i) => (
+                <li key={item.texto} className={`flex items-center gap-3 rounded-[22px] ${PASTELES[i % PASTELES.length]} p-4`}>
                   <IconoPastel tipo={item.icono} color="blanco" />
-                  <div className="min-w-0">
-                    <p className="text-[14.5px] font-bold text-marca">{item.title}</p>
-                    <p className="text-[13px] text-marca/60">{item.meta}</p>
-                  </div>
+                  <p className="min-w-0 text-[14.5px] font-medium text-marca">{item.texto}</p>
                 </li>
               ))}
             </ul>
@@ -217,7 +222,7 @@ export default async function MembresiaPage() {
               Trabajás tu sueño en ciclos de 90 días. Tu membresía se renueva mensualmente y podés cancelarla cuando
               quieras.
             </Subtitulo>
-            <BotonSuscribirse />
+            <BotonSuscribirse email={user.email ?? ""} />
           </section>
         </div>
       )}

@@ -157,7 +157,7 @@ export const premium = {
     "Tu identidad y la forma en que querés sostener este proceso.",
     "Movimientos que puedas llevar a tu vida.",
     "Espacios para revisar y ajustar.",
-    "Acompañamiento durante los 90 días.",
+    "Acompañamiento para sostener el proceso.",
   ],
   comparacion: {
     titulo: "DOS FORMAS DE VIVIR VALENTÍA",
@@ -184,9 +184,9 @@ export const premium = {
         "Acceso a contenidos y recursos Premium.",
         "Comunidad Premium.",
         "Grupo privado de WhatsApp.",
-        "1 encuentro en vivo por mes.",
-        "3 meditaciones nuevas por mes.",
-        "Acompañamiento durante todo el proceso.",
+        "Encuentros en vivo dentro de la comunidad Premium.",
+        "Clases, meditaciones y contenidos del método.",
+        "Acompañamiento para sostener el proceso.",
       ],
     },
     cierre: "Podés empezar gratis y pasar a Premium cuando sientas que querés dedicarle un proceso más profundo a tu sueño.",
@@ -245,7 +245,7 @@ export const faq = {
     {
       pregunta: "¿Cómo es la comunidad y el acompañamiento?",
       respuesta:
-        "Hay un grupo gratuito de WhatsApp y también una comunidad privada para Premium. En Premium tenemos además un encuentro en vivo por mes. También pueden aparecer propuestas y encuentros abiertos para toda la comunidad.",
+        "Hay un grupo gratuito de WhatsApp y también una comunidad privada para Premium, con encuentros en vivo y recursos propios. También pueden aparecer propuestas y encuentros abiertos para toda la comunidad.",
     },
     {
       pregunta: "¿Qué tipo de herramientas voy a encontrar?",

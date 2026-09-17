@@ -91,24 +91,31 @@ function planId(): string {
 // Eso es lo que evita que alguien active Premium propio mandando un
 // external_reference ajeno.
 //
+// `cardTokenId` + `status: "authorized"` — no `pending` — es el flujo
+// confirmado por el error real de producción ("card_token_id is
+// required") y por la documentación vigente: una suscripción con plan
+// asociado se crea directamente autorizada, con el token de tarjeta ya
+// generado client-side (Card Form de @mercadopago/sdk-js, ver
+// components/BotonSuscribirse.tsx — el número/CVV viajan dentro de
+// iframes de Mercado Pago, nunca tocan nuestro JS ni nuestro backend).
+// El modelo "pending sin medio de pago, esperando un init_point" que
+// usaba esta función antes es el de Suscripciones SIN plan asociado —
+// no el nuestro.
+//
 // A propósito NO manda `notification_url`: el código fuente oficial de
 // los SDK de Go y PHP para crear un preapproval no declara ese campo en
 // su tipo de request (github.com/mercadopago/sdk-go/pkg/preapproval:
 // auto_recurring, card_token_id, preapproval_plan_id, payer_email,
 // back_url, collector_id, reason, external_reference, status — nada de
 // notification_url), así que no está confirmado como parte del schema
-// real del endpoint. La guía general de Mercado Pago para Suscripciones
-// dice que las notificaciones "se configuran al crear la suscripción",
-// pero eso no alcanza para justificar mandar un campo no documentado.
-// La activación/mantenimiento/cancelación de Premium NO dependen de que
-// llegue ningún webhook — ver lib/suscripciones.ts (revalidación
-// server-side por polling contra GET /preapproval/{id}). El endpoint
-// /api/webhooks/mercadopago se conserva como mejora opcional a futuro,
-// para el día que se confirme una forma oficial de registrar la URL.
+// real del endpoint. La activación/mantenimiento/cancelación de Premium
+// NO dependen de que llegue ningún webhook — ver lib/suscripciones.ts
+// (revalidación server-side por polling contra GET /preapproval/{id}).
 export async function crearPreapproval(params: {
   payerEmail: string;
   externalReference: string;
   backUrl: string;
+  cardTokenId: string;
 }): Promise<Preapproval> {
   return mpFetch<Preapproval>("/preapproval", {
     method: "POST",
@@ -117,8 +124,9 @@ export async function crearPreapproval(params: {
       reason: PREMIUM_PLAN.reason,
       external_reference: params.externalReference,
       payer_email: params.payerEmail,
+      card_token_id: params.cardTokenId,
       back_url: params.backUrl,
-      status: "pending",
+      status: "authorized",
     }),
   });
 }

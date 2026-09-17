@@ -2,8 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { crearClienteServidor } from "@/lib/supabase/server";
-import { crearClienteServicio } from "@/lib/supabase/servicio";
-import { crearPreapproval, cancelarPreapproval, obtenerPreapproval } from "@/lib/mercadopago";
+import { crearPreapproval, cancelarPreapproval } from "@/lib/mercadopago";
 import { sincronizarSuscripcion } from "@/lib/suscripciones";
 
 function backUrlResultado(): string {
@@ -11,25 +10,31 @@ function backUrlResultado(): string {
   return `${base}/membresia/resultado`;
 }
 
-// Inicia (o retoma) una suscripción de Mercado Pago para la usuaria
-// logueada. Nunca activa Premium acá — solo crea el preapproval y
-// devuelve el link de pago; la activación real la hace el webhook
-// cuando Mercado Pago confirma. Server Action, no route handler: así el
-// ACCESS TOKEN (usado dentro de lib/mercadopago.ts) nunca se acerca al
-// cliente.
-export async function iniciarSuscripcion(): Promise<{ url: string } | { error: string }> {
+// Confirma la suscripción de la usuaria logueada usando el `card_token_id`
+// que ya generó Mercado Pago del lado del cliente (Card Form de
+// @mercadopago/sdk-js — ver components/BotonSuscribirse.tsx). Es lo
+// ÚNICO que se acepta del cliente acá: el usuario, su email y el plan/
+// precio salen siempre de la sesión y de la configuración del servidor,
+// nunca de lo que mande el navegador — así nadie puede activar Premium
+// propio (ni de otra persona) mandando un userId, email o precio
+// distinto. Server Action, no route handler: el ACCESS TOKEN (usado
+// dentro de lib/mercadopago.ts) nunca se acerca al cliente.
+export async function iniciarSuscripcion(cardTokenId: string): Promise<{ ok: true } | { error: string }> {
+  if (typeof cardTokenId !== "string" || cardTokenId.trim().length === 0) {
+    return { error: "No pudimos validar los datos de la tarjeta. Probá de nuevo." };
+  }
+
   const supabase = await crearClienteServidor();
   const {
     data: { user },
   } = await supabase.auth.getUser();
   if (!user?.email) return { error: "Necesitás iniciar sesión para sumarte a Premium." };
 
-  // Anti doble-click / anti-duplicado (punto 19 del brief): si ya hay una
-  // fila de suscripción para esta usuaria, no se crea un preapproval
-  // nuevo — se reutiliza o se informa el estado real.
+  // Anti doble-click / anti-duplicado: si ya está autorizada, no se crea
+  // otra suscripción.
   const { data: existente } = await supabase
     .from("suscripciones")
-    .select("proveedor_suscripcion_id, estado")
+    .select("estado")
     .eq("usuario_id", user.id)
     .eq("proveedor", "mercadopago")
     .maybeSingle();
@@ -38,48 +43,35 @@ export async function iniciarSuscripcion(): Promise<{ url: string } | { error: s
     return { error: "Ya sos parte de Valentía Premium." };
   }
 
-  if (existente?.estado === "pending" && existente.proveedor_suscripcion_id) {
-    try {
-      const preapproval = await obtenerPreapproval(existente.proveedor_suscripcion_id);
-      if (preapproval.status === "pending" && preapproval.init_point) {
-        return { url: preapproval.init_point };
-      }
-    } catch {
-      // Si la consulta falla (ej. el preapproval quedó viejo/inválido),
-      // se sigue abajo y se crea uno nuevo en vez de dejarla trabada.
-    }
-  }
-
   let preapproval;
   try {
     preapproval = await crearPreapproval({
       payerEmail: user.email,
       externalReference: user.id,
       backUrl: backUrlResultado(),
+      cardTokenId: cardTokenId.trim(),
     });
   } catch (err) {
+    // El token de tarjeta es efímero y de un solo uso — nunca se loguea
+    // (ni él ni ningún dato de la tarjeta), solo el mensaje de error que
+    // devuelve Mercado Pago.
     console.error("[membresia] error creando preapproval", err instanceof Error ? err.message : err);
-    return { error: "No pudimos iniciar la suscripción con Mercado Pago. Probá de nuevo en unos minutos." };
+    return { error: "No pudimos procesar tu tarjeta con Mercado Pago. Verificá los datos e intentá de nuevo." };
   }
 
-  const servicio = crearClienteServicio();
-  await servicio.from("suscripciones").upsert(
-    {
-      usuario_id: user.id,
-      proveedor: "mercadopago",
-      proveedor_suscripcion_id: preapproval.id,
-      proveedor_plan_id: preapproval.preapproval_plan_id ?? process.env.MERCADOPAGO_PREAPPROVAL_PLAN_ID ?? null,
-      external_reference: user.id,
-      estado: preapproval.status,
-      actualizado_en: new Date().toISOString(),
-    },
-    { onConflict: "usuario_id,proveedor" }
-  );
+  // Guarda el resultado real y, si corresponde, activa Premium — el
+  // mismo camino que usa la revalidación/webhook, así que es idempotente
+  // y no depende de este llamado para mantenerse correcto después.
+  await sincronizarSuscripcion(preapproval);
 
-  if (!preapproval.init_point) {
-    return { error: "Mercado Pago no devolvió un link de pago. Probá de nuevo en unos minutos." };
+  revalidatePath("/perfil");
+  revalidatePath("/membresia");
+
+  if (preapproval.status === "authorized") return { ok: true };
+  if (preapproval.status === "pending") {
+    return { error: "Mercado Pago todavía está confirmando el pago. Volvé a intentar en un momento." };
   }
-  return { url: preapproval.init_point };
+  return { error: "No pudimos confirmar el pago con Mercado Pago. Probá con otra tarjeta." };
 }
 
 // Cancela la suscripción real en Mercado Pago (API oficial, no un flag

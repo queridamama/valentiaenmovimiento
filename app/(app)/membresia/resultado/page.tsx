@@ -5,15 +5,15 @@ import { revalidarSuscripcionAhora } from "@/lib/suscripciones";
 import { Titulo, Subtitulo } from "@/components/ui";
 import RefrescoAutomatico from "@/components/RefrescoAutomatico";
 
-// Vuelta desde Mercado Pago. A propósito NO lee ningún query param del
-// checkout (status=approved, collection_status, etc.) para decidir nada:
-// esos valores los pone el navegador/Mercado Pago del lado del cliente y
-// no son una confirmación real. En vez de esperar a que llegue un
-// webhook (que puede no llegar nunca, ver lib/mercadopago.ts),
-// `revalidarSuscripcionAhora` le pregunta directo a la API de Mercado
-// Pago el estado real ANTES de decidir qué mostrar — es la única forma
-// confiable de saber, justo en este momento, si la suscripción quedó
-// autorizada.
+// Página a la que redirige BotonSuscribirse.tsx después de que la Server
+// Action ya confirmó (o no) el pago con el card_token_id — no es una
+// vuelta redirigida por Mercado Pago (esta integración no usa
+// init_point/Checkout hospedado, ver lib/mercadopago.ts). Igual, a
+// propósito NO se decide nada mirando el resultado que ya devolvió esa
+// llamada ni ningún query param: `revalidarSuscripcionAhora` vuelve a
+// preguntarle a la API de Mercado Pago el estado real antes de elegir
+// qué mostrar — es la única forma confiable de saberlo justo acá, y
+// además cubre el caso de que se llegue a esta URL de otra forma.
 export default async function ResultadoMembresiaPage() {
   const supabase = await crearClienteServidor();
   const {
