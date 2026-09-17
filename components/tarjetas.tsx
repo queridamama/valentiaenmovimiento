@@ -29,6 +29,19 @@ function BotonBloque({ href, children }: { href: string; children: ReactNode }) 
   );
 }
 
+// Mismo botón, para usar sobre un fondo ya oscuro (bg-marca) donde el
+// botón oscuro de arriba se volvería invisible.
+function BotonBloqueClaro({ href, children }: { href: string; children: ReactNode }) {
+  return (
+    <Link
+      href={href}
+      className="inline-flex items-center gap-1.5 rounded-full bg-acentoLima px-5 py-2.5 text-[13px] font-semibold text-marca transition active:scale-[0.98]"
+    >
+      {children}
+    </Link>
+  );
+}
+
 // Bloque protagonista de Home: el sueño real de la usuaria.
 export function TarjetaSueno({
   descripcion,
@@ -134,6 +147,90 @@ export function TarjetaProyecto({
   );
 }
 
+// "Seguí donde quedaste": el CTA principal de Inicio, tanto para Gratis
+// como para Premium — reemplaza el flujo "Inicio → Mi Ruta → etapa →
+// módulo → buscar experiencia" por un salto directo a la experiencia
+// exacta. `contexto` es la única parte que cambia según el caso ("Mi
+// Sueño · Paso 3 de 4" o "CONSTRUÍTE · Hasta dónde te bancás crecer").
+export function TarjetaContinuar({
+  contexto,
+  titulo,
+  tipo,
+  duracion,
+  href,
+}: {
+  contexto: string;
+  titulo: string;
+  tipo: "clase" | "meditacion";
+  duracion?: string | null;
+  href: string;
+}) {
+  return (
+    <div className="relative overflow-hidden rounded-[28px] bg-marca p-6 text-white">
+      <Doodle tipo="chispa" color="#D6DE2B" className="absolute right-6 top-5 h-4 w-4" />
+      <Etiqueta className="text-white/70">Seguí donde quedaste</Etiqueta>
+      <p className="pt-1 text-[13px] font-medium text-white/70">{contexto}</p>
+      <p className="pt-1 font-display text-[19px] font-bold leading-snug">
+        <span aria-hidden="true">{tipo === "meditacion" ? "🎧" : "🎥"}</span> {titulo}
+      </p>
+      {duracion && <p className="pt-1 text-[12.5px] text-white/60">{duracion}</p>}
+      <div className="pt-4">
+        <BotonBloqueClaro href={href}>Continuar</BotonBloqueClaro>
+      </div>
+    </div>
+  );
+}
+
+// Una sola novedad protagonista, debajo de "Seguí donde quedaste" — nunca
+// desplazándolo. Deliberadamente chica: es UN aviso, no otro bloque
+// grande compitiendo por atención.
+export function TarjetaNovedad({
+  titulo,
+  descripcion,
+  href,
+  className = "",
+}: {
+  titulo: string;
+  descripcion?: string | null;
+  href: string;
+  className?: string;
+}) {
+  return (
+    <Link href={href} className={`block space-y-1 rounded-[22px] ${FONDOS_BLOQUE.lima} p-4 ${className}`}>
+      <Etiqueta className="!text-marca/60">✨ Nuevo en Valentía</Etiqueta>
+      <p className="text-[14px] font-bold leading-snug text-marca">{titulo}</p>
+      {descripcion && <p className="text-[12.5px] leading-snug text-marca/70">{descripcion}</p>}
+    </Link>
+  );
+}
+
+// Biblioteca + Comunidad, en dos columnas chicas — reemplaza dos tarjetas
+// grandes verticales por un cierre compacto de Inicio, sin repetir
+// explicaciones largas que ya están en las páginas propias.
+export function TarjetaCompacta({
+  titulo,
+  cta,
+  href,
+  color,
+  icono,
+}: {
+  titulo: string;
+  cta: string;
+  href: string;
+  color: "rosa" | "celeste" | "lila" | "lima";
+  icono: TipoIcono;
+}) {
+  return (
+    <Link href={href} className={`space-y-2 rounded-[20px] ${FONDOS_BLOQUE[color]} p-4`}>
+      <IconoPastel tipo={icono} color="blanco" tamano="chico" />
+      <div>
+        <p className="text-[13.5px] font-bold text-marca">{titulo}</p>
+        <p className="text-[12px] font-medium text-marca/60">{cta} →</p>
+      </div>
+    </Link>
+  );
+}
+
 // Un blob orgánico chico en la esquina de una card, sin robarle foco al
 // contenido — mismo lenguaje que FormaDecorativa pero pensado para vivir
 // dentro de una tarjeta ya coloreada (usa blanco translúcido, no un color).
@@ -165,7 +262,6 @@ export { COLORES_PASO };
 // decide la página cicladno por índice — el componente no le asigna
 // significado al título real (es contenido de CMS, no un enum fijo).
 export function TarjetaPaso({
-  numero,
   titulo,
   descripcion,
   estado,
@@ -175,7 +271,6 @@ export function TarjetaPaso({
   clicable,
   tipo,
 }: {
-  numero: string;
   titulo: string;
   descripcion?: string | null;
   estado: "hecha" | "ahora" | "pendiente";
@@ -212,8 +307,12 @@ export function TarjetaPaso({
         className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full font-marcador text-base ${
           estado === "hecha" ? "bg-marca text-white" : pendiente ? "bg-white text-texto/35" : "bg-white text-marca"
         }`}
+        aria-hidden="true"
       >
-        {estado === "hecha" ? "✓" : numero}
+        {/* Estados visuales simples (✓/◐/○), sin gamificación — el número
+            de paso ya no se muestra: con módulos se repite entre uno y
+            otro, y dejaba de significar una posición real. */}
+        {estado === "hecha" ? "✓" : estado === "ahora" ? "◐" : "○"}
       </span>
       <div className="min-w-0 flex-1 space-y-1.5">
         {tipo && (
@@ -231,7 +330,9 @@ export function TarjetaPaso({
             {descripcion}
           </p>
         )}
-        {estado === "ahora" && <Etiqueta className="!text-[10px] text-marca/60">Ahora</Etiqueta>}
+        {/* "Seguí por acá", no "Ahora": indica dónde retomar sin sonar a
+            aviso de atraso — no hay culpa en no haber llegado todavía. */}
+        {estado === "ahora" && <Etiqueta className="!text-[10px] text-marca/60">Seguí por acá</Etiqueta>}
         {clicable && (
           <span className="mt-1 inline-flex w-fit items-center gap-1.5 rounded-full bg-white/85 px-3 py-1.5 text-[12px] font-semibold text-marca">
             <IconoPlayChico />

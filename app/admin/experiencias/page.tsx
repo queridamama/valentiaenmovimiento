@@ -8,7 +8,7 @@ export default async function AdminExperienciasPage() {
 
   const { data: experiencias } = await supabase
     .from("experiencias")
-    .select("id, titulo, tipo, nivel_acceso, estado, orden, etapa_id, etapa_wp, modulo_wp, etapas_ruta(nombre)")
+    .select("id, titulo, tipo, nivel_acceso, estado, orden, etapa_id, etapa_wp, modulo_wp, etapas_ruta(nombre), modulos_ruta(titulo)")
     .order("etapa_id", { ascending: true, nullsFirst: true })
     .order("orden", { ascending: true });
 
@@ -24,6 +24,7 @@ export default async function AdminExperienciasPage() {
       <div className="space-y-3">
         {(experiencias ?? []).map((e) => {
           const etapa = Array.isArray(e.etapas_ruta) ? e.etapas_ruta[0] : e.etapas_ruta;
+          const modulo = Array.isArray(e.modulos_ruta) ? e.modulos_ruta[0] : e.modulos_ruta;
           const duplicar = duplicarExperiencia.bind(null, e.id);
           const publicar = cambiarEstadoExperiencia.bind(null, e.id, "publicado");
           const borrador = cambiarEstadoExperiencia.bind(null, e.id, "borrador");
@@ -37,8 +38,8 @@ export default async function AdminExperienciasPage() {
                 <div>
                   <p className="font-medium">{e.titulo}</p>
                   <p className="text-xs text-texto/50">
-                    {ETIQUETA_TIPO_EXPERIENCIA[e.tipo as TipoExperiencia] ?? e.tipo} · {etapa?.nombre ?? "Recorrido de entrada"} · orden{" "}
-                    {e.orden} · {e.nivel_acceso} · {e.estado}
+                    {ETIQUETA_TIPO_EXPERIENCIA[e.tipo as TipoExperiencia] ?? e.tipo} · {etapa?.nombre ?? "Recorrido de entrada"}
+                    {modulo ? ` · ${modulo.titulo}` : ""} · orden {e.orden} · {e.nivel_acceso} · {e.estado}
                     {e.etapa_wp && (
                       <span className="ml-1 rounded-full bg-acento/15 px-2 py-0.5 text-[11px] font-medium text-acento">
                         WordPress · {e.etapa_wp}

@@ -49,15 +49,16 @@ export async function obtenerConfiguracionHome(supabase: SupabaseClient) {
   );
 }
 
-// Recorrido de entrada: experiencias sin etapa (etapa_id is null), en orden.
+// Recorrido de entrada: las experiencias marcadas como tal, en orden.
+// A propósito NO filtra por `etapa_id IS NULL`: desde la migración 0011
+// estas mismas 4 experiencias tienen `etapa_id` = DEFINÍ y `modulo_id` =
+// "De sueño a Proyecto de Valentía" (para poder mostrarse también dentro
+// de Mi Ruta Premium), así que la única fuente de verdad de "esto es
+// onboarding gratis" es `es_recorrido_entrada` — nunca su etapa.
 export async function obtenerRecorridoEntrada(supabase: SupabaseClient, userId: string) {
   const { data: experiencias } = await supabase
     .from("experiencias")
     .select("id, titulo, descripcion, texto_intro, video_url, audio_url, duracion, tipo, portada_url, nivel_acceso, estado, orden")
-    .is("etapa_id", null)
-    // Sin esto, una experiencia de Ruta Premium importada (etapa_id null
-    // hasta que Admin le asigne una etapa real) se colaría acá apenas se
-    // publicara — ver comentario en supabase/migrations/0009_*.sql.
     .eq("es_recorrido_entrada", true)
     .eq("estado", "publicado")
     .order("orden", { ascending: true });
@@ -71,17 +72,27 @@ export async function obtenerRecorridoEntrada(supabase: SupabaseClient, userId: 
   return (experiencias ?? []).map((e) => ({ ...e, completada: completadasSet.has(e.id) }));
 }
 
-// Ruta premium: etapas con sus experiencias publicadas accesibles para la
-// usuaria (RLS ya filtra por nivel_acceso vs. nivel_actual()).
+// Ruta premium: ETAPA → MÓDULOS → EXPERIENCIAS. Una etapa puede no tener
+// todavía ningún módulo publicado (DISEÑÁ/MOVETE/SOSTENÉ, por ahora) —
+// en ese caso `modulos` queda vacío, sin inventar nada. Una experiencia
+// con etapa pero sin módulo (contenido viejo aún no organizado) aparece
+// en `experienciasSueltas`, exactamente como se veía antes de que
+// existieran los módulos, para no ocultar nada por accidente.
 export async function obtenerRuta(supabase: SupabaseClient, userId: string) {
   const { data: etapas } = await supabase
     .from("etapas_ruta")
     .select("id, nombre, orden, descripcion")
     .order("orden", { ascending: true });
 
+  const { data: modulos } = await supabase
+    .from("modulos_ruta")
+    .select("id, etapa_id, titulo, descripcion, orden")
+    .eq("estado", "publicado")
+    .order("orden", { ascending: true });
+
   const { data: experiencias } = await supabase
     .from("experiencias")
-    .select("id, etapa_id, titulo, descripcion, video_url, audio_url, duracion, tipo, portada_url, nivel_acceso, estado, orden")
+    .select("id, etapa_id, modulo_id, titulo, descripcion, video_url, audio_url, duracion, tipo, portada_url, nivel_acceso, estado, orden")
     .not("etapa_id", "is", null)
     .eq("estado", "publicado")
     .order("orden", { ascending: true });
@@ -92,18 +103,165 @@ export async function obtenerRuta(supabase: SupabaseClient, userId: string) {
     .eq("usuario_id", userId);
   const completadasSet = new Set((completadas ?? []).map((c) => c.experiencia_id));
 
+  const experienciasConCompletada = (experiencias ?? []).map((e) => ({ ...e, completada: completadasSet.has(e.id) }));
+
   return (etapas ?? []).map((etapa) => ({
     ...etapa,
-    experiencias: (experiencias ?? [])
-      .filter((e) => e.etapa_id === etapa.id)
-      .map((e) => ({ ...e, completada: completadasSet.has(e.id) })),
+    modulos: (modulos ?? [])
+      .filter((m) => m.etapa_id === etapa.id)
+      .map((modulo) => ({
+        ...modulo,
+        experiencias: experienciasConCompletada.filter((e) => e.modulo_id === modulo.id),
+      })),
+    experienciasSueltas: experienciasConCompletada.filter((e) => e.etapa_id === etapa.id && !e.modulo_id),
   }));
+}
+
+export interface ItemRuta {
+  id: string;
+  titulo: string;
+  tipo: string;
+  duracion: string | null;
+  orden: number;
+  completada: boolean;
+  esRecorridoEntrada: boolean;
+  etapaNombre: string | null;
+  moduloTitulo: string | null;
+  posicionRecorrido: number | null;
+  totalRecorrido: number | null;
+}
+
+// Lista canónica y ordenada de la Ruta completa de una usuaria: recorrido
+// de entrada primero (siempre, Gratis y Premium), y si es Premium, a
+// continuación el resto de las experiencias publicadas de las etapas,
+// ordenadas por etapa → módulo → orden dentro del módulo. Es la base de
+// "Seguí donde quedaste": Gratis y Premium comparten exactamente el mismo
+// principio, la única diferencia es cuánto hay después del recorrido de
+// entrada.
+export async function obtenerListaCanonicaRuta(
+  supabase: SupabaseClient,
+  userId: string,
+  esPremium: boolean
+): Promise<ItemRuta[]> {
+  const { data: recorrido } = await supabase
+    .from("experiencias")
+    .select("id, titulo, tipo, duracion, orden")
+    .eq("es_recorrido_entrada", true)
+    .eq("estado", "publicado")
+    .order("orden", { ascending: true });
+
+  const entrada = recorrido ?? [];
+  const totalRecorrido = entrada.length;
+
+  const { data: completadas } = await supabase
+    .from("experiencias_completadas")
+    .select("experiencia_id")
+    .eq("usuario_id", userId);
+  const completadasSet = new Set((completadas ?? []).map((c) => c.experiencia_id));
+
+  const items: ItemRuta[] = entrada.map((e, i) => ({
+    id: e.id,
+    titulo: e.titulo,
+    tipo: e.tipo,
+    duracion: e.duracion,
+    orden: e.orden,
+    completada: completadasSet.has(e.id),
+    esRecorridoEntrada: true,
+    etapaNombre: null,
+    moduloTitulo: null,
+    posicionRecorrido: i + 1,
+    totalRecorrido,
+  }));
+
+  if (!esPremium) return items;
+
+  const [{ data: etapas }, { data: modulos }, { data: experiencias }] = await Promise.all([
+    supabase.from("etapas_ruta").select("id, nombre, orden").order("orden", { ascending: true }),
+    supabase.from("modulos_ruta").select("id, etapa_id, titulo, orden").eq("estado", "publicado").order("orden", { ascending: true }),
+    supabase
+      .from("experiencias")
+      .select("id, etapa_id, modulo_id, titulo, tipo, duracion, orden")
+      .not("etapa_id", "is", null)
+      .eq("estado", "publicado")
+      // Ya están en `items` (arriba): evita duplicar el recorrido de
+      // entrada ahora que también tiene etapa_id/modulo_id asignados.
+      .eq("es_recorrido_entrada", false)
+      .order("orden", { ascending: true }),
+  ]);
+
+  const etapasPorId = new Map((etapas ?? []).map((et) => [et.id, et]));
+  const modulosPorId = new Map((modulos ?? []).map((m) => [m.id, m]));
+
+  const resto = (experiencias ?? [])
+    .map((e) => ({ e, etapa: etapasPorId.get(e.etapa_id as string), modulo: e.modulo_id ? modulosPorId.get(e.modulo_id) : undefined }))
+    .filter((x): x is typeof x & { etapa: NonNullable<typeof x.etapa> } => Boolean(x.etapa))
+    .sort((a, b) => {
+      if (a.etapa.orden !== b.etapa.orden) return a.etapa.orden - b.etapa.orden;
+      const moduloOrdenA = a.modulo?.orden ?? 0;
+      const moduloOrdenB = b.modulo?.orden ?? 0;
+      if (moduloOrdenA !== moduloOrdenB) return moduloOrdenA - moduloOrdenB;
+      return a.e.orden - b.e.orden;
+    })
+    .map(({ e, etapa, modulo }) => ({
+      id: e.id,
+      titulo: e.titulo,
+      tipo: e.tipo,
+      duracion: e.duracion,
+      orden: e.orden,
+      completada: completadasSet.has(e.id),
+      esRecorridoEntrada: false,
+      etapaNombre: etapa.nombre,
+      moduloTitulo: modulo?.titulo ?? null,
+      posicionRecorrido: null,
+      totalRecorrido: null,
+    }));
+
+  return [...items, ...resto];
+}
+
+// "Seguí donde quedaste": si la última experiencia que visitó sigue sin
+// completar, se sigue ahí (aunque no sea la "primera" pendiente — pudo
+// haber avanzado salteando algo). Si ya la completó, o nunca visitó
+// ninguna, se busca la primera pendiente de la lista canónica. Si no
+// queda ninguna pendiente, no se inventa nada: se devuelve null.
+export async function obtenerSeguimientoInicio(
+  supabase: SupabaseClient,
+  userId: string,
+  esPremium: boolean
+): Promise<ItemRuta | null> {
+  const items = await obtenerListaCanonicaRuta(supabase, userId, esPremium);
+
+  const { data: perfil } = await supabase
+    .from("perfiles")
+    .select("ultima_experiencia_ruta_id")
+    .eq("id", userId)
+    .maybeSingle();
+  const ultimaId = perfil?.ultima_experiencia_ruta_id ?? null;
+
+  const ultima = ultimaId ? items.find((i) => i.id === ultimaId) : undefined;
+  if (ultima && !ultima.completada) return ultima;
+
+  return items.find((i) => !i.completada) ?? null;
+}
+
+// Novedad protagonista de Inicio: RLS ya filtra estado/nivel_acceso/
+// vigencia (ver policy `novedades_lectura`), acá solo se agrega el
+// desempate "si hay varias destacadas, la más reciente" pedido en el brief.
+export async function obtenerNovedadActiva(supabase: SupabaseClient) {
+  const { data } = await supabase
+    .from("novedades_inicio")
+    .select("id, titulo, descripcion, tipo, imagen_url, href, nivel_acceso")
+    .eq("destacado", true)
+    .order("publicado_desde", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  return data;
 }
 
 export async function obtenerExperienciaConPreguntas(supabase: SupabaseClient, experienciaId: string, userId: string) {
   const { data: experiencia } = await supabase
     .from("experiencias")
-    .select("id, etapa_id, titulo, descripcion, texto_intro, video_url, audio_url, duracion, tipo, portada_url, nivel_acceso, estado, orden")
+    .select("id, etapa_id, modulo_id, titulo, descripcion, texto_intro, video_url, audio_url, duracion, tipo, portada_url, nivel_acceso, estado, orden")
     .eq("id", experienciaId)
     .maybeSingle();
   if (!experiencia) return null;
@@ -196,24 +354,29 @@ export async function asegurarProyectoActivo(supabase: SupabaseClient, userId: s
   const existente = await obtenerProyectoActivo(supabase, userId);
   if (existente) return existente;
 
-  // Arranca en la primera etapa que ya tenga contenido publicado, para no
-  // mandar a la usuaria a una etapa vacía mientras se carga el resto del
-  // método desde /admin.
-  const { data: etapaConContenido } = await supabase
-    .from("experiencias")
-    .select("etapa_id, etapas_ruta(orden)")
-    .not("etapa_id", "is", null)
-    .eq("estado", "publicado")
-    .order("orden", { ascending: true })
-    .limit(1)
-    .maybeSingle();
+  // Arranca en la primera etapa (en orden de método, no de id de
+  // experiencia) que ya tenga contenido publicado, para no mandar a la
+  // usuaria a una etapa vacía mientras se carga el resto desde /admin.
+  const { data: etapas } = await supabase.from("etapas_ruta").select("id").order("orden", { ascending: true });
+  let etapaInicial: string | null = null;
+  for (const etapa of etapas ?? []) {
+    const { count } = await supabase
+      .from("experiencias")
+      .select("id", { count: "exact", head: true })
+      .eq("etapa_id", etapa.id)
+      .eq("estado", "publicado");
+    if (count && count > 0) {
+      etapaInicial = etapa.id;
+      break;
+    }
+  }
 
   const { data: nuevo, error } = await supabase
     .from("proyectos_valentia")
     .insert({
       usuario_id: userId,
       sueno_id: suenoId,
-      etapa_actual: etapaConContenido?.etapa_id ?? null,
+      etapa_actual: etapaInicial,
     })
     .select("id, sueno_id, fecha_inicio, etapa_actual, identidad_en_practica, estado")
     .maybeSingle();
@@ -232,18 +395,62 @@ export async function estaCompletada(supabase: SupabaseClient, userId: string, e
   return Boolean(data);
 }
 
-// Siguiente experiencia dentro del mismo grupo (recorrido de entrada, o
-// misma etapa premium), respetando orden y accesibilidad — para el link
-// "Siguiente" al terminar una experiencia.
+// Siguiente experiencia para el link "Siguiente" al terminar una. Con
+// módulos, `orden` es posición DENTRO del módulo (se repite 1..N entre
+// módulos distintos de una misma etapa), así que ya no alcanza con
+// "misma etapa, orden mayor": primero se busca dentro del mismo módulo,
+// y si ahí no hay más, se pasa a la primera experiencia del módulo
+// siguiente de esa etapa. Sin módulo (recorrido de entrada sin agrupar,
+// o una etapa todavía sin modularizar), se conserva el comportamiento
+// original.
 export async function obtenerSiguienteExperiencia(
   supabase: SupabaseClient,
   etapaId: string | null,
+  moduloId: string | null,
   ordenActual: number
 ) {
+  if (moduloId) {
+    const { data: siguienteEnModulo } = await supabase
+      .from("experiencias")
+      .select("id, titulo")
+      .eq("estado", "publicado")
+      .eq("modulo_id", moduloId)
+      .gt("orden", ordenActual)
+      .order("orden", { ascending: true })
+      .limit(1)
+      .maybeSingle();
+    if (siguienteEnModulo) return siguienteEnModulo;
+
+    const { data: moduloActual } = await supabase.from("modulos_ruta").select("orden").eq("id", moduloId).maybeSingle();
+    if (!moduloActual || !etapaId) return null;
+
+    const { data: siguienteModulo } = await supabase
+      .from("modulos_ruta")
+      .select("id")
+      .eq("etapa_id", etapaId)
+      .eq("estado", "publicado")
+      .gt("orden", moduloActual.orden)
+      .order("orden", { ascending: true })
+      .limit(1)
+      .maybeSingle();
+    if (!siguienteModulo) return null;
+
+    const { data: primeraDelSiguiente } = await supabase
+      .from("experiencias")
+      .select("id, titulo")
+      .eq("estado", "publicado")
+      .eq("modulo_id", siguienteModulo.id)
+      .order("orden", { ascending: true })
+      .limit(1)
+      .maybeSingle();
+    return primeraDelSiguiente;
+  }
+
   let query = supabase
     .from("experiencias")
     .select("id, titulo")
     .eq("estado", "publicado")
+    .is("modulo_id", null)
     .gt("orden", ordenActual)
     .order("orden", { ascending: true })
     .limit(1);

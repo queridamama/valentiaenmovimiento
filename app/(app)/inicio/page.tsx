@@ -2,12 +2,13 @@ import { crearClienteServidor } from "@/lib/supabase/server";
 import {
   obtenerAutorizacion,
   obtenerSuenoActivo,
-  obtenerRecorridoEntrada,
   obtenerMovimientoActual,
   obtenerSemanasEnMovimiento,
+  obtenerSeguimientoInicio,
+  obtenerNovedadActiva,
 } from "@/lib/datos";
-import { Badge, Etiqueta } from "@/components/ui";
-import { TarjetaSueno, TarjetaCamino } from "@/components/tarjetas";
+import { Badge } from "@/components/ui";
+import { TarjetaSueno, TarjetaCamino, TarjetaContinuar, TarjetaNovedad, TarjetaCompacta } from "@/components/tarjetas";
 import InstalarPWA from "@/components/pwa/InstalarPWA";
 
 export default async function InicioPage() {
@@ -18,17 +19,16 @@ export default async function InicioPage() {
   if (!user) return null;
 
   const nombre = (user.user_metadata?.nombre as string | undefined) ?? "";
-  const [autorizacion, sueno, recorrido, movimiento, semanas] = await Promise.all([
-    obtenerAutorizacion(supabase, user.id),
+  const autorizacion = await obtenerAutorizacion(supabase, user.id);
+  const esPremium = autorizacion.nivel === "premium";
+
+  const [sueno, movimiento, semanas, seguimiento, novedad] = await Promise.all([
     obtenerSuenoActivo(supabase, user.id),
-    obtenerRecorridoEntrada(supabase, user.id),
     obtenerMovimientoActual(supabase, user.id),
     obtenerSemanasEnMovimiento(supabase, user.id),
+    obtenerSeguimientoInicio(supabase, user.id, esPremium),
+    obtenerNovedadActiva(supabase),
   ]);
-
-  const esPremium = autorizacion.nivel === "premium";
-  const recorridoTerminado = recorrido.length > 0 && recorrido.every((e) => e.completada);
-  const siguiente = recorrido.find((e) => !e.completada);
 
   // Ritual semanal, adentro de la app (no hay infraestructura de push
   // todavía — ver NOTIFICACIONES.md). El día de la semana es el del
@@ -73,54 +73,45 @@ export default async function InicioPage() {
         </div>
       )}
 
-      {sueno && <TarjetaSueno descripcion={sueno.descripcion} href="/mi-sueno" cta="Ver mi ruta" />}
-
-      <div className="space-y-4">
-        <Etiqueta className="!text-texto/40">Dentro de Valentía podés</Etiqueta>
-
-        <TarjetaCamino
-          eyebrow="Mi Ruta"
-          texto="Empezá por acá. Un recorrido corto para poner en palabras qué querés, por qué importa y desde dónde estás empezando."
-          nota={
-            recorrido.length === 0
-              ? undefined
-              : recorridoTerminado
-                ? "Recorrido completado ✓"
-                : `${recorrido.filter((e) => e.completada).length} de ${recorrido.length} clases hechas`
+      {/* CTA principal: entra directo a la experiencia exacta, sin pasar
+          por Mi Ruta ni por buscar en qué quedó. Gratis y Premium
+          comparten el mismo bloque y el mismo criterio (ver
+          obtenerSeguimientoInicio en lib/datos.ts). Si ya completó todo
+          lo disponible, no se inventa una siguiente experiencia: el
+          bloque simplemente no aparece. */}
+      {seguimiento && (
+        <TarjetaContinuar
+          contexto={
+            seguimiento.esRecorridoEntrada
+              ? `Mi Sueño · Paso ${seguimiento.posicionRecorrido} de ${seguimiento.totalRecorrido}`
+              : [seguimiento.etapaNombre, seguimiento.moduloTitulo].filter(Boolean).join(" · ")
           }
-          cta={recorridoTerminado ? "Ver mi Ruta" : "Continuar mi Ruta"}
-          href={siguiente ? `/experiencias/${siguiente.id}` : "/mi-sueno"}
-          color="rosa"
-          icono="estrella"
+          titulo={seguimiento.titulo}
+          tipo={seguimiento.tipo === "meditacion" ? "meditacion" : "clase"}
+          duracion={seguimiento.duracion}
+          href={`/experiencias/${seguimiento.id}`}
         />
+      )}
 
-        <TarjetaCamino
-          eyebrow="Movimiento de la semana"
-          texto="Elegí algo concreto que vas a hacer esta semana. Después volvés para registrar qué pasó y reconocer ese movimiento."
-          nota={movimiento?.descripcion}
-          cta={movimiento ? "Ver mi movimiento" : "Elegir mi movimiento"}
-          href="/movimiento"
-          color="celeste"
-          icono="pasos"
-        />
+      {novedad && (
+        <TarjetaNovedad titulo={novedad.titulo} descripcion={novedad.descripcion} href={novedad.href} />
+      )}
 
-        <TarjetaCamino
-          eyebrow="Biblioteca"
-          texto="Videos, meditaciones y recursos para seguir trabajando en vos y en eso que querés construir."
-          cta="Explorar la Biblioteca"
-          href="/biblioteca"
-          color="lima"
-          icono="libro"
-        />
+      {sueno && <TarjetaSueno descripcion={sueno.descripcion} href="/mi-sueno" cta="Ver / editar" />}
 
-        <TarjetaCamino
-          eyebrow="Comunidad"
-          texto="Un espacio para compartir lo que vas viviendo y encontrarte con otras mujeres que también están poniendo algo en movimiento."
-          cta="Entrar a la Comunidad"
-          href="/comunidad"
-          color="lila"
-          icono="gente"
-        />
+      <TarjetaCamino
+        eyebrow="Movimiento de la semana"
+        texto="Elegí algo concreto que vas a hacer esta semana. Después volvés para registrar qué pasó y reconocer ese movimiento."
+        nota={movimiento?.descripcion}
+        cta={movimiento ? "Ver mi movimiento" : "Elegir mi movimiento"}
+        href="/movimiento"
+        color="celeste"
+        icono="pasos"
+      />
+
+      <div className="grid grid-cols-2 gap-3">
+        <TarjetaCompacta titulo="📚 Biblioteca" cta="Explorar" href="/biblioteca" color="lima" icono="libro" />
+        <TarjetaCompacta titulo="👥 Comunidad" cta="Entrar" href="/comunidad" color="lila" icono="gente" />
       </div>
 
       <InstalarPWA />

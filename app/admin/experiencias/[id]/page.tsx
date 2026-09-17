@@ -7,12 +7,13 @@ export default async function EditarExperienciaPage({ params }: { params: Promis
   const { id } = await params;
   const supabase = await crearClienteServidor();
 
-  const [{ data: etapas }, { data: experiencia }, { data: preguntas }] = await Promise.all([
+  const [{ data: etapas }, { data: modulos }, { data: experiencia }, { data: preguntas }] = await Promise.all([
     supabase.from("etapas_ruta").select("id, nombre").order("orden"),
+    supabase.from("modulos_ruta").select("id, titulo, etapas_ruta(nombre)").order("orden"),
     supabase
       .from("experiencias")
       .select(
-        "titulo, descripcion, texto_intro, video_url, audio_url, duracion, tipo, portada_url, etapa_id, nivel_acceso, estado, orden, wp_post_id, etapa_wp, modulo_wp"
+        "titulo, descripcion, texto_intro, video_url, audio_url, duracion, tipo, portada_url, etapa_id, modulo_id, nivel_acceso, estado, orden, wp_post_id, etapa_wp, modulo_wp"
       )
       .eq("id", id)
       .maybeSingle(),
@@ -28,6 +29,10 @@ export default async function EditarExperienciaPage({ params }: { params: Promis
   }
 
   const accion = guardarExperiencia.bind(null, id);
+  const modulosParaForm = (modulos ?? []).map((m) => {
+    const etapa = Array.isArray(m.etapas_ruta) ? m.etapas_ruta[0] : m.etapas_ruta;
+    return { id: m.id, titulo: m.titulo, etapaNombre: etapa?.nombre ?? "" };
+  });
 
   return (
     <div className="space-y-6">
@@ -35,6 +40,7 @@ export default async function EditarExperienciaPage({ params }: { params: Promis
       <FormularioExperiencia
         accion={accion}
         etapas={etapas ?? []}
+        modulos={modulosParaForm}
         inicial={{
           titulo: experiencia.titulo,
           descripcion: experiencia.descripcion ?? "",
@@ -45,6 +51,7 @@ export default async function EditarExperienciaPage({ params }: { params: Promis
           tipo: experiencia.tipo,
           portada_url: experiencia.portada_url ?? "",
           etapa_id: experiencia.etapa_id,
+          modulo_id: experiencia.modulo_id,
           nivel_acceso: experiencia.nivel_acceso,
           estado: experiencia.estado,
           orden: experiencia.orden,

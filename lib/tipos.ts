@@ -91,6 +91,7 @@ export interface Pregunta {
 export interface Experiencia {
   id: string;
   etapa_id: string | null;
+  modulo_id: string | null;
   titulo: string;
   descripcion: string | null;
   texto_intro: string | null;
@@ -102,6 +103,58 @@ export interface Experiencia {
   nivel_acceso: NivelAcceso;
   estado: EstadoExperiencia;
   orden: number;
+}
+
+// ---------- Módulos de Ruta (ETAPA → MÓDULOS → EXPERIENCIAS) ----------
+// Agrupa experiencias dentro de una etapa. Las 5 etapas siguen siendo el
+// catálogo fijo de siempre; un módulo es opcional (DISEÑÁ/MOVETE/SOSTENÉ
+// pueden no tener ninguno todavía) y no reemplaza `etapa_id` en
+// `experiencias`, lo complementa.
+export interface ModuloRuta {
+  id: string;
+  etapa_id: string;
+  titulo: string;
+  descripcion: string | null;
+  orden: number;
+  estado: EstadoExperiencia;
+}
+
+// ---------- Novedades de Inicio ----------
+export const TIPOS_NOVEDAD = [
+  "meditacion",
+  "video",
+  "contenido",
+  "curso",
+  "evento",
+  "encuentro",
+  "recurso",
+  "url",
+] as const;
+export type TipoNovedad = (typeof TIPOS_NOVEDAD)[number];
+
+export const ETIQUETA_TIPO_NOVEDAD: Record<TipoNovedad, string> = {
+  meditacion: "Meditación",
+  video: "Video",
+  contenido: "Contenido",
+  curso: "Mini curso",
+  evento: "Evento",
+  encuentro: "Encuentro",
+  recurso: "Recurso",
+  url: "Enlace",
+};
+
+export interface NovedadInicio {
+  id: string;
+  titulo: string;
+  descripcion: string | null;
+  tipo: TipoNovedad;
+  imagen_url: string | null;
+  href: string;
+  nivel_acceso: NivelAcceso;
+  estado: EstadoExperiencia;
+  destacado: boolean;
+  publicado_desde: string;
+  publicado_hasta: string | null;
 }
 
 // Una experiencia es un paso de la Ruta (Mi Sueño gratis o una etapa

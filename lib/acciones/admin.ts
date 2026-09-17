@@ -59,6 +59,7 @@ export async function guardarExperiencia(experienciaId: string | null, formData:
   const tipo = String(formData.get("tipo") ?? "clase");
   const portadaUrl = String(formData.get("portada_url") ?? "").trim() || null;
   const etapaId = String(formData.get("etapa_id") ?? "").trim() || null;
+  const moduloId = String(formData.get("modulo_id") ?? "").trim() || null;
   const nivelAcceso = String(formData.get("nivel_acceso") ?? "gratis");
   const estado = String(formData.get("estado") ?? "borrador");
   const orden = Number(formData.get("orden") ?? 0);
@@ -85,6 +86,7 @@ export async function guardarExperiencia(experienciaId: string | null, formData:
     tipo,
     portada_url: portadaUrl,
     etapa_id: etapaId,
+    modulo_id: moduloId,
     nivel_acceso: nivelAcceso,
     estado,
     orden,
@@ -154,6 +156,7 @@ export async function duplicarExperiencia(experienciaId: string) {
     .from("experiencias")
     .insert({
       etapa_id: original.etapa_id,
+      modulo_id: original.modulo_id,
       titulo: `${original.titulo} (copia)`,
       descripcion: original.descripcion,
       texto_intro: original.texto_intro,

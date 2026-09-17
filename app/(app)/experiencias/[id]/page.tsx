@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { crearClienteServidor } from "@/lib/supabase/server";
 import { obtenerExperienciaConPreguntas, estaCompletada, obtenerSiguienteExperiencia } from "@/lib/datos";
-import { guardarRespuestas } from "@/lib/acciones/experiencias";
+import { guardarRespuestas, registrarVisitaExperiencia } from "@/lib/acciones/experiencias";
 import { Badge, BotonPrimario, Titulo, Subtitulo, Etiqueta } from "@/components/ui";
 import ReproductorVideo from "@/components/ReproductorVideo";
 
@@ -30,8 +30,15 @@ export default async function ExperienciaPage({ params }: { params: Promise<{ id
   const { experiencia, preguntas } = datos;
   const completada = await estaCompletada(supabase, user.id, experiencia.id);
   const siguiente = completada
-    ? await obtenerSiguienteExperiencia(supabase, experiencia.etapa_id, experiencia.orden)
+    ? await obtenerSiguienteExperiencia(supabase, experiencia.etapa_id, experiencia.modulo_id, experiencia.orden)
     : null;
+
+  // Solo se registra "dónde quedó" al entrar a algo que TODAVÍA no
+  // completó — revisar una experiencia ya hecha nunca debe hacer
+  // retroceder "Seguí donde quedaste" en Inicio.
+  if (!completada) {
+    await registrarVisitaExperiencia(experiencia.id);
+  }
 
   const esPremium = experiencia.nivel_acceso === "membresia";
   const guardar = guardarRespuestas.bind(null, experiencia.id);

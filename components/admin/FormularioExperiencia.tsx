@@ -16,6 +16,7 @@ interface PreguntaEditable {
 interface Props {
   accion: (formData: FormData) => void;
   etapas: { id: string; nombre: string }[];
+  modulos: { id: string; titulo: string; etapaNombre: string }[];
   inicial?: {
     titulo: string;
     descripcion: string;
@@ -26,6 +27,7 @@ interface Props {
     tipo: TipoExperiencia;
     portada_url: string;
     etapa_id: string | null;
+    modulo_id: string | null;
     nivel_acceso: string;
     estado: string;
     orden: number;
@@ -40,7 +42,7 @@ interface Props {
 // estado de cliente (agregar/quitar/reordenar sin recargar) y se manda al
 // server action como un solo campo JSON — así la action no tiene que lidiar
 // con nombres de campo indexados.
-export default function FormularioExperiencia({ accion, etapas, inicial, preguntasIniciales }: Props) {
+export default function FormularioExperiencia({ accion, etapas, modulos, inicial, preguntasIniciales }: Props) {
   // `preguntasIniciales` puede ser legítimamente [] (una experiencia
   // existente sin preguntas, ej. un video) — eso hay que respetarlo tal
   // cual. La pregunta vacía por default es SOLO para el formulario de
@@ -166,6 +168,21 @@ export default function FormularioExperiencia({ accion, etapas, inicial, pregunt
               </option>
             ))}
           </select>
+        </label>
+
+        <label className="flex flex-col gap-1">
+          <span className="text-sm font-medium text-texto/70">Módulo (opcional)</span>
+          <select name="modulo_id" defaultValue={inicial?.modulo_id ?? ""} className="rounded-lg border border-texto/15 px-3 py-2">
+            <option value="">Sin módulo</option>
+            {modulos.map((m) => (
+              <option key={m.id} value={m.id}>
+                {m.etapaNombre} · {m.titulo}
+              </option>
+            ))}
+          </select>
+          <span className="text-xs text-texto/45">
+            Para mover esta experiencia a otro módulo, elegilo acá — no hace falta tocar nada más.
+          </span>
         </label>
 
         <div className="grid grid-cols-2 gap-4">

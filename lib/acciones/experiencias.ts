@@ -3,6 +3,25 @@
 import { revalidatePath } from "next/cache";
 import { crearClienteServidor } from "@/lib/supabase/server";
 
+// Registra "dónde quedó" en la Ruta, para que Inicio pueda ofrecer
+// "Seguí donde quedaste" sin adivinar. Se llama SOLO al entrar a una
+// experiencia que todavía no está completada (ver la página de la
+// experiencia) — así revisar algo ya hecho nunca hace retroceder el
+// puntero. No falla la página si algo sale mal: es un dato de
+// conveniencia, no algo de lo que dependa el resto de la app.
+export async function registrarVisitaExperiencia(experienciaId: string) {
+  const supabase = await crearClienteServidor();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return;
+
+  await supabase
+    .from("perfiles")
+    .update({ ultima_experiencia_ruta_id: experienciaId, ultima_visita_ruta_en: new Date().toISOString() })
+    .eq("id", user.id);
+}
+
 // Guarda todas las respuestas de una experiencia de una sola vez (la
 // página manda un input por pregunta, nombrado `pregunta_<id>`). Es
 // genérico a propósito: no sabe nada de "Mi Sueño" ni de "identidad", solo

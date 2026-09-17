@@ -50,7 +50,11 @@ export default async function MiSuenoPage() {
         )}
       </div>
 
-      {recorrido.length > 0 && (
+      {/* Para Premium con el recorrido ya terminado, estas mismas 4
+          experiencias vuelven a aparecer más abajo dentro del módulo
+          DEFINÍ de RutaPremiumAcordeon (desde que tienen etapa_id/
+          modulo_id asignados) — mostrarlas acá también sería duplicarlas. */}
+      {recorrido.length > 0 && !(esPremium && recorridoTerminado) && (
         <section className="space-y-5">
           <div className="space-y-3 rounded-[28px] bg-acentoRosa/60 p-5">
             <Etiqueta>Tu proceso</Etiqueta>
@@ -68,7 +72,6 @@ export default async function MiSuenoPage() {
               return (
                 <TarjetaPaso
                   key={e.id}
-                  numero={String(i + 1).padStart(2, "0")}
                   titulo={e.titulo}
                   descripcion={e.descripcion}
                   estado={estado}

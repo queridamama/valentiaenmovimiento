@@ -4,7 +4,9 @@ import { crearClienteServidor } from "@/lib/supabase/server";
 
 const DESTINOS = [
   { href: "/admin/inicio", label: "Portada del Home" },
+  { href: "/admin/novedades", label: "Nuevo en Valentía" },
   { href: "/admin/experiencias", label: "Experiencias" },
+  { href: "/admin/modulos", label: "Módulos" },
   { href: "/admin/biblioteca", label: "Biblioteca" },
   { href: "/admin/cursos", label: "Cursos" },
   { href: "/admin/comunidad", label: "Comunidad" },
