@@ -32,6 +32,10 @@ export const metadata: Metadata = {
     statusBarStyle: "default",
     title: "Valentía",
   },
+  icons: {
+    icon: "/icons/icon-512.png",
+    apple: "/icons/apple-touch-icon.png",
+  },
 };
 
 // themeColor va acá (no en `metadata`) desde Next 14 — ver

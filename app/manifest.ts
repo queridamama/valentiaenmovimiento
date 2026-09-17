@@ -1,11 +1,8 @@
 import type { MetadataRoute } from "next";
 
-// Manifest real de instalación. Los 3 íconos de acá abajo todavía no
-// existen como archivo (ver PWA.md) — quedan declarados con su path final
-// para que alcance con soltar los PNG en public/icons/ sin tocar más
-// código, pero hasta que existan la instalación en Android queda
-// degradada (Chrome no dispara `beforeinstallprompt` si no puede
-// resolver los íconos del manifest).
+// Manifest real de instalación. Los íconos salen de public/iso.png (el
+// isotipo cuadrado real) — ver PWA.md para cómo se generaron los 4
+// tamaños en public/icons/.
 export default function manifest(): MetadataRoute.Manifest {
   return {
     name: "Valentía en Movimiento",

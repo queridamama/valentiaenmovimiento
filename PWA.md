@@ -46,43 +46,33 @@ detecta iPhone/iPad (incluyendo iPadOS 13+, que se identifica como "Mac"
 en el user agent salvo por tener `maxTouchPoints > 1`) y, si NO está en
 modo standalone (`navigator.standalone === true`), muestra el mismo
 bloque. Al tocarlo, en vez de un prompt nativo (no existe en iOS) se abre
-un modal corto con el instructivo pedido:
+un modal corto y simple, sin mencionar navegador (tanto Safari como
+Chrome en iOS permiten agregar desde Compartir):
 
-1. Abrí esta página en Safari.
-2. Tocá el botón Compartir.
-3. Elegí "Agregar a pantalla de inicio".
+**"Agregá Valentía a tu pantalla de inicio"**
+**"Tocá el botón Compartir ↑ y elegí 'Agregar a la pantalla principal'."**
 
 Si la PWA ya está instalada y se abre en standalone, no se muestra nada.
 
-## Qué falta: el ícono cuadrado
+## El ícono cuadrado
 
-`public/` hoy solo tiene `logo.svg`, que es horizontal (el isotipo +
-nombre). Por pedido explícito, **no inventé una versión cuadrada
-reinterpretando el logo** — el manifest ya está preparado con los paths
-finales (`app/manifest.ts`), pero mientras esos archivos no existan,
-Chrome no puede resolver los íconos y **no va a disparar
-`beforeinstallprompt`** (es parte de sus criterios de instalabilidad) —
-o sea, en Android el bloque de instalación no va a tener nada para
-mostrar hasta que esto se resuelva. En iOS el instructivo funciona igual
-sin esto, pero el ícono que iOS pone en la pantalla de inicio también
-sale mal sin un `apple-touch-icon` real.
+Resuelto: `public/iso.png` (1254×1254, sin transparencia, esquinas
+rectas — el isotipo real que se subió al repo) es el ícono cuadrado
+fuente. A partir de ahí se generaron con `sharp` (script corrido una
+sola vez, no queda en el repo) los 4 archivos que usa `app/manifest.ts`
+y `app/layout.tsx`:
 
-**Lo que necesito, en un solo archivo:** un ícono cuadrado (sin el
-nombre "Valentía en Movimiento" al lado, solo el isotipo/marca), en PNG
-o SVG, de al menos 512×512px (ideal 1024×1024), con el elemento
-principal centrado y con aire alrededor (dejar ~15% de margen libre por
-lado, para que no se corte si el sistema operativo le aplica una máscara
-circular o redondeada).
+- `public/icons/icon-192.png` (192×192) — resize directo.
+- `public/icons/icon-512.png` (512×512) — resize directo.
+- `public/icons/icon-maskable-512.png` (512×512) — el contenido se
+  redujo a 410×410 (~80% del lienzo) y se centró sobre un fondo del
+  mismo color exacto del original (`#fdf9f4`), para que la "zona
+  segura" de un ícono maskable quede garantizada incluso si el sistema
+  operativo aplica una máscara circular agresiva — el resize directo
+  del isotipo original ya tenía aire, pero no tanto como para confiar
+  en él sin ese margen extra.
+- `public/icons/apple-touch-icon.png` (180×180) — resize directo, fondo
+  sólido (sin transparencia, como pide iOS).
 
-Con ese único archivo genero yo mismo, sin reinterpretar nada — es
-puro redimensionado técnico —, los 4 tamaños que hacen falta:
-
-- `public/icons/icon-192.png` (192×192)
-- `public/icons/icon-512.png` (512×512)
-- `public/icons/icon-maskable-512.png` (512×512, mismo margen de
-  seguridad de arriba)
-- `public/icons/apple-touch-icon.png` (180×180, fondo sólido, sin
-  transparencia — así lo pide iOS)
-
-Y termino de conectar `metadata.icons.apple` en `app/layout.tsx` (falta
-ese archivo para agregarlo).
+`metadata.icons` en `app/layout.tsx` ya apunta a `icon-512.png` y
+`apple-touch-icon.png`.
