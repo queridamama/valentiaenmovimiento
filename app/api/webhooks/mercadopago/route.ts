@@ -2,30 +2,29 @@ import { NextRequest, NextResponse } from "next/server";
 import { obtenerPreapproval, obtenerAuthorizedPayment, validarTokenWebhook, validarFirmaWebhook } from "@/lib/mercadopago";
 import { sincronizarSuscripcion } from "@/lib/suscripciones";
 
-// Endpoint a registrar en Mercado Pago para los tópicos de Suscripciones
+// Endpoint que recibe las notificaciones de Suscripciones
 // (subscription_preapproval, subscription_authorized_payment).
 //
-// IMPORTANTE sobre cómo se registra esta URL: la app de Mercado Pago de
-// Valentía se creó como "Suscripciones", y para ese tipo de aplicación
-// Mercado Pago NO muestra la sección de Webhooks dentro de "Tus
-// integraciones" (confirmado contra la cuenta real y la documentación
-// vigente) — ese es el panel donde normalmente se generaría la "Firma
-// secreta" para validar x-signature. Sin ese panel, no hay Firma secreta
-// que exigir.
+// CÓMO SE REGISTRA ESTA URL — a propósito, sin que nadie tenga que
+// buscar ningún panel de Webhooks/Notificaciones en Mercado Pago:
+// `crearPreapproval()` (lib/mercadopago.ts) manda esta misma URL como
+// `notification_url` en el body de cada POST /preapproval que crea una
+// suscripción. La app de Mercado Pago de Valentía es de tipo
+// "Suscripciones", y para ese tipo de app "Tus integraciones → Webhooks"
+// no está disponible — no hay panel donde configurar esto a mano, así
+// que se hace vía código, una vez por suscripción creada. Ver el
+// comentario largo en lib/mercadopago.ts (conNotificationUrl) sobre por
+// qué ese campo no está confirmado en la referencia oficial del
+// endpoint y qué hay que verificar con una suscripción de prueba real.
 //
-// Por eso la URL que hay que darle a Mercado Pago (donde sea que la app
-// de tipo Suscripciones permita cargarla — buscar algo como "URL de
-// notificaciones"/"Webhooks" dentro de la propia aplicación, no
-// necesariamente bajo "Tus integraciones") tiene que incluir un token
-// propio como query param:
-//
+// SEGURIDAD sin firma HMAC garantizada: la URL registrada incluye un
+// token propio como query param —
 //   https://<tu-dominio>/api/webhooks/mercadopago?token=<MERCADOPAGO_WEBHOOK_TOKEN>
-//
-// Ese token es enteramente nuestro (lo elegimos, lo guardamos en la
-// variable de entorno, lo pegamos en la URL) — no depende de ningún
-// panel de Mercado Pago, así que SÍ se exige en producción (ver
-// validarTokenWebhook). Si además Mercado Pago llega a mandar
-// x-signature para este tipo de app, se valida como capa extra
+// — que es enteramente nuestro (lo elegimos, lo guardamos en la
+// variable de entorno, lo mandamos nosotros mismos en notification_url).
+// No depende de ningún panel de Mercado Pago, así que SÍ se exige en
+// producción (ver validarTokenWebhook). Si además Mercado Pago llega a
+// mandar x-signature para este tipo de app, se valida como capa extra
 // (validarFirmaWebhook), pero nunca es la única defensa.
 //
 // La defensa que de verdad importa, con o sin token/firma: NUNCA se
@@ -84,8 +83,17 @@ export async function POST(req: NextRequest) {
       const preapproval = await obtenerPreapproval(pago.preapproval_id);
       await sincronizarSuscripcion(preapproval, { fechaUltimoPago: pago.date_created });
     }
-    // "payment" (pagos sueltos, Checkout Pro/API) no aplica a
-    // Suscripciones — se ignora sin error.
+    // "payment": la documentación de Mercado Pago para Suscripciones
+    // pide activar también este tópico ("en todos los casos deberás
+    // activar payments"), pero el pago de cada cobro recurrente YA nos
+    // llega, completo y con `preapproval_id`, como
+    // subscription_authorized_payment (arriba) — es la misma plata,
+    // vista desde el lado de Pagos en vez del lado de Suscripciones.
+    // No tenemos ningún uso para el Payment genérico (no vendemos
+    // Checkout Pro/pagos sueltos en esta app), así que si llega una
+    // notificación de tipo "payment" simplemente no entra en ningún
+    // `if` de arriba y se responde 200 sin hacer nada — recibirla y
+    // descartarla a propósito es más seguro que no tenerla contemplada.
   } catch (err) {
     // No se loguea el body completo (podría traer payer_email u otros
     // datos de la persona) ni el access token — solo lo mínimo para

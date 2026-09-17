@@ -94,6 +94,16 @@ export function validarFirmaWebhook(params: { xSignature: string | null; xReques
   return timingSafeEqual(bufEsperado, bufRecibido);
 }
 
+// ---------- URL de notificación propia ----------
+// Arma la URL exacta que se manda a Mercado Pago como `notification_url`
+// al crear cada suscripción (ver conNotificationUrl en
+// lib/mercadopago.ts) — pura, sin red, para poder testear que el token
+// queda bien puesto en la URL sin necesitar credenciales.
+export function construirUrlWebhook(params: { appUrl: string; token: string }): string {
+  const base = params.appUrl.replace(/\/$/, "");
+  return `${base}/api/webhooks/mercadopago?token=${encodeURIComponent(params.token)}`;
+}
+
 // ---------- Acceso vigente y "pagado hasta" ----------
 // GET /preapproval/{id} sí expone `next_payment_date` (confirmado contra
 // la documentación oficial de Mercado Pago) — la cautela real no es si

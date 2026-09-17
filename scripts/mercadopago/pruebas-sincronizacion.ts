@@ -17,6 +17,7 @@ import {
   calcularNuevaAutorizacion,
   esAccesoVigente,
   calcularFechaProximoPago,
+  construirUrlWebhook,
   validarTokenWebhook,
   validarFirmaWebhook,
 } from "../../lib/mercadopago-logica";
@@ -204,6 +205,18 @@ console.log("\n11. validarFirmaWebhook: con secreto Y header presentes, firma co
   assert(invalida === false, "firma incorrecta (header presente pero no matchea) → false");
 
   delete process.env.MERCADOPAGO_WEBHOOK_SECRET;
+}
+
+console.log("\n12. construirUrlWebhook: arma la URL exacta que se manda a Mercado Pago como notification_url");
+{
+  const url = construirUrlWebhook({ appUrl: "https://valentiaenmovimiento.vercel.app", token: "abc123" });
+  assert(url === "https://valentiaenmovimiento.vercel.app/api/webhooks/mercadopago?token=abc123", "URL armada correctamente");
+
+  const conSlashFinal = construirUrlWebhook({ appUrl: "https://valentiaenmovimiento.vercel.app/", token: "abc123" });
+  assert(conSlashFinal === url, "no importa si appUrl trae '/' al final");
+
+  const conCaracteresEspeciales = construirUrlWebhook({ appUrl: "https://app.test", token: "a b&c" });
+  assert(conCaracteresEspeciales === "https://app.test/api/webhooks/mercadopago?token=a%20b%26c", "el token se escapa como query param");
 }
 
 console.log(fallos === 0 ? "\n✅ Todas las pruebas pasaron." : `\n❌ ${fallos} prueba(s) fallaron.`);

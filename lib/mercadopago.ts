@@ -1,6 +1,6 @@
 import "server-only";
 import { PREMIUM_PLAN } from "@/lib/config/premium";
-import type { EstadoPreapproval } from "@/lib/mercadopago-logica";
+import { construirUrlWebhook, type EstadoPreapproval } from "@/lib/mercadopago-logica";
 
 export type { EstadoPreapproval } from "@/lib/mercadopago-logica";
 export { validarTokenWebhook, validarFirmaWebhook } from "@/lib/mercadopago-logica";
@@ -83,6 +83,56 @@ function planId(): string {
   return id;
 }
 
+// URL de nuestro propio webhook, con el token propio como query param
+// (ver validarTokenWebhook en lib/mercadopago-logica.ts). Se arma acá,
+// no en quien llama, para que nadie pueda crear una suscripción sin que
+// quede una forma de recibir sus notificaciones: si falta el token,
+// directamente no se crea la suscripción (falla fuerte, a propósito).
+// El armado en sí (construirUrlWebhook) es lógica pura, testeada en
+// scripts/mercadopago/pruebas-sincronizacion.ts.
+function urlWebhookPropio(): string {
+  const token = process.env.MERCADOPAGO_WEBHOOK_TOKEN;
+  if (!token) throw new Error("Falta configurar MERCADOPAGO_WEBHOOK_TOKEN.");
+  return construirUrlWebhook({ appUrl: process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000", token });
+}
+
+// ---------- notification_url: campo NO confirmado en /preapproval ----------
+// Para integraciones de Suscripciones, la documentación GENERAL de
+// Mercado Pago dice que las notificaciones "se configuran al crear el
+// pago/la suscripción" (no hay panel de Webhooks en "Tus integraciones"
+// para este tipo de app). Pero la referencia CONCRETA del endpoint no
+// confirma eso: el código fuente oficial de los SDK de Go y PHP para
+// crear un preapproval NO incluye ningún campo `notification_url` en su
+// tipo de request —
+//   github.com/mercadopago/sdk-go/pkg/preapproval (Request):
+//     auto_recurring, card_token_id, preapproval_plan_id, payer_email,
+//     back_url, collector_id, reason, external_reference, status.
+// — ni el ejemplo oficial (aunque deprecado) del SDK de PHP para crear
+// un preapproval. Esta es justo la inconsistencia entre la guía general
+// y la referencia del endpoint: se deja explícita en vez de resolverla
+// adivinando.
+//
+// Se manda igual, aislada en este único lugar, con este razonamiento:
+//   - Mercado Pago, como la mayoría de las REST API, típicamente ignora
+//     un campo desconocido en el body en vez de rechazar la request —
+//     el peor caso esperable es que no tenga ningún efecto, no que
+//     rompa la creación de la suscripción.
+//   - Si Mercado Pago sí lo respeta (documentado o no), resuelve
+//     exactamente el objetivo: activar Suscripciones sin que haga falta
+//     tocar ningún panel de Mercado Pago a mano.
+//
+// CÓMO VERIFICAR (una sola vez, con credenciales reales, no se puede
+// desde este entorno de desarrollo): crear una suscripción de prueba
+// desde /membresia, autorizarla con una tarjeta de test, y confirmar en
+// los logs de Vercel que POST /api/webhooks/mercadopago recibió
+// subscription_preapproval sin haber configurado nada a mano en Mercado
+// Pago. Si no llega, este `notification_url` es lo primero (y probable-
+// mente lo único) a revisar — no hace falta tocar el resto de la
+// integración.
+function conNotificationUrl<T extends object>(body: T): T & { notification_url: string } {
+  return { ...body, notification_url: urlWebhookPropio() };
+}
+
 // Crea una suscripción (preapproval) asociada al plan único de Valentía
 // Premium. `external_reference` es nuestro usuario_id — no es secreto,
 // pero tampoco hace falta que lo sea: nunca se confía en un
@@ -97,14 +147,16 @@ export async function crearPreapproval(params: {
 }): Promise<Preapproval> {
   return mpFetch<Preapproval>("/preapproval", {
     method: "POST",
-    body: JSON.stringify({
-      preapproval_plan_id: planId(),
-      reason: PREMIUM_PLAN.reason,
-      external_reference: params.externalReference,
-      payer_email: params.payerEmail,
-      back_url: params.backUrl,
-      status: "pending",
-    }),
+    body: JSON.stringify(
+      conNotificationUrl({
+        preapproval_plan_id: planId(),
+        reason: PREMIUM_PLAN.reason,
+        external_reference: params.externalReference,
+        payer_email: params.payerEmail,
+        back_url: params.backUrl,
+        status: "pending",
+      })
+    ),
   });
 }
 
