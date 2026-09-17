@@ -15,36 +15,65 @@ import { createHmac, timingSafeEqual } from "node:crypto";
 // un estado real que devuelva Mercado Pago.
 export type EstadoPreapproval = "pending" | "authorized" | "paused" | "canceled";
 
-// ---------- Validación del webhook (x-signature) ----------
-// Mercado Pago firma cada notificación con HMAC-SHA256 sobre un
-// "manifest" armado con el id del recurso, el x-request-id y el
-// timestamp, usando el secreto configurado en la app de Mercado Pago
-// (Tus integraciones → Webhooks → "Firma secreta"). Formato del
-// manifest documentado por MP: "id:{data.id};request-id:{x-request-id};
-// ts:{ts};".
+// ---------- Validación del webhook ----------
+// Mercado Pago documenta la firma HMAC (header x-signature) como parte
+// de la configuración de notificaciones vía "Tus integraciones →
+// Webhooks", que genera ahí la "Firma secreta". PERO: para una
+// aplicación creada específicamente como "Suscripciones", ese panel de
+// Webhooks no aparece dentro de "Tus integraciones" — confirmado contra
+// la documentación vigente y la cuenta real de la app. No hay forma de
+// obtener esa Firma secreta para este tipo de integración, así que
+// exigirla (y menos aún rechazar todo en producción por su ausencia)
+// sería bloquear el webhook para siempre, no una medida de seguridad.
 //
-// Sin secreto configurado: en desarrollo se deja pasar (para poder
-// probar el webhook antes de tener el secreto real), pero en producción
-// se rechaza — no hay fail-open productivo. La consulta server-side a
-// Mercado Pago (con el ACCESS TOKEN) sigue siendo obligatoria de todos
-// modos: esta firma es una capa adicional, no la única defensa.
-export function validarFirmaWebhook(params: {
-  xSignature: string | null;
-  xRequestId: string | null;
-  dataId: string | null;
-  esProduccion?: boolean;
-}): boolean {
-  const secreto = process.env.MERCADOPAGO_WEBHOOK_SECRET;
+// Por eso la defensa real acá son DOS cosas que sí controlamos nosotros:
+//   1. `validarTokenWebhook`: un secreto propio, elegido por nosotros,
+//      que se agrega como query param en la URL que le damos a Mercado
+//      Pago para recibir notificaciones (ej. .../api/webhooks/
+//      mercadopago?token=XXXX). Mercado Pago hace POST a esa URL tal
+//      cual se la dimos, query string incluida — esto no depende de
+//      ningún panel ni campo de Mercado Pago, así que si falta en
+//      producción SÍ se rechaza (no hay excusa: es enteramente nuestro).
+//   2. La verificación server-side obligatoria: pase lo que pase acá,
+//      `sincronizarSuscripcion` nunca escribe nada a partir del body de
+//      la notificación — siempre vuelve a pedirle el recurso real a la
+//      API de Mercado Pago con el ACCESS TOKEN antes de tocar Supabase
+//      (ver lib/suscripciones.ts). Esa consulta es la que de verdad
+//      impide activar Premium con datos falsos, con o sin firma.
+//
+// `validarFirmaWebhook` (x-signature) se conserva como capa extra
+// puramente oportunista: si Mercado Pago llega a mandar el header (para
+// este tipo de app no hay garantía de que lo haga) y hay un secreto
+// cargado, se valida y se rechaza ante una firma que no matchea. Nunca
+// rechaza solo porque el header no vino — su ausencia no es rara para
+// una integración de Suscripciones sin panel de Webhooks.
+export function validarTokenWebhook(params: { tokenRecibido: string | null; esProduccion?: boolean }): boolean {
+  const tokenEsperado = process.env.MERCADOPAGO_WEBHOOK_TOKEN;
   const esProduccion = params.esProduccion ?? process.env.NODE_ENV === "production";
 
-  if (!secreto) {
+  if (!tokenEsperado) {
     if (esProduccion) {
-      console.error("[mercadopago] Falta MERCADOPAGO_WEBHOOK_SECRET en producción — se rechaza el webhook.");
+      console.error("[mercadopago] Falta MERCADOPAGO_WEBHOOK_TOKEN en producción — se rechaza el webhook.");
       return false;
     }
     return true;
   }
-  if (!params.xSignature || !params.dataId) return false;
+  if (!params.tokenRecibido) return false;
+
+  const bufEsperado = Buffer.from(tokenEsperado);
+  const bufRecibido = Buffer.from(params.tokenRecibido);
+  if (bufEsperado.length !== bufRecibido.length) return false;
+  return timingSafeEqual(bufEsperado, bufRecibido);
+}
+
+// Firma HMAC-SHA256 sobre un "manifest" armado con el id del recurso, el
+// x-request-id y el timestamp, tal como la documenta Mercado Pago para
+// integraciones que sí tienen el panel de Webhooks. Best-effort: ver
+// comentario de arriba.
+export function validarFirmaWebhook(params: { xSignature: string | null; xRequestId: string | null; dataId: string | null }): boolean {
+  const secreto = process.env.MERCADOPAGO_WEBHOOK_SECRET;
+  if (!secreto || !params.xSignature) return true; // nada que validar
+  if (!params.dataId) return false;
 
   const partes = Object.fromEntries(
     params.xSignature.split(",").map((par) => {

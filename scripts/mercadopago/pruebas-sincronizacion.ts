@@ -17,6 +17,7 @@ import {
   calcularNuevaAutorizacion,
   esAccesoVigente,
   calcularFechaProximoPago,
+  validarTokenWebhook,
   validarFirmaWebhook,
 } from "../../lib/mercadopago-logica";
 
@@ -134,31 +135,53 @@ console.log("\n7. Webhook duplicado → idempotente (aplicar la misma notificaci
   assert(segunda.debeEscribir === false, "segunda notificación (duplicada): no-op");
 }
 
-console.log("\n8. validarFirmaWebhook: producción sin secreto configurado → rechazado");
+console.log("\n8. validarTokenWebhook: producción sin MERCADOPAGO_WEBHOOK_TOKEN configurado → rechazado (SÍ es fail-closed: es un secreto propio, siempre obtenible)");
 {
-  const original = process.env.MERCADOPAGO_WEBHOOK_SECRET;
-  delete process.env.MERCADOPAGO_WEBHOOK_SECRET;
+  const original = process.env.MERCADOPAGO_WEBHOOK_TOKEN;
+  delete process.env.MERCADOPAGO_WEBHOOK_TOKEN;
 
-  const rechazadoEnProduccion = validarFirmaWebhook({
-    xSignature: null,
-    xRequestId: null,
-    dataId: "123",
-    esProduccion: true,
-  });
-  assert(rechazadoEnProduccion === false, "producción sin secreto → false (fail-closed)");
+  const rechazadoEnProduccion = validarTokenWebhook({ tokenRecibido: null, esProduccion: true });
+  assert(rechazadoEnProduccion === false, "producción sin token → false (fail-closed)");
 
-  const permitidoEnDev = validarFirmaWebhook({
-    xSignature: null,
-    xRequestId: null,
-    dataId: "123",
-    esProduccion: false,
-  });
-  assert(permitidoEnDev === true, "desarrollo sin secreto → true (fail-open controlado, solo para setup local)");
+  const permitidoEnDev = validarTokenWebhook({ tokenRecibido: null, esProduccion: false });
+  assert(permitidoEnDev === true, "desarrollo sin token → true (fail-open controlado, solo para setup local)");
 
-  if (original) process.env.MERCADOPAGO_WEBHOOK_SECRET = original;
+  if (original) process.env.MERCADOPAGO_WEBHOOK_TOKEN = original;
 }
 
-console.log("\n9. validarFirmaWebhook: con secreto configurado, firma correcta pasa y firma incorrecta se rechaza");
+console.log("\n9. validarTokenWebhook: con token configurado, el correcto pasa y cualquier otro se rechaza");
+{
+  process.env.MERCADOPAGO_WEBHOOK_TOKEN = "token-de-prueba-bien-largo";
+
+  const correcto = validarTokenWebhook({ tokenRecibido: "token-de-prueba-bien-largo", esProduccion: true });
+  assert(correcto === true, "token correcto → true");
+
+  const incorrecto = validarTokenWebhook({ tokenRecibido: "cualquier-otra-cosa", esProduccion: true });
+  assert(incorrecto === false, "token incorrecto → false");
+
+  const faltante = validarTokenWebhook({ tokenRecibido: null, esProduccion: true });
+  assert(faltante === false, "sin token en la request (configurado el esperado) → false");
+
+  delete process.env.MERCADOPAGO_WEBHOOK_TOKEN;
+}
+
+console.log("\n10. validarFirmaWebhook: best-effort — nunca rechaza solo porque falte el header (no hay garantía de que Mercado Pago lo mande para una app de tipo Suscripciones)");
+{
+  const original = process.env.MERCADOPAGO_WEBHOOK_SECRET;
+
+  delete process.env.MERCADOPAGO_WEBHOOK_SECRET;
+  const sinSecretoNiHeader = validarFirmaWebhook({ xSignature: null, xRequestId: null, dataId: "123" });
+  assert(sinSecretoNiHeader === true, "sin secreto configurado → true (nada que validar)");
+
+  process.env.MERCADOPAGO_WEBHOOK_SECRET = "secreto-de-prueba";
+  const conSecretoSinHeader = validarFirmaWebhook({ xSignature: null, xRequestId: null, dataId: "123" });
+  assert(conSecretoSinHeader === true, "secreto configurado pero Mercado Pago no mandó x-signature → true (no es sospechoso para este tipo de app)");
+
+  if (original) process.env.MERCADOPAGO_WEBHOOK_SECRET = original;
+  else delete process.env.MERCADOPAGO_WEBHOOK_SECRET;
+}
+
+console.log("\n11. validarFirmaWebhook: con secreto Y header presentes, firma correcta pasa y firma incorrecta (manipulada) se rechaza");
 {
   process.env.MERCADOPAGO_WEBHOOK_SECRET = "secreto-de-prueba";
   const dataId = "abc123";
@@ -170,7 +193,6 @@ console.log("\n9. validarFirmaWebhook: con secreto configurado, firma correcta p
     xSignature: `ts=${ts},v1=${firmaCorrecta}`,
     xRequestId: "req-1",
     dataId,
-    esProduccion: true,
   });
   assert(valida === true, "firma correcta → true");
 
@@ -178,9 +200,8 @@ console.log("\n9. validarFirmaWebhook: con secreto configurado, firma correcta p
     xSignature: `ts=${ts},v1=${"0".repeat(firmaCorrecta.length)}`,
     xRequestId: "req-1",
     dataId,
-    esProduccion: true,
   });
-  assert(invalida === false, "firma incorrecta → false");
+  assert(invalida === false, "firma incorrecta (header presente pero no matchea) → false");
 
   delete process.env.MERCADOPAGO_WEBHOOK_SECRET;
 }

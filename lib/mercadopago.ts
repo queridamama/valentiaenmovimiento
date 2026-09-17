@@ -3,7 +3,7 @@ import { PREMIUM_PLAN } from "@/lib/config/premium";
 import type { EstadoPreapproval } from "@/lib/mercadopago-logica";
 
 export type { EstadoPreapproval } from "@/lib/mercadopago-logica";
-export { validarFirmaWebhook } from "@/lib/mercadopago-logica";
+export { validarTokenWebhook, validarFirmaWebhook } from "@/lib/mercadopago-logica";
 
 // Todo esto habla con la API REST de Mercado Pago directo por fetch — no
 // hace falta el SDK oficial para dos endpoints (preapproval,
