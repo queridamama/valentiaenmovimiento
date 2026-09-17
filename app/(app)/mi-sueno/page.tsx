@@ -10,6 +10,7 @@ import {
 } from "@/lib/datos";
 import { Titulo, Subtitulo, Etiqueta, Progreso } from "@/components/ui";
 import { TarjetaPaso, TarjetaCamino, COLORES_PASO } from "@/components/tarjetas";
+import RutaPremiumAcordeon from "@/components/RutaPremiumAcordeon";
 import type { TipoIcono } from "@/components/iconos";
 
 const ICONOS_PASO: TipoIcono[] = ["estrella", "corazon", "montana", "documento"];
@@ -148,38 +149,7 @@ export default async function MiSuenoPage() {
 
       {recorridoTerminado && esPremium && (
         <section className="space-y-4">
-          {ruta.map((etapa) => {
-            const esActual = etapa.id === proyecto?.etapa_actual;
-            const hechas = etapa.experiencias.filter((e) => e.completada).length;
-            return (
-              <div key={etapa.id} className="space-y-3">
-                <div className={`rounded-[22px] p-4 ${esActual ? "bg-marca text-white" : "bg-texto/5 opacity-60"}`}>
-                  <p className="text-[15px] font-bold tracking-wide">{etapa.nombre}</p>
-                  <p className={`text-xs ${esActual ? "text-white/70" : "text-texto/50"}`}>
-                    {etapa.experiencias.length} experiencia{etapa.experiencias.length === 1 ? "" : "s"}
-                    {etapa.experiencias.length > 0 ? ` · ${hechas} hecha${hechas === 1 ? "" : "s"}` : ""}
-                  </p>
-                </div>
-                {esActual && etapa.experiencias.length > 0 && (
-                  <div className="flex flex-col gap-6 pl-2">
-                    {etapa.experiencias.map((e, i) => (
-                      <TarjetaPaso
-                        key={e.id}
-                        numero={String(i + 1).padStart(2, "0")}
-                        titulo={e.titulo}
-                        descripcion={e.descripcion}
-                        estado={e.completada ? "hecha" : "ahora"}
-                        color={COLORES_PASO[i % COLORES_PASO.length]}
-                        icono={ICONOS_PASO[i % ICONOS_PASO.length]}
-                        href={`/experiencias/${e.id}`}
-                        clicable
-                      />
-                    ))}
-                  </div>
-                )}
-              </div>
-            );
-          })}
+          <RutaPremiumAcordeon etapas={ruta} etapaActualId={proyecto?.etapa_actual ?? null} />
           <Link
             href="/mi-proyecto"
             className="block rounded-[22px] bg-marca px-5 py-4 text-center text-[14px] font-semibold text-white"
