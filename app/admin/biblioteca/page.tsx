@@ -7,7 +7,7 @@ export default async function AdminBibliotecaPage() {
   const supabase = await crearClienteServidor();
   const { data: contenidos } = await supabase
     .from("contenidos")
-    .select("id, titulo, tipo, estado, actualizado_en")
+    .select("id, titulo, tipo, estado, actualizado_en, etapa_wp, modulo_wp")
     .order("actualizado_en", { ascending: false });
 
   return (
@@ -33,6 +33,12 @@ export default async function AdminBibliotecaPage() {
                   <p className="font-medium">{c.titulo}</p>
                   <p className="text-xs text-texto/50">
                     {ETIQUETA_TIPO_CONTENIDO[c.tipo as TipoContenido] ?? c.tipo} · {c.estado}
+                    {c.etapa_wp && (
+                      <span className="ml-1 rounded-full bg-acento/15 px-2 py-0.5 text-[11px] font-medium text-acento">
+                        WordPress · {c.etapa_wp}
+                        {c.modulo_wp ? ` · ${c.modulo_wp}` : ""}
+                      </span>
+                    )}
                   </p>
                 </div>
                 <Link href={`/admin/biblioteca/${c.id}`} className="text-sm font-medium text-acento">

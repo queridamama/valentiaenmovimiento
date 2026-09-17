@@ -40,7 +40,15 @@ export type Nivel = "gratis" | "premium";
 export type Rol = "miembro" | "editor" | "admin";
 
 // ---------- Biblioteca / CMS ----------
-export const TIPOS_CONTENIDO = ["clase", "meditacion", "audio", "plantilla", "recurso", "taller_grabado"] as const;
+export const TIPOS_CONTENIDO = [
+  "clase",
+  "meditacion",
+  "audio",
+  "plantilla",
+  "recurso",
+  "taller_grabado",
+  "lectura",
+] as const;
 export type TipoContenido = (typeof TIPOS_CONTENIDO)[number];
 
 export const ETIQUETA_TIPO_CONTENIDO: Record<TipoContenido, string> = {
@@ -50,6 +58,7 @@ export const ETIQUETA_TIPO_CONTENIDO: Record<TipoContenido, string> = {
   plantilla: "Plantilla",
   recurso: "Recurso descargable",
   taller_grabado: "Taller grabado",
+  lectura: "Lectura / reflexión",
 };
 
 // contenido_ubicaciones.contexto — dónde puede aparecer un mismo contenido

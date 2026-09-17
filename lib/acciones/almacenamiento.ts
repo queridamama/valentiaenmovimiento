@@ -103,6 +103,22 @@ export async function obtenerAudioPublicacion(publicacionId: string): Promise<st
   return firmarUrlPrivada(publicacion.audio_url);
 }
 
+// Un contenido migrado de WordPress (ver scripts/importar-wordpress.ts)
+// guarda en audio_url/archivo_url la URL externa original tal cual — por
+// ahora a propósito no se sube el archivo a Storage. Esa URL ya es
+// reproducible directo; intentar "firmarla" como si fuera un path del
+// bucket privado no encuentra nada y devuelve null. Solo lo que YA es un
+// path interno (sin esquema) necesita pasar por firmarUrlPrivada.
+function esUrlExterna(valor: string): boolean {
+  return /^https?:\/\//i.test(valor);
+}
+
+function resolverArchivo(valor: string | null): Promise<string | null> {
+  if (!valor) return Promise.resolve(null);
+  if (esUrlExterna(valor)) return Promise.resolve(valor);
+  return firmarUrlPrivada(valor);
+}
+
 // Mismo patrón que obtenerAudioPublicacion, para un contenido de
 // Biblioteca/Ruta/Curso: la policy "contenidos_lectura" (contenido_accesible())
 // ya decidió si esta fila puede llegar a la alumna — acá solo se firma lo
@@ -124,8 +140,8 @@ export async function obtenerArchivosContenido(
   if (!contenido) return { audioUrl: null, archivoUrl: null };
 
   const [audioUrl, archivoUrl] = await Promise.all([
-    contenido.audio_url ? firmarUrlPrivada(contenido.audio_url) : Promise.resolve(null),
-    contenido.archivo_url ? firmarUrlPrivada(contenido.archivo_url) : Promise.resolve(null),
+    resolverArchivo(contenido.audio_url),
+    resolverArchivo(contenido.archivo_url),
   ]);
   return { audioUrl, archivoUrl };
 }

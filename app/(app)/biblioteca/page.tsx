@@ -12,6 +12,7 @@ const ICONO_POR_TIPO: Record<string, TipoIcono> = {
   recurso: "documento",
   clase: "estrella",
   taller_grabado: "estrella",
+  lectura: "documento",
 };
 
 function Fila({
@@ -47,6 +48,15 @@ function Fila({
   );
 }
 
+// Para la fila de una lectura, que no tiene `duracion` cargada como las
+// demás — un extracto corto de texto plano alcanza (mismo criterio que ya
+// usa /admin/comunidad para el extracto de una publicación).
+function extractoTexto(html: string | null, max = 90): string {
+  if (!html) return "";
+  const texto = html.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim();
+  return texto.length > max ? `${texto.slice(0, max)}…` : texto;
+}
+
 function Seccion({ titulo, texto, children }: { titulo: string; texto: string; children: React.ReactNode }) {
   return (
     <section className="space-y-3">
@@ -76,6 +86,7 @@ export default async function BibliotecaPage() {
   const meditaciones = biblioteca.filter((b) => ["meditacion", "audio"].includes(b.contenido.tipo));
   const ejercicios = biblioteca.filter((b) => ["plantilla", "recurso"].includes(b.contenido.tipo));
   const videos = biblioteca.filter((b) => ["clase", "taller_grabado"].includes(b.contenido.tipo));
+  const lecturas = biblioteca.filter((b) => b.contenido.tipo === "lectura");
 
   return (
     <main className="mx-auto max-w-md space-y-8 px-5 pb-6 pt-6">
@@ -116,6 +127,22 @@ export default async function BibliotecaPage() {
         </Seccion>
       )}
 
+      {lecturas.length > 0 && (
+        <Seccion titulo="Lecturas y reflexiones" texto="Escritos de Meli para leer con calma.">
+          {lecturas.map((b) => (
+            <Fila
+              key={b.ubicacionId}
+              href={`/biblioteca/${b.contenido.id}`}
+              titulo={b.contenido.titulo}
+              duracion={b.contenido.duracion ?? extractoTexto(b.contenido.contenido_html)}
+              portadaUrl={b.contenido.portada_url}
+              icono={ICONO_POR_TIPO[b.contenido.tipo] ?? "documento"}
+              premium={b.nivelAcceso === "membresia"}
+            />
+          ))}
+        </Seccion>
+      )}
+
       {cursos.length > 0 && (
         <Seccion titulo="Mini cursos gratuitos" texto="Series cortas, con principio y fin.">
           {cursos.map((c) => (
@@ -140,7 +167,7 @@ export default async function BibliotecaPage() {
         </Seccion>
       )}
 
-      {meditaciones.length === 0 && ejercicios.length === 0 && cursos.length === 0 && videos.length === 0 && (
+      {meditaciones.length === 0 && ejercicios.length === 0 && lecturas.length === 0 && cursos.length === 0 && videos.length === 0 && (
         <p className="text-sm italic text-texto/40">Todavía no hay contenidos publicados acá.</p>
       )}
 

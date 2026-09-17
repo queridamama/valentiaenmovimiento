@@ -351,21 +351,29 @@ export async function obtenerBiblioteca(supabase: SupabaseClient) {
   const { data } = await supabase
     .from("contenido_ubicaciones")
     .select(
-      "id, nivel_acceso, orden, contenidos!inner(id, tipo, titulo, descripcion, portada_url, video_url, audio_url, archivo_url, duracion)"
+      "id, nivel_acceso, orden, contenidos!inner(id, tipo, titulo, descripcion, contenido_html, portada_url, video_url, audio_url, archivo_url, duracion)"
     )
     .eq("contexto", "biblioteca")
     .order("orden", { ascending: true });
+
+  type ContenidoBiblioteca = {
+    id: string;
+    tipo: string;
+    titulo: string;
+    descripcion: string | null;
+    contenido_html: string | null;
+    portada_url: string | null;
+    video_url: string | null;
+    audio_url: string | null;
+    archivo_url: string | null;
+    duracion: string | null;
+  };
 
   return (data ?? [])
     .map((u) => ({
       ubicacionId: u.id as string,
       nivelAcceso: u.nivel_acceso as "gratis" | "membresia",
-      contenido: unoDeRelacion(
-        u.contenidos as unknown as
-          | { id: string; tipo: string; titulo: string; descripcion: string | null; portada_url: string | null; video_url: string | null; audio_url: string | null; archivo_url: string | null; duracion: string | null }
-          | { id: string; tipo: string; titulo: string; descripcion: string | null; portada_url: string | null; video_url: string | null; audio_url: string | null; archivo_url: string | null; duracion: string | null }[]
-          | null
-      ),
+      contenido: unoDeRelacion(u.contenidos as unknown as ContenidoBiblioteca | ContenidoBiblioteca[] | null),
     }))
     .filter((u): u is typeof u & { contenido: NonNullable<(typeof u)["contenido"]> } => u.contenido !== null);
 }

@@ -37,6 +37,32 @@ export default async function EditarContenidoPage({ params }: { params: Promise<
     <div className="max-w-2xl space-y-8">
       <h1 className="font-display text-2xl font-semibold">Editar contenido</h1>
 
+      {contenido.wp_post_id && (
+        <div className="space-y-1 rounded-card border border-acento/25 bg-acento/5 p-4 text-sm">
+          <p className="font-semibold text-acento">Origen: migración de WordPress</p>
+          <p className="text-texto/60">
+            Post original #{contenido.wp_post_id}
+            {contenido.etapa_wp ? ` · Etapa vieja: ${contenido.etapa_wp}` : ""}
+            {contenido.modulo_wp ? ` · Módulo/tag viejo: ${contenido.modulo_wp}` : ""}
+            {contenido.orden_wp !== null ? ` · Orden de origen: ${contenido.orden_wp}` : ""}
+          </p>
+          {contenido.fecha_publicacion_original && (
+            <p className="text-texto/60">
+              Publicado originalmente:{" "}
+              {new Date(contenido.fecha_publicacion_original).toLocaleDateString("es-AR", {
+                day: "2-digit",
+                month: "2-digit",
+                year: "numeric",
+              })}
+            </p>
+          )}
+          <p className="text-xs italic text-texto/40">
+            Esto es solo referencia — para ubicarlo en la Ruta Premium nueva, usá &ldquo;Agregar a una etapa&rdquo; más
+            abajo.
+          </p>
+        </div>
+      )}
+
       <form action={guardar} className="space-y-4">
         <div className="grid grid-cols-2 gap-4">
           <label className="flex flex-col gap-1">
