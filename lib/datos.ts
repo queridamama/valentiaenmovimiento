@@ -26,54 +26,72 @@ export async function obtenerAutorizacion(supabase: SupabaseClient, userId: stri
     .maybeSingle();
   const autorizacion = data ?? { nivel: "gratis" as const, rol: "miembro" as const, origen_nivel: "manual" as const };
 
-  // Premium activado por Mercado Pago: acá NO se depende de ningún
-  // webhook para saber si sigue vigente — se revalida server-side,
-  // directo contra la API (ver lib/suscripciones.ts). `revalidarSiCorresponde`
-  // solo pega contra Mercado Pago si el último dato guardado ya es viejo
-  // (ventana en lib/mercadopago-logica.ts); si Mercado Pago está caído,
-  // no cambia nada y se reintenta en la próxima lectura. Nunca corre
-  // para Gratis ni para un Premium manual.
+  // Premium otorgado a mano: nunca se consulta ni se modifica por
+  // Mercado Pago — se corta acá, ni siquiera se llega a mirar si existe
+  // alguna fila en `suscripciones` (protección reforzada: la misma
+  // combinación también está protegida adentro de revalidarSiCorresponde
+  // y de calcularNuevaAutorizacion, pero para el caso más común
+  // — cortesías, pruebas, alumnas históricas — conviene no gastar ni la
+  // consulta).
+  if (autorizacion.nivel === "premium" && autorizacion.origen_nivel === "manual") {
+    return autorizacion;
+  }
+
+  // Acá NO se depende de ningún webhook para saber si corresponde
+  // Premium — se revalida server-side, directo contra la API (ver
+  // lib/suscripciones.ts). `revalidarSiCorresponde` cubre DOS casos con
+  // el mismo mecanismo:
+  //   1. Ya es Premium por Mercado Pago: se revisa cada tanto que siga
+  //      vigente (ventana larga, ver lib/mercadopago-logica.ts).
+  //   2. TODAVÍA figura Gratis pero ya existe una suscripción real
+  //      cargada (pagó y nunca volvió bien a /membresia/resultado —
+  //      cerró Mercado Pago, perdió conexión, etc.): acá es donde se
+  //      autocorrige a Premium sin depender de esa vuelta (ventana
+  //      corta mientras sigue "pending").
+  // Si Mercado Pago está caído, `revalidarSiCorresponde` no cambia nada
+  // y se reintenta en la próxima lectura — nunca activa ni desactiva
+  // Premium por un error de red. Para la inmensa mayoría de las cuentas
+  // Gratis (sin ninguna fila en `suscripciones`) esto es un select vacío,
+  // no un llamado a Mercado Pago.
+  await revalidarSiCorresponde(userId);
+
+  const { data: fresca } = await supabase
+    .from("autorizaciones")
+    .select("nivel, rol, origen_nivel")
+    .eq("usuario_id", userId)
+    .maybeSingle();
+  if (fresca) {
+    autorizacion.nivel = fresca.nivel;
+    autorizacion.rol = fresca.rol;
+    autorizacion.origen_nivel = fresca.origen_nivel;
+  }
+
+  // Auto-corrección del período de gracia: aunque la consulta de arriba
+  // haya sido un no-op (dato todavía fresco) o haya fallado (Mercado
+  // Pago caído), igual puede ser el momento exacto en que la fecha hasta
+  // la que ya pagó termina de vencer — eso no depende de ningún aviso
+  // externo, así que se revisa siempre con el último dato que tengamos
+  // guardado. Solo aplica si, después de todo lo anterior, sigue siendo
+  // Premium por Mercado Pago.
   if (autorizacion.nivel === "premium" && autorizacion.origen_nivel === "mercadopago") {
-    await revalidarSiCorresponde(userId);
-
-    // Se vuelve a leer: `revalidarSiCorresponde` puede haber actualizado
-    // el nivel (ej. si Mercado Pago ya la había cancelado hace días).
-    const { data: fresca } = await supabase
-      .from("autorizaciones")
-      .select("nivel, rol, origen_nivel")
+    const { data: suscripcion } = await supabase
+      .from("suscripciones")
+      .select("estado, fecha_proximo_pago")
       .eq("usuario_id", userId)
+      .eq("proveedor", "mercadopago")
       .maybeSingle();
-    if (fresca) {
-      autorizacion.nivel = fresca.nivel;
-      autorizacion.origen_nivel = fresca.origen_nivel;
-    }
 
-    // Auto-corrección del período de gracia: aunque la consulta de
-    // arriba haya sido un no-op (dato todavía fresco) o haya fallado
-    // (Mercado Pago caído), igual puede ser el momento exacto en que la
-    // fecha hasta la que ya pagó termina de vencer — eso no depende de
-    // ningún aviso externo, así que se revisa siempre con el último dato
-    // que tengamos guardado.
-    if (autorizacion.nivel === "premium" && autorizacion.origen_nivel === "mercadopago") {
-      const { data: suscripcion } = await supabase
-        .from("suscripciones")
-        .select("estado, fecha_proximo_pago")
+    const periodoVencido =
+      suscripcion && !esAccesoVigente(suscripcion.estado as EstadoPreapproval, suscripcion.fecha_proximo_pago);
+
+    if (periodoVencido) {
+      const servicio = crearClienteServicio();
+      await servicio
+        .from("autorizaciones")
+        .update({ nivel: "gratis" })
         .eq("usuario_id", userId)
-        .eq("proveedor", "mercadopago")
-        .maybeSingle();
-
-      const periodoVencido =
-        suscripcion && !esAccesoVigente(suscripcion.estado as EstadoPreapproval, suscripcion.fecha_proximo_pago);
-
-      if (periodoVencido) {
-        const servicio = crearClienteServicio();
-        await servicio
-          .from("autorizaciones")
-          .update({ nivel: "gratis" })
-          .eq("usuario_id", userId)
-          .eq("origen_nivel", "mercadopago");
-        autorizacion.nivel = "gratis";
-      }
+        .eq("origen_nivel", "mercadopago");
+      autorizacion.nivel = "gratis";
     }
   }
 

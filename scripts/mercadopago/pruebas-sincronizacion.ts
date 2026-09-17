@@ -19,6 +19,7 @@ import {
   calcularFechaProximoPago,
   debeRevalidar,
   VENTANA_REVALIDACION_MS,
+  VENTANA_REVALIDACION_PENDIENTE_MS,
   validarTokenWebhook,
   validarFirmaWebhook,
 } from "../../lib/mercadopago-logica";
@@ -208,18 +209,69 @@ console.log("\n11. validarFirmaWebhook: con secreto Y header presentes, firma co
   delete process.env.MERCADOPAGO_WEBHOOK_SECRET;
 }
 
-console.log("\n12. debeRevalidar: la ventana de revalidación server-side (polling, no webhook)");
+console.log("\n12. debeRevalidar: ventana larga para suscripciones ya resueltas (authorized/paused/canceled)");
 {
   const actualizadoEn = "2026-06-15T00:00:00Z";
 
   const justoAntes = Date.parse(actualizadoEn) + VENTANA_REVALIDACION_MS - 1;
-  assert(debeRevalidar(actualizadoEn, justoAntes) === false, "todavía dentro de la ventana → no revalida (no le pega a la API)");
+  assert(debeRevalidar(actualizadoEn, "authorized", justoAntes) === false, "todavía dentro de la ventana → no revalida (no le pega a la API)");
 
   const justoDespues = Date.parse(actualizadoEn) + VENTANA_REVALIDACION_MS + 1;
-  assert(debeRevalidar(actualizadoEn, justoDespues) === true, "pasada la ventana → sí revalida");
+  assert(debeRevalidar(actualizadoEn, "authorized", justoDespues) === true, "pasada la ventana → sí revalida");
 
   const muchoDespues = Date.parse(actualizadoEn) + VENTANA_REVALIDACION_MS * 10;
-  assert(debeRevalidar(actualizadoEn, muchoDespues) === true, "mucho más viejo → sigue revalidando (no se \"cansa\")");
+  assert(debeRevalidar(actualizadoEn, "canceled", muchoDespues) === true, "mucho más viejo → sigue revalidando (no se \"cansa\")");
+}
+
+console.log("\n13. debeRevalidar: ventana corta y propia para suscripciones todavía 'pending'");
+{
+  const actualizadoEn = "2026-06-15T00:00:00Z";
+
+  assert(VENTANA_REVALIDACION_PENDIENTE_MS < VENTANA_REVALIDACION_MS, "la ventana 'pending' es más chica que la ventana estable");
+
+  const dentroDeLaVentanaPendiente = Date.parse(actualizadoEn) + VENTANA_REVALIDACION_PENDIENTE_MS - 1;
+  assert(debeRevalidar(actualizadoEn, "pending", dentroDeLaVentanaPendiente) === false, "todavía dentro de los 5 minutos → no revalida todavía");
+
+  // El mismo momento que sería "todavía fresco" para una suscripción ya
+  // resuelta (authorized) ya es "vieja" para una que sigue pending — es
+  // justo la diferencia que se busca: enterarse rápido de que Mercado
+  // Pago ya la autorizó, sin esperar la ventana larga.
+  const pasadaLaVentanaPendienteNoLaEstable = Date.parse(actualizadoEn) + VENTANA_REVALIDACION_PENDIENTE_MS + 1;
+  assert(debeRevalidar(actualizadoEn, "pending", pasadaLaVentanaPendienteNoLaEstable) === true, "pasados los 5 minutos, todavía pending → sí revalida");
+  assert(
+    debeRevalidar(actualizadoEn, "authorized", pasadaLaVentanaPendienteNoLaEstable) === false,
+    "el mismo momento, pero ya authorized → sigue fresca para la ventana larga"
+  );
+}
+
+console.log(
+  "\n14. Caso borde: Gratis/manual con una suscripción 'pending' guardada, nunca pasó por /membresia/resultado, Mercado Pago ya confirmó authorized → debe terminar en Premium/mercadopago"
+);
+{
+  // Reproduce exactamente el escenario reportado: se guardó la fila en
+  // `suscripciones` al iniciar la compra (estado='pending', proveedor=
+  // 'mercadopago'), pero la autorización de la cuenta sigue en su
+  // default de siempre (gratis/manual) porque la usuaria cerró Mercado
+  // Pago, perdió conexión, o nunca volvió a /membresia/resultado. La
+  // revalidación perezosa (revalidarSiCorresponde, en lib/suscripciones.ts)
+  // es la que tiene que encontrar esta fila y, si ya pasó su ventana
+  // corta de 'pending', volver a consultar — acá se simula que esa
+  // consulta ya devolvió "authorized" y se verifica el resultado final.
+  const actualizadoEnAlGuardarLaFilaPending = "2026-06-15T00:00:00Z";
+  const ahoraSieteMinutosDespues = Date.parse(actualizadoEnAlGuardarLaFilaPending) + 7 * 60 * 1000;
+
+  const correspondeRevalidar = debeRevalidar(actualizadoEnAlGuardarLaFilaPending, "pending", ahoraSieteMinutosDespues);
+  assert(correspondeRevalidar === true, "pasados 7 minutos con estado 'pending' → sí corresponde volver a consultar a Mercado Pago");
+
+  // Mercado Pago (simulado) ya confirmó la suscripción.
+  const vigente = esAccesoVigente("authorized", null, ahoraSieteMinutosDespues);
+  const decision = calcularNuevaAutorizacion({
+    autorizacionActual: { nivel: "gratis", origenNivel: "manual" },
+    vigente,
+  });
+  assert(decision.debeEscribir === true, "se corrige la autorización");
+  assert(decision.debeEscribir && decision.nivel === "premium", "queda Premium");
+  assert(decision.debeEscribir && decision.origenNivel === "mercadopago", "con origen mercadopago — sin haber pasado nunca por /membresia/resultado");
 }
 
 console.log(fallos === 0 ? "\n✅ Todas las pruebas pasaron." : `\n❌ ${fallos} prueba(s) fallaron.`);

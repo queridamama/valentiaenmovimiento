@@ -99,20 +99,33 @@ export function validarFirmaWebhook(params: { xSignature: string | null; xReques
 // llegue un webhook (ver nota en lib/mercadopago.ts): en cambio, se
 // revalida contra GET /preapproval/{id} de forma perezosa — solo cuando
 // el último dato guardado ya es "viejo" — para no pegarle a la API de
-// Mercado Pago en cada request de cada usuaria Premium.
+// Mercado Pago en cada request. La ventana depende del estado guardado:
 //
-// 6 horas es una decisión de producto, no un valor que documente
-// Mercado Pago: una usuaria Premium activa entra varias veces por día,
-// así que la mayoría de sus visitas no generan ningún llamado a la API
-// (dato todavía fresco); y si canceló o se le rechazó el cobro, nos
-// enteramos en cuestión de horas, no de días. El caso "recién volvió del
-// checkout" no espera esta ventana: `revalidarSuscripcionAhora` (ver
-// lib/suscripciones.ts) la ignora a propósito y siempre consulta.
-export const VENTANA_REVALIDACION_MS = 6 * 60 * 60 * 1000;
+//   - "pending": la usuaria ya inició el pago (existe una fila en
+//     `suscripciones`) pero todavía figura Gratis — es exactamente el
+//     caso de "pagó, pero nunca volvió bien a /membresia/resultado"
+//     (cerró Mercado Pago, se le cortó la conexión, etc.). Acá conviene
+//     una ventana corta: no hay ningún Premium que "mantener" todavía,
+//     así que revisar seguido no tiene el costo de una usuaria Premium
+//     ya estable, y es justo la ventana crítica en la que queremos
+//     enterarnos rápido de que Mercado Pago ya la autorizó.
+//   - cualquier otro estado (authorized/paused/canceled): ya se resolvió
+//     una vez, así que alcanza con la ventana larga de siempre — una
+//     usuaria Premium activa entra varias veces por día, la mayoría de
+//     esas visitas no generan ningún llamado a la API; y si canceló o
+//     se le rechazó el cobro, nos enteramos en horas, no en días.
+//
+// Ninguno de los dos números lo documenta Mercado Pago: son decisiones
+// de producto nuestras. El caso "recién volvió del checkout" no espera
+// ninguna de las dos ventanas: `revalidarSuscripcionAhora` (ver
+// lib/suscripciones.ts) las ignora a propósito y siempre consulta.
+export const VENTANA_REVALIDACION_MS = 6 * 60 * 60 * 1000; // 6 horas
+export const VENTANA_REVALIDACION_PENDIENTE_MS = 5 * 60 * 1000; // 5 minutos
 
-export function debeRevalidar(actualizadoEnIso: string, ahora: number = Date.now()): boolean {
+export function debeRevalidar(actualizadoEnIso: string, estado: EstadoPreapproval, ahora: number = Date.now()): boolean {
+  const ventana = estado === "pending" ? VENTANA_REVALIDACION_PENDIENTE_MS : VENTANA_REVALIDACION_MS;
   const antiguedadMs = ahora - new Date(actualizadoEnIso).getTime();
-  return antiguedadMs >= VENTANA_REVALIDACION_MS;
+  return antiguedadMs >= ventana;
 }
 
 // ---------- Acceso vigente y "pagado hasta" ----------
