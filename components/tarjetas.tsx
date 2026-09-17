@@ -173,6 +173,7 @@ export function TarjetaPaso({
   icono,
   href,
   clicable,
+  tipo,
 }: {
   numero: string;
   titulo: string;
@@ -182,11 +183,27 @@ export function TarjetaPaso({
   icono: TipoIcono;
   href?: string;
   clicable: boolean;
+  // Solo la Ruta Premium (videos/meditaciones migrados) lo manda — el
+  // recorrido gratis no pasa `tipo` y sigue viéndose exactamente igual
+  // que antes ("Ver clase"/"Volver a ver", sin etiqueta de formato).
+  tipo?: "clase" | "meditacion";
 }) {
   // El estado "pendiente" se distingue con colores mate explícitos, nunca
   // con opacity sobre toda la tarjeta — eso volvía ilegible el número
   // dentro de su propio círculo blanco.
   const pendiente = estado === "pendiente";
+  const textoCta =
+    tipo === "clase"
+      ? estado === "hecha"
+        ? "Volver a ver"
+        : "Ver video"
+      : tipo === "meditacion"
+        ? estado === "hecha"
+          ? "Volver a escuchar"
+          : "Escuchar meditación"
+        : estado === "hecha"
+          ? "Volver a ver"
+          : "Ver clase";
   const contenido = (
     <div
       className={`relative flex items-start gap-4 rounded-[24px] p-5 ${pendiente ? "bg-texto/6" : FONDOS_BLOQUE[color]}`}
@@ -199,6 +216,11 @@ export function TarjetaPaso({
         {estado === "hecha" ? "✓" : numero}
       </span>
       <div className="min-w-0 flex-1 space-y-1.5">
+        {tipo && (
+          <p className={`text-[10.5px] font-bold uppercase tracking-wide ${pendiente ? "text-texto/35" : "text-marca/55"}`}>
+            {tipo === "clase" ? "▶ Video" : "🎧 Meditación"}
+          </p>
+        )}
         <p className={`text-[16px] font-bold leading-snug ${pendiente ? "text-texto/40" : "text-marca"}`}>{titulo}</p>
         {descripcion && (
           <p
@@ -213,7 +235,7 @@ export function TarjetaPaso({
         {clicable && (
           <span className="mt-1 inline-flex w-fit items-center gap-1.5 rounded-full bg-white/85 px-3 py-1.5 text-[12px] font-semibold text-marca">
             <IconoPlayChico />
-            {estado === "hecha" ? "Volver a ver" : "Ver clase"}
+            {textoCta}
           </span>
         )}
       </div>

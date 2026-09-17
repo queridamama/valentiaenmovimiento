@@ -41,8 +41,17 @@ interface Props {
 // server action como un solo campo JSON — así la action no tiene que lidiar
 // con nombres de campo indexados.
 export default function FormularioExperiencia({ accion, etapas, inicial, preguntasIniciales }: Props) {
+  // `preguntasIniciales` puede ser legítimamente [] (una experiencia
+  // existente sin preguntas, ej. un video) — eso hay que respetarlo tal
+  // cual. La pregunta vacía por default es SOLO para el formulario de
+  // "nueva experiencia", donde `preguntasIniciales` ni siquiera se pasa
+  // (es `undefined`). Antes, `?.length` trataba `[]` igual que
+  // `undefined` y le pegaba una pregunta vacía a cualquier experiencia
+  // sin preguntas — guardarExperiencia() después rechazaba eso con "La
+  // pregunta 1 no puede estar vacía", así que un video sin preguntas
+  // nunca se podía guardar ni publicar.
   const [preguntas, setPreguntas] = useState<PreguntaEditable[]>(
-    preguntasIniciales?.length
+    preguntasIniciales !== undefined
       ? preguntasIniciales
       : [{ texto: "", placeholder: "", area_respuesta: "libre", orden: 1 }]
   );

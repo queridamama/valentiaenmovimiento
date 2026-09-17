@@ -11,6 +11,7 @@ interface ExperienciaRuta {
   titulo: string;
   descripcion: string | null;
   completada: boolean;
+  tipo?: "clase" | "meditacion";
 }
 
 interface EtapaRuta {
@@ -102,6 +103,7 @@ export default function RutaPremiumAcordeon({ etapas, etapaActualId }: { etapas:
                     icono={ICONOS_PASO[i % ICONOS_PASO.length]}
                     href={`/experiencias/${e.id}`}
                     clicable
+                    tipo={e.tipo}
                   />
                 ))}
               </div>
