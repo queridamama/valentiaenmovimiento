@@ -117,12 +117,18 @@ export function TarjetaProyecto({
   etapaNombre,
   etapaIndice,
   href,
+  mostrarCta = true,
   className = "",
 }: {
   dia: number;
   etapaNombre?: string;
   etapaIndice: number;
-  href: string;
+  href?: string;
+  // Cuando esta tarjeta se usa DENTRO de /mi-proyecto, un "Ver mi
+  // Proyecto →" que apunta a la misma página es un CTA que no lleva a
+  // ningún lado nuevo — se oculta ahí. En cualquier otro lugar (ej. Mi
+  // Sueño) sigue llevando a Mi Proyecto como siempre.
+  mostrarCta?: boolean;
   className?: string;
 }) {
   return (
@@ -140,9 +146,11 @@ export function TarjetaProyecto({
           </div>
         ))}
       </div>
-      <Link href={href} className="mt-4 inline-block text-[13px] font-semibold text-white underline decoration-white/40 underline-offset-4">
-        Ver mi Proyecto →
-      </Link>
+      {mostrarCta && href && (
+        <Link href={href} className="mt-4 inline-block text-[13px] font-semibold text-white underline decoration-white/40 underline-offset-4">
+          Ver mi Proyecto →
+        </Link>
+      )}
     </div>
   );
 }

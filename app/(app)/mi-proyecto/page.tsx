@@ -67,7 +67,7 @@ export default async function MiProyectoPage() {
             dia={diaDelProyecto(proyecto.fecha_inicio)}
             etapaNombre={etapaActual?.nombre}
             etapaIndice={Math.max(0, etapaIndice)}
-            href="/mi-proyecto"
+            mostrarCta={false}
           />
         )}
       </div>

@@ -21,8 +21,14 @@ export default async function AdminUsuariasPage() {
     .select("id, nombre, fecha_registro")
     .order("fecha_registro", { ascending: false });
 
-  const { data: autorizaciones } = await supabase.from("autorizaciones").select("usuario_id, nivel, rol");
+  const { data: autorizaciones } = await supabase.from("autorizaciones").select("usuario_id, nivel, rol, origen_nivel");
   const autPorId = new Map((autorizaciones ?? []).map((a) => [a.usuario_id, a]));
+
+  const { data: suscripciones } = await supabase
+    .from("suscripciones")
+    .select("usuario_id, estado")
+    .eq("proveedor", "mercadopago");
+  const suscripcionPorUsuario = new Map((suscripciones ?? []).map((s) => [s.usuario_id, s.estado]));
 
   return (
     <div className="space-y-6">
@@ -32,6 +38,8 @@ export default async function AdminUsuariasPage() {
           const aut = autPorId.get(p.id);
           const nivel = aut?.nivel ?? "gratis";
           const rol = aut?.rol ?? "miembro";
+          const origen = aut?.origen_nivel ?? "manual";
+          const estadoSuscripcion = suscripcionPorUsuario.get(p.id);
           const aPremium = cambiarNivelUsuaria.bind(null, p.id, "premium");
           const aGratis = cambiarNivelUsuaria.bind(null, p.id, "gratis");
 
@@ -41,6 +49,8 @@ export default async function AdminUsuariasPage() {
                 <p className="font-medium">{p.nombre || "(sin nombre)"}</p>
                 <p className="text-xs text-texto/50">
                   Nivel: {nivel} · Rol: {rol}
+                  {nivel === "premium" && ` · Origen: ${origen === "mercadopago" ? "Mercado Pago" : "Manual"}`}
+                  {estadoSuscripcion && ` · Suscripción MP: ${estadoSuscripcion}`}
                 </p>
               </div>
               <div className="flex flex-wrap gap-2 text-xs">

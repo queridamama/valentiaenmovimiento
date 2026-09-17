@@ -1,5 +1,6 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { AreaRespuesta } from "@/lib/tipos";
+import { crearClienteServicio } from "@/lib/supabase/servicio";
 
 // La forma en que supabase-js tipa una relación embebida a-uno (ej. la
 // `perfiles` de quien publicó) varía según la versión: a veces objeto, a
@@ -18,10 +19,53 @@ export function unoDeRelacion<T>(valor: T | T[] | null | undefined): T | null {
 export async function obtenerAutorizacion(supabase: SupabaseClient, userId: string) {
   const { data } = await supabase
     .from("autorizaciones")
-    .select("nivel, rol")
+    .select("nivel, rol, origen_nivel")
     .eq("usuario_id", userId)
     .maybeSingle();
-  return data ?? { nivel: "gratis" as const, rol: "miembro" as const };
+  const autorizacion = data ?? { nivel: "gratis" as const, rol: "miembro" as const, origen_nivel: "manual" as const };
+
+  // Auto-corrección del período de gracia de Mercado Pago: cuando una
+  // suscripción se pausa o cancela, el webhook (lib/suscripciones.ts) NO
+  // baja el nivel de inmediato si todavía no pasó la fecha hasta la que
+  // ya pagó — pero Mercado Pago no avisa cuándo ese período termina, así
+  // que se revisa acá, en cada lectura de autorización, y recién ahí se
+  // corrige. Solo corre esta consulta extra para Premium activado por
+  // Mercado Pago (nunca para Gratis ni para un Premium manual).
+  if (autorizacion.nivel === "premium" && autorizacion.origen_nivel === "mercadopago") {
+    const { data: suscripcion } = await supabase
+      .from("suscripciones")
+      .select("estado, fecha_proximo_pago")
+      .eq("usuario_id", userId)
+      .eq("proveedor", "mercadopago")
+      .maybeSingle();
+
+    const periodoVencido =
+      suscripcion &&
+      suscripcion.estado !== "authorized" &&
+      (!suscripcion.fecha_proximo_pago || new Date(suscripcion.fecha_proximo_pago).getTime() <= Date.now());
+
+    if (periodoVencido) {
+      const servicio = crearClienteServicio();
+      await servicio
+        .from("autorizaciones")
+        .update({ nivel: "gratis" })
+        .eq("usuario_id", userId)
+        .eq("origen_nivel", "mercadopago");
+      autorizacion.nivel = "gratis";
+    }
+  }
+
+  return autorizacion;
+}
+
+export async function obtenerSuscripcionPropia(supabase: SupabaseClient, userId: string) {
+  const { data } = await supabase
+    .from("suscripciones")
+    .select("estado, monto, moneda, fecha_proximo_pago, fecha_ultimo_pago, cancelada_en")
+    .eq("usuario_id", userId)
+    .eq("proveedor", "mercadopago")
+    .maybeSingle();
+  return data;
 }
 
 export async function obtenerSuenoActivo(supabase: SupabaseClient, userId: string) {

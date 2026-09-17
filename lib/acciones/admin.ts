@@ -212,14 +212,22 @@ export async function cambiarAccesoExperiencia(experienciaId: string, nivelAcces
   revalidatePath("/admin/experiencias");
 }
 
-// Conversión manual a Premium (todavía sin Mercado Pago): SOLO admin — la
-// policy `autorizaciones_update_admin` en supabase/schema.sql ya lo exige
-// a nivel de base, esto además evita que un editor vea la opción.
+// Conversión manual de nivel (cortesías, pruebas, alumnas históricas,
+// soporte): SOLO admin — la policy `autorizaciones_update_admin` en
+// supabase/schema.sql ya lo exige a nivel de base, esto además evita que
+// un editor vea la opción. Siempre marca origen_nivel='manual', incluso
+// si la usuaria tenía Premium por Mercado Pago: el admin tiene la última
+// palabra, y esto además evita que un webhook posterior de una
+// suscripción vieja/inconsistente le vuelva a tocar el nivel por error
+// (ver lib/suscripciones.ts, que nunca toca un origen_nivel='manual').
 export async function cambiarNivelUsuaria(usuarioId: string, nivel: "gratis" | "premium") {
   const { supabase, rol } = await exigirStaff();
   if (rol !== "admin") throw new Error("Solo un admin puede cambiar el nivel de una usuaria.");
 
-  const { error } = await supabase.from("autorizaciones").update({ nivel }).eq("usuario_id", usuarioId);
+  const { error } = await supabase
+    .from("autorizaciones")
+    .update({ nivel, origen_nivel: "manual" })
+    .eq("usuario_id", usuarioId);
   if (error) throw error;
 
   revalidatePath("/admin/usuarias");
