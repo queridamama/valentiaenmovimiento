@@ -38,7 +38,7 @@ export default async function ResultadoMembresiaPage() {
     );
   }
 
-  if (suscripcion?.estado === "cancelled") {
+  if (suscripcion?.estado === "canceled") {
     return (
       <main className="mx-auto max-w-md space-y-5 px-6 pb-10 pt-16 text-center">
         <Titulo>No pudimos confirmar el pago</Titulo>

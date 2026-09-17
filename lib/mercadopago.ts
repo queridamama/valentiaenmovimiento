@@ -1,6 +1,9 @@
 import "server-only";
-import { createHmac, timingSafeEqual } from "node:crypto";
 import { PREMIUM_PLAN } from "@/lib/config/premium";
+import type { EstadoPreapproval } from "@/lib/mercadopago-logica";
+
+export type { EstadoPreapproval } from "@/lib/mercadopago-logica";
+export { validarFirmaWebhook } from "@/lib/mercadopago-logica";
 
 // Todo esto habla con la API REST de Mercado Pago directo por fetch — no
 // hace falta el SDK oficial para dos endpoints (preapproval,
@@ -9,17 +12,12 @@ import { PREMIUM_PLAN } from "@/lib/config/premium";
 // Server Action (no llevan "use server"), se llaman desde código de
 // servidor (route handlers, server actions, Server Components).
 //
-// LÍMITE CONOCIDO — leer antes de tocar la lógica de cancelación: este
-// entorno no tiene acceso de red a mercadopago.com (política de egress
-// del sandbox), así que no pude verificar contra la documentación en
-// vivo el nombre/comportamiento exacto de `next_payment_date` en el
-// recurso Preapproval al cancelar una suscripción. Se asume (de la
-// documentación histórica de Mercado Pago) que es la fecha del próximo
-// cobro programado, y se usa como "pagado hasta" para no cortar acceso a
-// mitad de ciclo (ver obtenerNivelDesdeSuscripcion en
-// lib/acciones/membresia.ts). Antes de confiar en esto en producción:
-// pegarle a GET /preapproval/:id con una suscripción real y confirmar
-// que el campo existe y se comporta como se espera.
+// La lógica de decisión (qué estado de acceso corresponde, cuándo
+// preservar la fecha de "pagado hasta", validación de firma del webhook)
+// vive en lib/mercadopago-logica.ts, sin "server-only" — así se puede
+// testear con un script plano sin credenciales (ver
+// scripts/mercadopago/pruebas-sincronizacion.ts). Este archivo es solo
+// I/O: los fetch reales a la API de Mercado Pago.
 
 const API_BASE = "https://api.mercadopago.com";
 
@@ -47,8 +45,6 @@ async function mpFetch<T>(path: string, init: RequestInit = {}): Promise<T> {
   }
   return cuerpo as T;
 }
-
-export type EstadoPreapproval = "pending" | "authorized" | "paused" | "cancelled";
 
 export interface Preapproval {
   id: string;
@@ -116,59 +112,15 @@ export async function obtenerPreapproval(id: string): Promise<Preapproval> {
   return mpFetch<Preapproval>(`/preapproval/${encodeURIComponent(id)}`);
 }
 
+// Estado real de Mercado Pago: "canceled" (una sola "l"). Ver el
+// comentario en lib/mercadopago-logica.ts.
 export async function cancelarPreapproval(id: string): Promise<Preapproval> {
   return mpFetch<Preapproval>(`/preapproval/${encodeURIComponent(id)}`, {
     method: "PUT",
-    body: JSON.stringify({ status: "cancelled" }),
+    body: JSON.stringify({ status: "canceled" }),
   });
 }
 
 export async function obtenerAuthorizedPayment(id: string | number): Promise<AuthorizedPayment> {
   return mpFetch<AuthorizedPayment>(`/authorized_payments/${encodeURIComponent(String(id))}`);
-}
-
-// ---------- Validación del webhook (x-signature) ----------
-// Mercado Pago firma cada notificación con HMAC-SHA256 sobre un
-// "manifest" armado con el id del recurso, el x-request-id y el
-// timestamp, usando el secreto configurado en la app de Mercado Pago
-// (Tus integraciones → Webhooks → "Firma secreta"). Formato del
-// manifest documentado por MP: "id:{data.id};request-id:{x-request-id};
-// ts:{ts};" — ver LÍMITE CONOCIDO al inicio de este archivo: no pude
-// confirmar esto contra la documentación en vivo desde este entorno
-// (sin acceso de red a mercadopago.com). Si Mercado Pago cambia el
-// formato, esta es la única función a ajustar.
-//
-// Si no hay MERCADOPAGO_WEBHOOK_SECRET configurado todavía (setup
-// inicial), esta función no rechaza la notificación — pero el llamador
-// (route.ts) igual solo actúa sobre el estado que vuelve a consultar
-// server-side a la API de MP, nunca sobre el body de la notificación en
-// sí, así que la superficie de riesgo real de no tener el secreto
-// configurado es baja (alguien podría hacer que reconsultemos un id de
-// suscripción real de más, pero nunca activar Premium con datos falsos).
-export function validarFirmaWebhook(params: {
-  xSignature: string | null;
-  xRequestId: string | null;
-  dataId: string | null;
-}): boolean {
-  const secreto = process.env.MERCADOPAGO_WEBHOOK_SECRET;
-  if (!secreto) return true;
-  if (!params.xSignature || !params.dataId) return false;
-
-  const partes = Object.fromEntries(
-    params.xSignature.split(",").map((par) => {
-      const [clave, valor] = par.split("=");
-      return [clave?.trim(), valor?.trim()];
-    })
-  );
-  const ts = partes.ts;
-  const v1 = partes.v1;
-  if (!ts || !v1) return false;
-
-  const manifest = `id:${params.dataId.toLowerCase()};request-id:${params.xRequestId ?? ""};ts:${ts};`;
-  const firmaEsperada = createHmac("sha256", secreto).update(manifest).digest("hex");
-
-  const bufEsperado = Buffer.from(firmaEsperada, "hex");
-  const bufRecibido = Buffer.from(v1, "hex");
-  if (bufEsperado.length !== bufRecibido.length) return false;
-  return timingSafeEqual(bufEsperado, bufRecibido);
 }

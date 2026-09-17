@@ -8,6 +8,7 @@
     "start": "next start",
     "lint": "eslint .",
     "test:rls": "tsx supabase/tests/rls.test.ts",
+    "test:mercadopago": "tsx scripts/mercadopago/pruebas-sincronizacion.ts",
     "importar:wordpress": "tsx scripts/importar-wordpress.ts"
   },
   "dependencies": {

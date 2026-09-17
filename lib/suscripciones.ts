@@ -1,25 +1,21 @@
 import "server-only";
 import { crearClienteServicio } from "@/lib/supabase/servicio";
 import type { Preapproval } from "@/lib/mercadopago";
-
-// Un preapproval "paused" o "cancelled" todavía puede tener acceso
-// vigente si ya pagó el ciclo en curso: `next_payment_date` es la fecha
-// del próximo cobro programado ANTES de la baja, o sea, hasta cuándo
-// alcanza lo que ya pagó. No se corta a mitad de período (ver brief) —
-// ver el LÍMITE CONOCIDO documentado en lib/mercadopago.ts sobre este
-// campo, no verificado contra documentación en vivo desde este entorno.
-function accesoVigente(preapproval: Preapproval): boolean {
-  if (preapproval.status === "authorized") return true;
-  if (preapproval.status === "pending") return false;
-  if (!preapproval.next_payment_date) return false;
-  return new Date(preapproval.next_payment_date).getTime() > Date.now();
-}
+import { calcularFechaProximoPago, esAccesoVigente, calcularNuevaAutorizacion } from "@/lib/mercadopago-logica";
 
 // Único punto de escritura para el estado real de una suscripción de
 // Mercado Pago: lo llama el webhook y la cancelación manual desde Perfil.
 // Idempotente (upsert por usuario_id+proveedor) y nunca pisa un Premium
-// otorgado a mano (origen_nivel = 'manual') — esa es la protección contra
-// que un webhook le baje el nivel a una cortesía o alumna histórica.
+// otorgado a mano (nivel=premium + origen_nivel='manual') — esa es la
+// protección contra que un webhook le baje el nivel a una cortesía o
+// alumna histórica. Un Gratis con origen 'manual' (el default de
+// cualquier cuenta nueva) sí puede pasar a Premium por Mercado Pago: ver
+// calcularNuevaAutorizacion en lib/mercadopago-logica.ts.
+//
+// Deja que cualquier error de Supabase se propague (no lo atrapa): quien
+// llama (el webhook) necesita saber si la escritura falló para poder
+// responder 500 y que Mercado Pago reintente — tragarse el error acá
+// haría que un evento real se pierda en silencio.
 export async function sincronizarSuscripcion(preapproval: Preapproval, extra?: { fechaUltimoPago?: string }) {
   const usuarioId = preapproval.external_reference;
   if (!usuarioId) {
@@ -28,6 +24,23 @@ export async function sincronizarSuscripcion(preapproval: Preapproval, extra?: {
   }
 
   const supabase = crearClienteServicio();
+
+  // Se lee el registro existente ANTES de escribir: es lo que permite no
+  // perder `fecha_proximo_pago` si la respuesta de Mercado Pago para un
+  // preapproval recién cancelado/pausado no vuelve a traer
+  // next_payment_date (ver calcularFechaProximoPago).
+  const { data: suscripcionExistente } = await supabase
+    .from("suscripciones")
+    .select("fecha_proximo_pago")
+    .eq("usuario_id", usuarioId)
+    .eq("proveedor", "mercadopago")
+    .maybeSingle();
+
+  const fechaProximoPago = calcularFechaProximoPago({
+    nextPaymentDateNueva: preapproval.next_payment_date ?? null,
+    status: preapproval.status,
+    fechaProximoPagoExistente: suscripcionExistente?.fecha_proximo_pago ?? null,
+  });
 
   const { error: errorSuscripcion } = await supabase.from("suscripciones").upsert(
     {
@@ -42,8 +55,8 @@ export async function sincronizarSuscripcion(preapproval: Preapproval, extra?: {
       payer_email: preapproval.payer_email ?? null,
       fecha_inicio: preapproval.date_created ?? null,
       fecha_ultimo_pago: extra?.fechaUltimoPago ?? preapproval.summarized?.last_charged_date ?? null,
-      fecha_proximo_pago: preapproval.next_payment_date ?? null,
-      cancelada_en: preapproval.status === "cancelled" ? new Date().toISOString() : null,
+      fecha_proximo_pago: fechaProximoPago,
+      cancelada_en: preapproval.status === "canceled" ? new Date().toISOString() : null,
       actualizado_en: new Date().toISOString(),
     },
     { onConflict: "usuario_id,proveedor" }
@@ -56,14 +69,18 @@ export async function sincronizarSuscripcion(preapproval: Preapproval, extra?: {
     .eq("usuario_id", usuarioId)
     .maybeSingle();
 
-  if (autorizacionActual?.origen_nivel === "manual") return;
+  const decision = calcularNuevaAutorizacion({
+    autorizacionActual: autorizacionActual
+      ? { nivel: autorizacionActual.nivel, origenNivel: autorizacionActual.origen_nivel }
+      : null,
+    vigente: esAccesoVigente(preapproval.status, fechaProximoPago),
+  });
 
-  const nivelObjetivo = accesoVigente(preapproval) ? "premium" : "gratis";
-  if (autorizacionActual?.nivel === nivelObjetivo && autorizacionActual?.origen_nivel === "mercadopago") return;
+  if (!decision.debeEscribir) return;
 
   const { error: errorAutorizacion } = await supabase
     .from("autorizaciones")
-    .update({ nivel: nivelObjetivo, origen_nivel: "mercadopago" })
+    .update({ nivel: decision.nivel, origen_nivel: decision.origenNivel })
     .eq("usuario_id", usuarioId);
   if (errorAutorizacion) throw errorAutorizacion;
 }

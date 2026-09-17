@@ -1,6 +1,7 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { AreaRespuesta } from "@/lib/tipos";
 import { crearClienteServicio } from "@/lib/supabase/servicio";
+import { esAccesoVigente, type EstadoPreapproval } from "@/lib/mercadopago-logica";
 
 // La forma en que supabase-js tipa una relación embebida a-uno (ej. la
 // `perfiles` de quien publicó) varía según la versión: a veces objeto, a
@@ -40,9 +41,7 @@ export async function obtenerAutorizacion(supabase: SupabaseClient, userId: stri
       .maybeSingle();
 
     const periodoVencido =
-      suscripcion &&
-      suscripcion.estado !== "authorized" &&
-      (!suscripcion.fecha_proximo_pago || new Date(suscripcion.fecha_proximo_pago).getTime() <= Date.now());
+      suscripcion && !esAccesoVigente(suscripcion.estado as EstadoPreapproval, suscripcion.fecha_proximo_pago);
 
     if (periodoVencido) {
       const servicio = crearClienteServicio();

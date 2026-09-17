@@ -103,7 +103,7 @@ export async function cancelarSuscripcion(): Promise<{ ok: true } | { error: str
   if (!suscripcion?.proveedor_suscripcion_id) {
     return { error: "No encontramos una suscripción de Mercado Pago asociada a tu cuenta." };
   }
-  if (suscripcion.estado === "cancelled") return { ok: true };
+  if (suscripcion.estado === "canceled") return { ok: true };
 
   try {
     const preapproval = await cancelarPreapproval(suscripcion.proveedor_suscripcion_id);

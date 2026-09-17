@@ -10,7 +10,7 @@ const ETIQUETA_ESTADO_SUSCRIPCION: Record<string, string> = {
   authorized: "Activa",
   pending: "Confirmando el pago",
   paused: "En pausa",
-  cancelled: "Cancelada",
+  canceled: "Cancelada",
 };
 
 function formatearFecha(fechaIso: string): string {
@@ -63,7 +63,7 @@ export default async function PerfilPage() {
               {suscripcion.estado === "authorized" && suscripcion.fecha_proximo_pago && (
                 <p className="text-[13.5px] text-white/80">Próximo cobro: {formatearFecha(suscripcion.fecha_proximo_pago)}</p>
               )}
-              {suscripcion.estado === "cancelled" && suscripcion.fecha_proximo_pago && (
+              {suscripcion.estado === "canceled" && suscripcion.fecha_proximo_pago && (
                 <p className="text-[13.5px] text-white/80">
                   Cancelada — conservás el acceso hasta el {formatearFecha(suscripcion.fecha_proximo_pago)}.
                 </p>
@@ -73,7 +73,7 @@ export default async function PerfilPage() {
                   Ver mi Proyecto →
                 </Link>
               </div>
-              {suscripcion.estado !== "cancelled" && (
+              {suscripcion.estado !== "canceled" && (
                 <div className="pt-1">
                   <BotonCancelarSuscripcion />
                 </div>

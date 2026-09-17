@@ -11,18 +11,22 @@
 --      reemplazo.
 --   2. `autorizaciones.origen_nivel`: distingue un Premium otorgado a
 --      mano desde Admin (cortesías, pruebas, alumnas históricas) de uno
---      activado por Mercado Pago. Es la pieza que evita que un webhook
---      de Mercado Pago le baje el nivel a alguien que Melisa activó
---      manualmente — el webhook SOLO downgradea si origen_nivel =
---      'mercadopago'. Default 'manual': todo Premium/Gratis que ya
---      exista hoy en la base (sin este campo) queda protegido por
---      default, exactamente el comportamiento que hay que preservar.
+--      activado por Mercado Pago. Protege SOLO la combinación
+--      nivel='premium' + origen_nivel='manual' — un webhook de Mercado
+--      Pago nunca puede tocar esa. Una cuenta Gratis con origen_nivel=
+--      'manual' (el default de cualquier cuenta nueva, incluida la que
+--      nunca pasó por Admin) sigue pudiendo pasar a Premium por Mercado
+--      Pago sin problema: 'manual' en una Gratis no significa "no
+--      tocar", significa "todavía no hay un pago real que lo explique".
+--      Default 'manual': todo Premium ya otorgado hoy en la base (sin
+--      este campo) queda protegido por default, exactamente el
+--      comportamiento que hay que preservar.
 -- =============================================================
 
 alter table autorizaciones
   add column if not exists origen_nivel text not null default 'manual' check (origen_nivel in ('manual', 'mercadopago'));
 
-comment on column autorizaciones.origen_nivel is 'Quién otorgó el nivel actual: "manual" (Admin: cortesía, prueba, alumna histórica) o "mercadopago" (pago real). Un webhook de Mercado Pago solo puede bajar el nivel si origen_nivel = ''mercadopago'' — nunca pisa un Premium manual. Cambiar el nivel desde Admin siempre vuelve a marcar "manual", incluso si antes era de Mercado Pago (el admin tiene la última palabra).';
+comment on column autorizaciones.origen_nivel is 'Quién otorgó el nivel actual: "manual" (Admin: cortesía, prueba, alumna histórica, o simplemente el default de una cuenta nueva) o "mercadopago" (pago real). Un webhook de Mercado Pago nunca puede tocar la combinación nivel=premium + origen_nivel=manual; sí puede convertir una Gratis/manual en Premium/mercadopago. Cambiar el nivel desde Admin siempre vuelve a marcar "manual", incluso si antes era de Mercado Pago (el admin tiene la última palabra).';
 
 create table if not exists suscripciones (
   id uuid primary key default gen_random_uuid(),
@@ -37,9 +41,11 @@ create table if not exists suscripciones (
   -- llegue sin más contexto. Ver lib/mercadopago.ts.
   external_reference text not null,
   -- Estados reales de Mercado Pago Preapproval: pending | authorized |
-  -- paused | cancelled. No se inventan estados propios para no perder
-  -- información de lo que Mercado Pago realmente informa.
-  estado text not null default 'pending' check (estado in ('pending', 'authorized', 'paused', 'cancelled')),
+  -- paused | canceled (una sola "l" — así lo usa la API real, PUT
+  -- /preapproval/{id} con status:"canceled"). No se inventan estados
+  -- propios para no perder información de lo que Mercado Pago realmente
+  -- informa.
+  estado text not null default 'pending' check (estado in ('pending', 'authorized', 'paused', 'canceled')),
   monto numeric,
   moneda text default 'ARS',
   payer_email text,
@@ -48,8 +54,10 @@ create table if not exists suscripciones (
   -- Próximo cobro programado según Mercado Pago (`next_payment_date` del
   -- recurso Preapproval). Se usa también como "pagado hasta" al cancelar:
   -- si la usuaria cancela a mitad de ciclo, conserva Premium hasta esta
-  -- fecha en vez de cortarle el acceso que ya pagó. Ver nota de límite
-  -- conocido en lib/mercadopago.ts sobre este campo.
+  -- fecha en vez de cortarle el acceso que ya pagó. Si Mercado Pago deja
+  -- de devolver next_payment_date justo después de cancelar/pausar, se
+  -- conserva el último valor ya guardado acá en vez de perderlo — ver
+  -- calcularFechaProximoPago en lib/mercadopago-logica.ts.
   fecha_proximo_pago timestamptz,
   cancelada_en timestamptz,
   creado_en timestamptz not null default now(),

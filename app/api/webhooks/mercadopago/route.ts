@@ -8,11 +8,18 @@ import { sincronizarSuscripcion } from "@/lib/suscripciones";
 // tipo de evento y el id del recurso: el estado real siempre se vuelve a
 // consultar server-side con el ACCESS TOKEN (ver lib/mercadopago.ts).
 //
-// Responde 200 rápido y sin bloquear en casi todos los casos — incluso
-// si algo salió mal procesando, para no generar una tormenta de
-// reintentos por un problema que un reintento automático no va a
-// resolver (ver comentario abajo). La única respuesta distinta de 200 es
-// 401 por firma inválida.
+// Respuestas:
+//   - firma inválida (o falta el secreto en producción) → 401, no se
+//     procesa nada.
+//   - evento irrelevante/sin recurso → 200, no hay nada que hacer.
+//   - evento procesado correctamente → 200.
+//   - error consultando Mercado Pago o escribiendo en Supabase → 500,
+//     A PROPÓSITO: Mercado Pago reintenta una notificación que no
+//     devuelve 200, y eso es justo lo que se quiere acá — un problema
+//     transitorio (red, rate limit, DB caída un segundo) no debe perder
+//     el evento en silencio. `sincronizarSuscripcion` es idempotente
+//     (upsert por usuario_id+proveedor), así que un reintento nunca
+//     duplica nada, solo repite el mismo resultado.
 export async function POST(req: NextRequest) {
   const xSignature = req.headers.get("x-signature");
   const xRequestId = req.headers.get("x-request-id");
@@ -54,8 +61,12 @@ export async function POST(req: NextRequest) {
   } catch (err) {
     // No se loguea el body completo (podría traer payer_email u otros
     // datos de la persona) ni el access token — solo lo mínimo para
-    // poder investigar manualmente cuál notificación falló.
+    // poder investigar manualmente cuál notificación falló. 500 en vez
+    // de 200: un error acá es transitorio (Mercado Pago caído, Supabase
+    // caído) y merece que Mercado Pago reintente, no que el evento se
+    // pierda.
     console.error("[webhook mercadopago] error procesando", tipo, dataId, err instanceof Error ? err.message : err);
+    return NextResponse.json({ error: "Error procesando la notificación" }, { status: 500 });
   }
 
   return NextResponse.json({ ok: true });
