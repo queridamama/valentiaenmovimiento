@@ -57,22 +57,26 @@ Si la PWA ya está instalada y se abre en standalone, no se muestra nada.
 ## El ícono cuadrado
 
 Resuelto: `public/iso.png` (1254×1254, sin transparencia, esquinas
-rectas — el isotipo real que se subió al repo) es el ícono cuadrado
-fuente. A partir de ahí se generaron con `sharp` (script corrido una
-sola vez, no queda en el repo) los 4 archivos que usa `app/manifest.ts`
-y `app/layout.tsx`:
+rectas, fondo blanco — el isotipo real que se subió al repo) es el
+ícono cuadrado fuente. A partir de ahí se generaron con `sharp` (script
+corrido una sola vez, no queda en el repo) los 4 archivos que usa
+`app/manifest.ts` y `app/layout.tsx`:
 
 - `public/icons/icon-192.png` (192×192) — resize directo.
 - `public/icons/icon-512.png` (512×512) — resize directo.
 - `public/icons/icon-maskable-512.png` (512×512) — el contenido se
   redujo a 410×410 (~80% del lienzo) y se centró sobre un fondo del
-  mismo color exacto del original (`#fdf9f4`), para que la "zona
-  segura" de un ícono maskable quede garantizada incluso si el sistema
-  operativo aplica una máscara circular agresiva — el resize directo
-  del isotipo original ya tenía aire, pero no tanto como para confiar
-  en él sin ese margen extra.
+  mismo color exacto del original (`#fdfffe`, blanco), para que la
+  "zona segura" de un ícono maskable quede garantizada incluso si el
+  sistema operativo aplica una máscara circular agresiva — el resize
+  directo del isotipo original ya tenía aire, pero no tanto como para
+  confiar en él sin ese margen extra.
 - `public/icons/apple-touch-icon.png` (180×180) — resize directo, fondo
   sólido (sin transparencia, como pide iOS).
+
+(`public/iso.png` se reemplazó una vez, de fondo crema a fondo blanco;
+los 4 archivos de arriba se regeneraron con el color de fondo
+actualizado — no quedó ningún rastro del crema viejo.)
 
 `metadata.icons` en `app/layout.tsx` ya apunta a `icon-512.png` y
 `apple-touch-icon.png`.
