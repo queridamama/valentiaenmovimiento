@@ -1,21 +1,27 @@
 import Link from "next/link";
 import { crearClienteServidor } from "@/lib/supabase/server";
 import { obtenerAutorizacion, obtenerSuscripcionPropia } from "@/lib/datos";
+import { revalidarSuscripcionAhora } from "@/lib/suscripciones";
 import { Titulo, Subtitulo } from "@/components/ui";
 import RefrescoAutomatico from "@/components/RefrescoAutomatico";
 
 // Vuelta desde Mercado Pago. A propósito NO lee ningún query param del
 // checkout (status=approved, collection_status, etc.) para decidir nada:
 // esos valores los pone el navegador/Mercado Pago del lado del cliente y
-// no son una confirmación real. Lo único que importa es lo que ya
-// quedó guardado en nuestra base por el webhook — si todavía no llegó,
-// se muestra "procesando" y la página se refresca sola hasta que llegue.
+// no son una confirmación real. En vez de esperar a que llegue un
+// webhook (que puede no llegar nunca, ver lib/mercadopago.ts),
+// `revalidarSuscripcionAhora` le pregunta directo a la API de Mercado
+// Pago el estado real ANTES de decidir qué mostrar — es la única forma
+// confiable de saber, justo en este momento, si la suscripción quedó
+// autorizada.
 export default async function ResultadoMembresiaPage() {
   const supabase = await crearClienteServidor();
   const {
     data: { user },
   } = await supabase.auth.getUser();
   if (!user) return null;
+
+  await revalidarSuscripcionAhora(user.id);
 
   const [autorizacion, suscripcion] = await Promise.all([
     obtenerAutorizacion(supabase, user.id),

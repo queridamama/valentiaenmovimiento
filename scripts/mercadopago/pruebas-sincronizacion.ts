@@ -17,7 +17,8 @@ import {
   calcularNuevaAutorizacion,
   esAccesoVigente,
   calcularFechaProximoPago,
-  construirUrlWebhook,
+  debeRevalidar,
+  VENTANA_REVALIDACION_MS,
   validarTokenWebhook,
   validarFirmaWebhook,
 } from "../../lib/mercadopago-logica";
@@ -207,16 +208,18 @@ console.log("\n11. validarFirmaWebhook: con secreto Y header presentes, firma co
   delete process.env.MERCADOPAGO_WEBHOOK_SECRET;
 }
 
-console.log("\n12. construirUrlWebhook: arma la URL exacta que se manda a Mercado Pago como notification_url");
+console.log("\n12. debeRevalidar: la ventana de revalidación server-side (polling, no webhook)");
 {
-  const url = construirUrlWebhook({ appUrl: "https://valentiaenmovimiento.vercel.app", token: "abc123" });
-  assert(url === "https://valentiaenmovimiento.vercel.app/api/webhooks/mercadopago?token=abc123", "URL armada correctamente");
+  const actualizadoEn = "2026-06-15T00:00:00Z";
 
-  const conSlashFinal = construirUrlWebhook({ appUrl: "https://valentiaenmovimiento.vercel.app/", token: "abc123" });
-  assert(conSlashFinal === url, "no importa si appUrl trae '/' al final");
+  const justoAntes = Date.parse(actualizadoEn) + VENTANA_REVALIDACION_MS - 1;
+  assert(debeRevalidar(actualizadoEn, justoAntes) === false, "todavía dentro de la ventana → no revalida (no le pega a la API)");
 
-  const conCaracteresEspeciales = construirUrlWebhook({ appUrl: "https://app.test", token: "a b&c" });
-  assert(conCaracteresEspeciales === "https://app.test/api/webhooks/mercadopago?token=a%20b%26c", "el token se escapa como query param");
+  const justoDespues = Date.parse(actualizadoEn) + VENTANA_REVALIDACION_MS + 1;
+  assert(debeRevalidar(actualizadoEn, justoDespues) === true, "pasada la ventana → sí revalida");
+
+  const muchoDespues = Date.parse(actualizadoEn) + VENTANA_REVALIDACION_MS * 10;
+  assert(debeRevalidar(actualizadoEn, muchoDespues) === true, "mucho más viejo → sigue revalidando (no se \"cansa\")");
 }
 
 console.log(fallos === 0 ? "\n✅ Todas las pruebas pasaron." : `\n❌ ${fallos} prueba(s) fallaron.`);

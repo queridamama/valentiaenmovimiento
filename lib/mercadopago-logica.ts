@@ -94,14 +94,25 @@ export function validarFirmaWebhook(params: { xSignature: string | null; xReques
   return timingSafeEqual(bufEsperado, bufRecibido);
 }
 
-// ---------- URL de notificación propia ----------
-// Arma la URL exacta que se manda a Mercado Pago como `notification_url`
-// al crear cada suscripción (ver conNotificationUrl en
-// lib/mercadopago.ts) — pura, sin red, para poder testear que el token
-// queda bien puesto en la URL sin necesitar credenciales.
-export function construirUrlWebhook(params: { appUrl: string; token: string }): string {
-  const base = params.appUrl.replace(/\/$/, "");
-  return `${base}/api/webhooks/mercadopago?token=${encodeURIComponent(params.token)}`;
+// ---------- Ventana de revalidación server-side ----------
+// La activación/mantenimiento/cancelación de Premium no dependen de que
+// llegue un webhook (ver nota en lib/mercadopago.ts): en cambio, se
+// revalida contra GET /preapproval/{id} de forma perezosa — solo cuando
+// el último dato guardado ya es "viejo" — para no pegarle a la API de
+// Mercado Pago en cada request de cada usuaria Premium.
+//
+// 6 horas es una decisión de producto, no un valor que documente
+// Mercado Pago: una usuaria Premium activa entra varias veces por día,
+// así que la mayoría de sus visitas no generan ningún llamado a la API
+// (dato todavía fresco); y si canceló o se le rechazó el cobro, nos
+// enteramos en cuestión de horas, no de días. El caso "recién volvió del
+// checkout" no espera esta ventana: `revalidarSuscripcionAhora` (ver
+// lib/suscripciones.ts) la ignora a propósito y siempre consulta.
+export const VENTANA_REVALIDACION_MS = 6 * 60 * 60 * 1000;
+
+export function debeRevalidar(actualizadoEnIso: string, ahora: number = Date.now()): boolean {
+  const antiguedadMs = ahora - new Date(actualizadoEnIso).getTime();
+  return antiguedadMs >= VENTANA_REVALIDACION_MS;
 }
 
 // ---------- Acceso vigente y "pagado hasta" ----------

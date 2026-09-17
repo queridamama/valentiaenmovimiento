@@ -2,36 +2,36 @@ import { NextRequest, NextResponse } from "next/server";
 import { obtenerPreapproval, obtenerAuthorizedPayment, validarTokenWebhook, validarFirmaWebhook } from "@/lib/mercadopago";
 import { sincronizarSuscripcion } from "@/lib/suscripciones";
 
-// Endpoint que recibe las notificaciones de Suscripciones
-// (subscription_preapproval, subscription_authorized_payment).
+// Endpoint OPCIONAL, no una dependencia: la activación/mantenimiento/
+// cancelación de Premium se resuelven por polling server-side directo
+// contra GET /preapproval/{id} (ver lib/suscripciones.ts:
+// revalidarSuscripcionAhora se llama al volver del checkout en
+// /membresia/resultado, y revalidarSiCorresponde en cada lectura de
+// autorización, con una ventana de 6hs — lib/mercadopago-logica.ts).
 //
-// CÓMO SE REGISTRA ESTA URL — a propósito, sin que nadie tenga que
-// buscar ningún panel de Webhooks/Notificaciones en Mercado Pago:
-// `crearPreapproval()` (lib/mercadopago.ts) manda esta misma URL como
-// `notification_url` en el body de cada POST /preapproval que crea una
-// suscripción. La app de Mercado Pago de Valentía es de tipo
-// "Suscripciones", y para ese tipo de app "Tus integraciones → Webhooks"
-// no está disponible — no hay panel donde configurar esto a mano, así
-// que se hace vía código, una vez por suscripción creada. Ver el
-// comentario largo en lib/mercadopago.ts (conNotificationUrl) sobre por
-// qué ese campo no está confirmado en la referencia oficial del
-// endpoint y qué hay que verificar con una suscripción de prueba real.
+// Por qué no depende de esto: `crearPreapproval()` (lib/mercadopago.ts)
+// NO manda `notification_url` — ese campo no está confirmado en la
+// referencia oficial de POST /preapproval (los SDK oficiales de Go y
+// PHP no lo declaran en su tipo de request), así que no hay forma
+// verificada de decirle a Mercado Pago dónde mandar las notificaciones
+// sin inventar un campo no documentado. Sumado a que la app de Mercado
+// Pago de Valentía es de tipo "Suscripciones" y ese tipo de app no
+// muestra "Tus integraciones → Webhooks" para configurarlo a mano, este
+// endpoint queda escrito y listo pero sin nada que lo alimente por
+// ahora — se conserva por si el día de mañana se confirma una forma
+// oficial de registrar la URL (manual, en algún panel de la propia
+// aplicación, o un campo nuevo que Mercado Pago termine documentando).
 //
-// SEGURIDAD sin firma HMAC garantizada: la URL registrada incluye un
-// token propio como query param —
+// SEGURIDAD, si alguna vez llega a recibir tráfico real: la URL que se
+// registre debe incluir un token propio como query param —
 //   https://<tu-dominio>/api/webhooks/mercadopago?token=<MERCADOPAGO_WEBHOOK_TOKEN>
-// — que es enteramente nuestro (lo elegimos, lo guardamos en la
-// variable de entorno, lo mandamos nosotros mismos en notification_url).
-// No depende de ningún panel de Mercado Pago, así que SÍ se exige en
-// producción (ver validarTokenWebhook). Si además Mercado Pago llega a
-// mandar x-signature para este tipo de app, se valida como capa extra
-// (validarFirmaWebhook), pero nunca es la única defensa.
-//
-// La defensa que de verdad importa, con o sin token/firma: NUNCA se
-// confía en el body de la notificación para dar Premium. Ante cualquier
-// evento válido, se vuelve a consultar el recurso real a la API de
-// Mercado Pago con el ACCESS TOKEN, y solo esa respuesta autenticada
-// puede terminar escribiendo algo en Supabase (ver lib/suscripciones.ts).
+// — enteramente nuestro, así que SÍ se exige en producción
+// (validarTokenWebhook). Si además Mercado Pago manda x-signature, se
+// valida como capa extra (validarFirmaWebhook), pero nunca es la única
+// defensa: NUNCA se confía en el body de la notificación para dar
+// Premium — se vuelve a consultar el recurso real a la API con el
+// ACCESS TOKEN antes de escribir nada (lib/suscripciones.ts), exacta-
+// mente la misma regla que usa el polling.
 //
 // Respuestas:
 //   - token/firma inválidos → 401, no se procesa nada.
@@ -83,17 +83,20 @@ export async function POST(req: NextRequest) {
       const preapproval = await obtenerPreapproval(pago.preapproval_id);
       await sincronizarSuscripcion(preapproval, { fechaUltimoPago: pago.date_created });
     }
-    // "payment": la documentación de Mercado Pago para Suscripciones
-    // pide activar también este tópico ("en todos los casos deberás
-    // activar payments"), pero el pago de cada cobro recurrente YA nos
-    // llega, completo y con `preapproval_id`, como
-    // subscription_authorized_payment (arriba) — es la misma plata,
-    // vista desde el lado de Pagos en vez del lado de Suscripciones.
-    // No tenemos ningún uso para el Payment genérico (no vendemos
-    // Checkout Pro/pagos sueltos en esta app), así que si llega una
-    // notificación de tipo "payment" simplemente no entra en ningún
-    // `if` de arriba y se responde 200 sin hacer nada — recibirla y
-    // descartarla a propósito es más seguro que no tenerla contemplada.
+    // "payment": la documentación general de Mercado Pago para
+    // Suscripciones menciona activar también este tópico — no se
+    // asume que sea seguro ignorarlo por eso solo, se deja explícito
+    // qué cubrimos sin él. Este endpoint no es siquiera la vía
+    // principal (ver el comentario de arriba: la fuente de verdad es
+    // el polling directo a GET /preapproval/{id}), y esa consulta
+    // devuelve, sobre el propio recurso, tanto el estado
+    // (pending/authorized/paused/canceled) como el último cobro y el
+    // próximo (`summarized.last_charged_date`/`next_payment_date`) —
+    // todo lo que `sincronizarSuscripcion` necesita ya sale de ahí, sin
+    // depender de ningún evento de Pagos. Si de todos modos llega una
+    // notificación de tipo "payment" acá, no entra en ningún `if` de
+    // arriba y se responde 200 sin hacer nada — recibirla y descartarla
+    // a propósito es más seguro que no tenerla contemplada.
   } catch (err) {
     // No se loguea el body completo (podría traer payer_email u otros
     // datos de la persona) ni el access token — solo lo mínimo para
