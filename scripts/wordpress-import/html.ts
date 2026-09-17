@@ -99,3 +99,58 @@ export function extraerDuracion(textoPlano: string): string | null {
 export function textoPlanoDesdeHtml(html: string): string {
   return decodificarEntidades(html.replace(/<[^>]+>/g, " ")).replace(/\s+/g, " ").trim();
 }
+
+const MARCA_PREGUNTA = "🔸";
+
+function esParrafoSoloDuracion(textoPlano: string): boolean {
+  return (
+    (textoPlano.length < 20 && /\d+\s*min(uto)?s?\b/i.test(textoPlano)) ||
+    /^duraci[oó]n estimada/i.test(textoPlano)
+  );
+}
+
+export interface CuerpoExperiencia {
+  // HTML limpio (p/br/strong/etc.) con SOLO la explicación real — nunca la
+  // línea de duración, nunca las preguntas, nunca el shortcode. null si el
+  // post no tenía ningún párrafo de explicación (caso típico de los 4
+  // videos, donde el único texto es la duración).
+  textoIntro: string | null;
+  // Una entrada por línea que empezaba con 🔸 (o &#x1f538; ya decodificado
+  // a ese mismo carácter), en el orden en que aparecían, con el símbolo
+  // sacado y el resto del texto EXACTO — nunca reescrito.
+  preguntas: string[];
+}
+
+// Separa el cuerpo de una meditación/clase del CSV en sus tres partes
+// reales: intro, preguntas de integración, y "basura" (duración,
+// shortcode, bloques de audio/embed, párrafos vacíos) — para que ninguna
+// termine pegada a texto_intro por error.
+export function analizarCuerpoExperiencia(contenidoRaw: string): CuerpoExperiencia {
+  const htmlLimpio = limpiarHtmlWordPress(contenidoRaw);
+  const parrafos = [...htmlLimpio.matchAll(/<p>([\s\S]*?)<\/p>/g)].map((m) => m[1]);
+
+  const preguntas: string[] = [];
+  const parrafosIntro: string[] = [];
+
+  for (const p of parrafos) {
+    if (p.includes(MARCA_PREGUNTA)) {
+      for (const linea of p.split(/<br\s*\/?>/i)) {
+        const plano = linea.replace(/<[^>]+>/g, "").trim();
+        if (plano.startsWith(MARCA_PREGUNTA)) {
+          const texto = plano.slice(MARCA_PREGUNTA.length).trim();
+          if (texto) preguntas.push(texto);
+        }
+      }
+      continue;
+    }
+
+    const plano = p.replace(/<[^>]+>/g, "").trim();
+    if (!plano || esParrafoSoloDuracion(plano)) continue;
+    parrafosIntro.push(p);
+  }
+
+  return {
+    textoIntro: parrafosIntro.length > 0 ? parrafosIntro.map((p) => `<p>${p}</p>`).join("\n\n") : null,
+    preguntas,
+  };
+}

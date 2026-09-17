@@ -1,13 +1,14 @@
 import Link from "next/link";
 import { crearClienteServidor } from "@/lib/supabase/server";
 import { duplicarExperiencia, cambiarEstadoExperiencia, cambiarAccesoExperiencia } from "@/lib/acciones/admin";
+import { ETIQUETA_TIPO_EXPERIENCIA, type TipoExperiencia } from "@/lib/tipos";
 
 export default async function AdminExperienciasPage() {
   const supabase = await crearClienteServidor();
 
   const { data: experiencias } = await supabase
     .from("experiencias")
-    .select("id, titulo, nivel_acceso, estado, orden, etapa_id, etapas_ruta(nombre)")
+    .select("id, titulo, tipo, nivel_acceso, estado, orden, etapa_id, etapa_wp, modulo_wp, etapas_ruta(nombre)")
     .order("etapa_id", { ascending: true, nullsFirst: true })
     .order("orden", { ascending: true });
 
@@ -36,7 +37,14 @@ export default async function AdminExperienciasPage() {
                 <div>
                   <p className="font-medium">{e.titulo}</p>
                   <p className="text-xs text-texto/50">
-                    {etapa?.nombre ?? "Recorrido de entrada"} · orden {e.orden} · {e.nivel_acceso} · {e.estado}
+                    {ETIQUETA_TIPO_EXPERIENCIA[e.tipo as TipoExperiencia] ?? e.tipo} · {etapa?.nombre ?? "Recorrido de entrada"} · orden{" "}
+                    {e.orden} · {e.nivel_acceso} · {e.estado}
+                    {e.etapa_wp && (
+                      <span className="ml-1 rounded-full bg-acento/15 px-2 py-0.5 text-[11px] font-medium text-acento">
+                        WordPress · {e.etapa_wp}
+                        {e.modulo_wp ? ` · ${e.modulo_wp}` : ""}
+                      </span>
+                    )}
                   </p>
                 </div>
                 <Link href={`/admin/experiencias/${e.id}`} className="text-sm font-medium text-acento">

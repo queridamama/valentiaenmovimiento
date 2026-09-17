@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { AREAS_RESPUESTA, ETIQUETA_AREA, type AreaRespuesta } from "@/lib/tipos";
+import { AREAS_RESPUESTA, ETIQUETA_AREA, TIPOS_EXPERIENCIA, ETIQUETA_TIPO_EXPERIENCIA, type AreaRespuesta, type TipoExperiencia } from "@/lib/tipos";
 import EditorEnriquecido from "@/components/admin/EditorEnriquecido";
 import CampoArchivo from "@/components/admin/CampoArchivo";
 
@@ -21,11 +21,17 @@ interface Props {
     descripcion: string;
     texto_intro: string;
     video_url: string;
+    audio_url: string;
+    duracion: string;
+    tipo: TipoExperiencia;
     portada_url: string;
     etapa_id: string | null;
     nivel_acceso: string;
     estado: string;
     orden: number;
+    wp_post_id?: number | null;
+    etapa_wp?: string | null;
+    modulo_wp?: string | null;
   };
   preguntasIniciales?: PreguntaEditable[];
 }
@@ -57,7 +63,30 @@ export default function FormularioExperiencia({ accion, etapas, inicial, pregunt
     <form action={accion} className="space-y-6">
       <input type="hidden" name="preguntas_json" value={JSON.stringify(preguntas)} />
 
+      {inicial?.wp_post_id && (
+        <div className="space-y-1 rounded-card border border-acento/25 bg-acento/5 p-4 text-sm">
+          <p className="font-semibold text-acento">Origen: migración de WordPress</p>
+          <p className="text-texto/60">
+            Post original #{inicial.wp_post_id}
+            {inicial.etapa_wp ? ` · Etapa vieja: ${inicial.etapa_wp}` : ""}
+            {inicial.modulo_wp ? ` · Módulo/tag viejo: ${inicial.modulo_wp}` : ""}
+          </p>
+          <p className="text-xs italic text-texto/40">Solo referencia — la etapa real se elige más abajo.</p>
+        </div>
+      )}
+
       <div className="grid gap-4">
+        <label className="flex flex-col gap-1">
+          <span className="text-sm font-medium text-texto/70">Tipo</span>
+          <select name="tipo" defaultValue={inicial?.tipo ?? "clase"} className="rounded-lg border border-texto/15 px-3 py-2">
+            {TIPOS_EXPERIENCIA.map((t) => (
+              <option key={t} value={t}>
+                {ETIQUETA_TIPO_EXPERIENCIA[t]}
+              </option>
+            ))}
+          </select>
+        </label>
+
         <label className="flex flex-col gap-1">
           <span className="text-sm font-medium text-texto/70">Título</span>
           <input
@@ -89,12 +118,32 @@ export default function FormularioExperiencia({ accion, etapas, inicial, pregunt
         <EditorEnriquecido name="texto_intro" label="Texto introductorio" contenidoInicial={inicial?.texto_intro ?? ""} />
 
         <label className="flex flex-col gap-1">
-          <span className="text-sm font-medium text-texto/70">URL de video (opcional)</span>
+          <span className="text-sm font-medium text-texto/70">URL de video (YouTube, Vimeo o archivo — opcional)</span>
           <input
             name="video_url"
             defaultValue={inicial?.video_url}
             placeholder="https://…"
             className="rounded-lg border border-texto/15 px-3 py-2"
+          />
+        </label>
+
+        <label className="flex flex-col gap-1">
+          <span className="text-sm font-medium text-texto/70">URL de audio (opcional — para meditaciones)</span>
+          <input
+            name="audio_url"
+            defaultValue={inicial?.audio_url}
+            placeholder="https://…"
+            className="rounded-lg border border-texto/15 px-3 py-2"
+          />
+        </label>
+
+        <label className="flex flex-col gap-1">
+          <span className="text-sm font-medium text-texto/70">Duración (opcional)</span>
+          <input
+            name="duracion"
+            defaultValue={inicial?.duracion}
+            placeholder="Ej: 25 min"
+            className="w-40 rounded-lg border border-texto/15 px-3 py-2"
           />
         </label>
 

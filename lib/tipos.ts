@@ -95,8 +95,23 @@ export interface Experiencia {
   descripcion: string | null;
   texto_intro: string | null;
   video_url: string | null;
+  audio_url: string | null;
+  duracion: string | null;
+  tipo: TipoExperiencia;
   portada_url: string | null;
   nivel_acceso: NivelAcceso;
   estado: EstadoExperiencia;
   orden: number;
 }
+
+// Una experiencia es un paso de la Ruta (Mi Sueño gratis o una etapa
+// Premium): puede ser un video ('clase') o un audio guiado ('meditacion').
+// A diferencia de Biblioteca, acá el tipo decide qué reproductor mostrar,
+// no una categoría de listado.
+export const TIPOS_EXPERIENCIA = ["clase", "meditacion"] as const;
+export type TipoExperiencia = (typeof TIPOS_EXPERIENCIA)[number];
+
+export const ETIQUETA_TIPO_EXPERIENCIA: Record<TipoExperiencia, string> = {
+  clase: "Clase / video",
+  meditacion: "Meditación / audio",
+};

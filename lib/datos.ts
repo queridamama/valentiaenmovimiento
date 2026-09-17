@@ -53,8 +53,12 @@ export async function obtenerConfiguracionHome(supabase: SupabaseClient) {
 export async function obtenerRecorridoEntrada(supabase: SupabaseClient, userId: string) {
   const { data: experiencias } = await supabase
     .from("experiencias")
-    .select("id, titulo, descripcion, texto_intro, video_url, portada_url, nivel_acceso, estado, orden")
+    .select("id, titulo, descripcion, texto_intro, video_url, audio_url, duracion, tipo, portada_url, nivel_acceso, estado, orden")
     .is("etapa_id", null)
+    // Sin esto, una experiencia de Ruta Premium importada (etapa_id null
+    // hasta que Admin le asigne una etapa real) se colaría acá apenas se
+    // publicara — ver comentario en supabase/migrations/0009_*.sql.
+    .eq("es_recorrido_entrada", true)
     .eq("estado", "publicado")
     .order("orden", { ascending: true });
 
@@ -77,7 +81,7 @@ export async function obtenerRuta(supabase: SupabaseClient, userId: string) {
 
   const { data: experiencias } = await supabase
     .from("experiencias")
-    .select("id, etapa_id, titulo, descripcion, video_url, portada_url, nivel_acceso, estado, orden")
+    .select("id, etapa_id, titulo, descripcion, video_url, audio_url, duracion, tipo, portada_url, nivel_acceso, estado, orden")
     .not("etapa_id", "is", null)
     .eq("estado", "publicado")
     .order("orden", { ascending: true });
@@ -99,7 +103,7 @@ export async function obtenerRuta(supabase: SupabaseClient, userId: string) {
 export async function obtenerExperienciaConPreguntas(supabase: SupabaseClient, experienciaId: string, userId: string) {
   const { data: experiencia } = await supabase
     .from("experiencias")
-    .select("id, etapa_id, titulo, descripcion, texto_intro, video_url, portada_url, nivel_acceso, estado, orden")
+    .select("id, etapa_id, titulo, descripcion, texto_intro, video_url, audio_url, duracion, tipo, portada_url, nivel_acceso, estado, orden")
     .eq("id", experienciaId)
     .maybeSingle();
   if (!experiencia) return null;

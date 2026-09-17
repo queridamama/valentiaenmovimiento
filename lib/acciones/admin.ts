@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { exigirStaff } from "@/lib/autorizacion";
-import { AREAS_RESPUESTA, ESTADOS_EXPERIENCIA, NIVELES_ACCESO, type AreaRespuesta } from "@/lib/tipos";
+import { AREAS_RESPUESTA, ESTADOS_EXPERIENCIA, NIVELES_ACCESO, TIPOS_EXPERIENCIA, type AreaRespuesta } from "@/lib/tipos";
 
 interface PreguntaForm {
   id?: string;
@@ -54,6 +54,9 @@ export async function guardarExperiencia(experienciaId: string | null, formData:
   const descripcion = String(formData.get("descripcion") ?? "").trim() || null;
   const textoIntro = String(formData.get("texto_intro") ?? "").trim() || null;
   const videoUrl = String(formData.get("video_url") ?? "").trim() || null;
+  const audioUrl = String(formData.get("audio_url") ?? "").trim() || null;
+  const duracion = String(formData.get("duracion") ?? "").trim() || null;
+  const tipo = String(formData.get("tipo") ?? "clase");
   const portadaUrl = String(formData.get("portada_url") ?? "").trim() || null;
   const etapaId = String(formData.get("etapa_id") ?? "").trim() || null;
   const nivelAcceso = String(formData.get("nivel_acceso") ?? "gratis");
@@ -66,6 +69,9 @@ export async function guardarExperiencia(experienciaId: string | null, formData:
   if (!ESTADOS_EXPERIENCIA.includes(estado as (typeof ESTADOS_EXPERIENCIA)[number])) {
     throw new Error("Estado inválido.");
   }
+  if (!TIPOS_EXPERIENCIA.includes(tipo as (typeof TIPOS_EXPERIENCIA)[number])) {
+    throw new Error("Tipo de experiencia inválido.");
+  }
 
   const preguntas = parsearPreguntas(String(formData.get("preguntas_json") ?? "[]"));
 
@@ -74,6 +80,9 @@ export async function guardarExperiencia(experienciaId: string | null, formData:
     descripcion,
     texto_intro: textoIntro,
     video_url: videoUrl,
+    audio_url: audioUrl,
+    duracion,
+    tipo,
     portada_url: portadaUrl,
     etapa_id: etapaId,
     nivel_acceso: nivelAcceso,
@@ -149,10 +158,15 @@ export async function duplicarExperiencia(experienciaId: string) {
       descripcion: original.descripcion,
       texto_intro: original.texto_intro,
       video_url: original.video_url,
+      audio_url: original.audio_url,
+      duracion: original.duracion,
+      tipo: original.tipo,
       portada_url: original.portada_url,
       nivel_acceso: original.nivel_acceso,
       estado: "borrador",
       orden: original.orden,
+      // wp_post_id NUNCA se copia: es unique, y la copia no viene de
+      // WordPress — nace suelta, igual que ya hace duplicarContenido.
       creado_por: user.id,
     })
     .select("id")

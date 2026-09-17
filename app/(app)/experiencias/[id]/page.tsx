@@ -3,6 +3,7 @@ import { crearClienteServidor } from "@/lib/supabase/server";
 import { obtenerExperienciaConPreguntas, estaCompletada, obtenerSiguienteExperiencia } from "@/lib/datos";
 import { guardarRespuestas } from "@/lib/acciones/experiencias";
 import { Badge, BotonPrimario, Titulo, Subtitulo, Etiqueta } from "@/components/ui";
+import ReproductorVideo from "@/components/ReproductorVideo";
 
 export default async function ExperienciaPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -68,11 +69,15 @@ export default async function ExperienciaPage({ params }: { params: Promise<{ id
         </div>
 
         {experiencia.video_url ? (
-          <video src={experiencia.video_url} controls className="w-full rounded-card bg-black" />
+          <ReproductorVideo url={experiencia.video_url} />
+        ) : experiencia.audio_url ? (
+          <audio src={experiencia.audio_url} controls className="w-full" />
         ) : (
           tieneTexto && (
             <div className="rounded-card border border-dashed border-texto/15 bg-tarjeta p-5 text-sm text-texto/40">
-              Todavía no hay video para esta clase — podés seguir con el texto.
+              {experiencia.tipo === "meditacion"
+                ? "Todavía no hay audio para esta meditación — podés seguir con el texto."
+                : "Todavía no hay video para esta clase — podés seguir con el texto."}
             </div>
           )
         )}
@@ -89,30 +94,38 @@ export default async function ExperienciaPage({ params }: { params: Promise<{ id
           </div>
         )}
 
-        <form action={guardar} className="space-y-6 rounded-[28px] bg-acentoRosa/35 p-6">
-          <div className="space-y-1">
-            <Etiqueta>Tu turno</Etiqueta>
-            <p className="text-sm text-marca/60">Nadie más lee esto. Es para vos.</p>
-          </div>
-          <div className="space-y-5">
-            {preguntas.map((p) => (
-              <label key={p.id} className="flex flex-col gap-2">
-                <span className="text-[15px] font-medium text-texto">{p.texto}</span>
-                <textarea
-                  name={`pregunta_${p.id}`}
-                  defaultValue={p.respuestaActual}
-                  placeholder={p.placeholder ?? ""}
-                  rows={3}
-                  required
-                  className="rounded-[18px] border-0 bg-white px-4 py-3 text-[15px] leading-relaxed placeholder:text-texto/35 focus:outline-none focus:ring-2 focus:ring-marca/40"
-                />
-              </label>
-            ))}
-          </div>
-          <BotonPrimario type="submit">
-            {completada ? "Guardar cambios" : esPremium ? "Guardar en mi Proyecto" : "Guardar mis respuestas"}
-          </BotonPrimario>
-        </form>
+        {preguntas.length > 0 ? (
+          <form action={guardar} className="space-y-6 rounded-[28px] bg-acentoRosa/35 p-6">
+            <div className="space-y-1">
+              <Etiqueta>Tu turno</Etiqueta>
+              <p className="text-sm text-marca/60">Nadie más lee esto. Es para vos.</p>
+            </div>
+            <div className="space-y-5">
+              {preguntas.map((p) => (
+                <label key={p.id} className="flex flex-col gap-2">
+                  <span className="text-[15px] font-medium text-texto">{p.texto}</span>
+                  <textarea
+                    name={`pregunta_${p.id}`}
+                    defaultValue={p.respuestaActual}
+                    placeholder={p.placeholder ?? ""}
+                    rows={3}
+                    required
+                    className="rounded-[18px] border-0 bg-white px-4 py-3 text-[15px] leading-relaxed placeholder:text-texto/35 focus:outline-none focus:ring-2 focus:ring-marca/40"
+                  />
+                </label>
+              ))}
+            </div>
+            <BotonPrimario type="submit">
+              {completada ? "Guardar cambios" : esPremium ? "Guardar en mi Proyecto" : "Guardar mis respuestas"}
+            </BotonPrimario>
+          </form>
+        ) : (
+          !completada && (
+            <form action={guardar}>
+              <BotonPrimario type="submit">Marcar como completada</BotonPrimario>
+            </form>
+          )
+        )}
 
         {completada &&
           (siguiente ? (

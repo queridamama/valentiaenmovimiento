@@ -110,8 +110,13 @@ export async function guardarRespuestas(experienciaId: string, formData: FormDat
     }
   }
 
-  // Completa la experiencia solo si TODAS sus preguntas tienen respuesta —
-  // igual que el gating de "Siguiente"/"Guardar" en el diseño.
+  // Completa la experiencia si TODAS sus preguntas tienen respuesta. Una
+  // experiencia sin preguntas (ej. un video de Ruta Premium que es puro
+  // contenido, sin integración escrita) también se completa acá: 0
+  // respuestas >= 0 preguntas es válido a propósito, si no un video así
+  // nunca podría marcarse como hecho ni desbloquear "Siguiente" — antes
+  // de este fix exigía preguntas>0, dejando esos casos sin forma de
+  // completarse.
   const { count: totalPreguntas } = await supabase
     .from("preguntas_experiencia")
     .select("id", { count: "exact", head: true })
@@ -123,7 +128,7 @@ export async function guardarRespuestas(experienciaId: string, formData: FormDat
     .eq("usuario_id", user.id)
     .eq("experiencia_id", experienciaId);
 
-  if (totalPreguntas !== null && totalRespuestas !== null && totalPreguntas > 0 && totalRespuestas >= totalPreguntas) {
+  if (totalPreguntas !== null && totalRespuestas !== null && totalRespuestas >= totalPreguntas) {
     await supabase
       .from("experiencias_completadas")
       .upsert({ usuario_id: user.id, experiencia_id: experienciaId }, { onConflict: "usuario_id,experiencia_id" });
