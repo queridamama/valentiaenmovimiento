@@ -8,6 +8,24 @@
 
 import { createHmac, timingSafeEqual } from "node:crypto";
 
+// ---------- Monto de prueba del checkout alojado (beta) ----------
+// Prueba en paralelo del checkout alojado (ver crearPreapprovalSinPlan en
+// lib/mercadopago.ts): permite cobrar un monto de prueba mucho más bajo
+// que PREMIUM_PLAN.price para poder hacer una transacción REAL sin pagar
+// $35.000 en cada prueba. Nunca toca PREMIUM_PLAN.price ni ninguna
+// lógica de acceso/renovación — el Card Form y el precio real de Premium
+// siguen usando PREMIUM_PLAN.price sin cambios; esto solo afecta
+// auto_recurring.transaction_amount del preapproval SIN plan de prueba.
+// Si la variable de entorno no está configurada, o vino con un valor que
+// no es un monto válido (no numérico, cero o negativo), se usa el precio
+// real como fallback — nunca se manda un monto inválido a Mercado Pago.
+export function resolverMontoCheckoutAlojado(params: { valorEnv: string | null | undefined; precioDefault: number }): number {
+  if (!params.valorEnv) return params.precioDefault;
+  const monto = Number(params.valorEnv);
+  if (!Number.isFinite(monto) || monto <= 0) return params.precioDefault;
+  return monto;
+}
+
 // Estados reales del recurso Preapproval de Mercado Pago, ya
 // NORMALIZADOS a un solo valor por nuestra cuenta ("canceled", una sola
 // "l" — el valor que usa nuestro CHECK constraint en Supabase). Un error

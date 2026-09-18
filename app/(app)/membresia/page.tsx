@@ -5,6 +5,7 @@ import { Subtitulo, Subrayado, Etiqueta } from "@/components/ui";
 import { IconoPastel } from "@/components/iconos";
 import type { TipoIcono } from "@/components/iconos";
 import { PREMIUM_PLAN, formatearPrecio } from "@/lib/config/premium";
+import { montoCheckoutAlojadoBeta } from "@/lib/mercadopago";
 import BotonSuscribirse from "@/components/BotonSuscribirse";
 import BotonSuscribirseAlojado from "@/components/BotonSuscribirseAlojado";
 
@@ -230,7 +231,7 @@ export default async function MembresiaPage() {
               quieras.
             </Subtitulo>
             <BotonSuscribirse email={user.email ?? ""} />
-            {CHECKOUT_ALOJADO_BETA && <BotonSuscribirseAlojado />}
+            {CHECKOUT_ALOJADO_BETA && <BotonSuscribirseAlojado monto={montoCheckoutAlojadoBeta()} />}
           </section>
         </div>
       )}

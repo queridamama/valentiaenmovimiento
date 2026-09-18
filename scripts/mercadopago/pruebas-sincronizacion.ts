@@ -35,6 +35,7 @@ import {
   esErrorStatusPreapprovalInvalido,
   debeMostrarGestionSuscripcion,
   puedeIniciarNuevaSuscripcion,
+  resolverMontoCheckoutAlojado,
 } from "../../lib/mercadopago-logica";
 
 let fallos = 0;
@@ -579,6 +580,34 @@ console.log(
   });
   assert(decision.debeEscribir === true, "se registra el origen mercadopago");
   assert(decision.debeEscribir && decision.nivel === "gratis", "sigue Gratis — nunca 'error': la UI cae en la rama de 'confirmando' (ver /membresia/resultado), no en la de 'rechazado'");
+}
+
+console.log("\n28. resolverMontoCheckoutAlojado: monto de prueba del checkout alojado, con fallback seguro a PREMIUM_PLAN.price");
+{
+  assert(
+    resolverMontoCheckoutAlojado({ valorEnv: "10", precioDefault: 35000 }) === 10,
+    "MERCADOPAGO_CHECKOUT_ALOJADO_BETA_AMOUNT=10 → usa 10, no el precio real"
+  );
+  assert(
+    resolverMontoCheckoutAlojado({ valorEnv: undefined, precioDefault: 35000 }) === 35000,
+    "sin la variable configurada → usa PREMIUM_PLAN.price como fallback"
+  );
+  assert(
+    resolverMontoCheckoutAlojado({ valorEnv: null, precioDefault: 35000 }) === 35000,
+    "variable vacía/null → mismo fallback"
+  );
+  assert(
+    resolverMontoCheckoutAlojado({ valorEnv: "0", precioDefault: 35000 }) === 35000,
+    "0 no es un monto de prueba válido → fallback, nunca se manda un monto en cero a Mercado Pago"
+  );
+  assert(
+    resolverMontoCheckoutAlojado({ valorEnv: "-5", precioDefault: 35000 }) === 35000,
+    "negativo tampoco es válido → fallback"
+  );
+  assert(
+    resolverMontoCheckoutAlojado({ valorEnv: "no-es-un-numero", precioDefault: 35000 }) === 35000,
+    "un valor no numérico (typo en la variable) → fallback, nunca rompe la creación del preapproval"
+  );
 }
 
 console.log(fallos === 0 ? "\n✅ Todas las pruebas pasaron." : `\n❌ ${fallos} prueba(s) fallaron.`);
