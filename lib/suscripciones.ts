@@ -1,6 +1,6 @@
 import "server-only";
 import { crearClienteServicio } from "@/lib/supabase/servicio";
-import { obtenerPreapproval, buscarPagosAutorizados, type Preapproval, type EstadoPreapproval } from "@/lib/mercadopago";
+import { obtenerPreapproval, buscarPagosAutorizados, buscarPagos, type Preapproval, type EstadoPreapproval } from "@/lib/mercadopago";
 import {
   calcularFechaProximoPago,
   calcularAccesoHasta,
@@ -10,7 +10,10 @@ import {
   pagoMasReciente,
   estadoPagoReal,
   detallePagoReal,
+  fechaPagoAprobado,
   esPagoAprobado,
+  filtrarCandidatosValidos,
+  type InfoPagoAutorizado,
 } from "@/lib/mercadopago-logica";
 
 export interface ResultadoSincronizacion {
@@ -92,21 +95,8 @@ export async function sincronizarSuscripcion(preapproval: Preapproval): Promise<
     return null;
   });
 
-  // Log seguro (sin email, sin tarjeta, sin ningún dato de la persona) —
-  // sirve especialmente para la prueba en paralelo del checkout alojado:
-  // acá se ve, para cada sync, si /authorized_payments/search ya
-  // devolvió algún resultado o sigue en `[]` para un preapproval que ya
-  // cambió de estado (ver el requisito de "no inventar acceso, dejarlo
-  // como confirmando" más abajo en calcularAccesoHasta/esAccesoVigente).
-  console.log(
-    "[mercadopago] sincronizarSuscripcion",
-    "preapproval:", preapproval.id,
-    "status:", preapproval.status,
-    "modalidad:", suscripcionExistente?.modalidad ?? "sin registrar",
-    "authorized_payments:", busqueda ? `${busqueda.results.length} resultado(s)` : "consulta falló"
-  );
-
-  const pagoReciente = busqueda
+  const authorizedPaymentsOk = busqueda !== null;
+  let pagoReciente: InfoPagoAutorizado | null = busqueda
     ? pagoMasReciente(
         busqueda.results.map((p) => ({
           status: p.status ?? null,
@@ -116,15 +106,90 @@ export async function sincronizarSuscripcion(preapproval: Preapproval): Promise<
         }))
       )
     : null;
+  let origenPago: "authorized_payments" | "payments_search" | "ninguno" = pagoReciente ? "authorized_payments" : "ninguno";
+  // null = el fallback ni se intentó (Card Form, o authorized_payments ya
+  // encontró algo usable). Se distingue de `false` (se intentó y falló)
+  // para la decisión de "conservar vs. fresco" de más abajo.
+  let paymentsSearchOk: boolean | null = null;
+
+  // Fallback SOLO para preapprovals sin plan asociado (checkout alojado):
+  // un caso real de producción mostró Mercado Pago confirmando el primer
+  // pago como aprobado mientras /authorized_payments/search seguía
+  // devolviendo `[]` para ese preapproval. `!preapproval.preapproval_plan_id`
+  // identifica esta modalidad de forma más confiable que leer
+  // `suscripcionExistente?.modalidad` (esa columna recién se marca
+  // DESPUÉS de este primer sync, ver marcarModalidadSuscripcion) — nunca
+  // se intenta para el Card Form (que siempre crea con
+  // preapproval_plan_id), así que ese flujo queda sin ningún cambio.
+  if (!pagoReciente && !preapproval.preapproval_plan_id) {
+    const resultadoPagos = await buscarPagos(usuarioId).catch((err) => {
+      console.error(
+        "[mercadopago] no se pudo consultar /v1/payments/search (fallback checkout alojado), se conserva el último pago conocido",
+        preapproval.id,
+        err instanceof Error ? err.message : err
+      );
+      return null;
+    });
+    paymentsSearchOk = resultadoPagos !== null;
+
+    if (resultadoPagos) {
+      const candidatosValidos = filtrarCandidatosValidos(
+        resultadoPagos.results.map((p) => ({
+          status: p.status ?? null,
+          statusDetail: p.status_detail ?? null,
+          externalReference: p.external_reference ?? null,
+          currencyId: p.currency_id ?? null,
+          transactionAmount: p.transaction_amount ?? null,
+          dateCreated: p.date_created ?? null,
+          dateApproved: p.date_approved ?? null,
+        })),
+        {
+          externalReference: usuarioId,
+          currencyId: preapproval.auto_recurring?.currency_id ?? null,
+          transactionAmount: preapproval.auto_recurring?.transaction_amount ?? null,
+          fechaCreacionPreapproval: preapproval.date_created ?? null,
+        }
+      );
+
+      pagoReciente = pagoMasReciente(
+        candidatosValidos.map((c) => ({
+          paymentStatus: c.status,
+          paymentStatusDetail: c.statusDetail,
+          dateCreated: c.dateCreated,
+          dateApproved: c.dateApproved,
+        }))
+      );
+      if (pagoReciente) origenPago = "payments_search";
+    }
+  }
+
+  // Log seguro (sin email, sin tarjeta, sin ningún dato de la persona) —
+  // sirve especialmente para la prueba en paralelo del checkout alojado:
+  // acá se ve, para cada sync, si /authorized_payments/search ya
+  // devolvió algún resultado usable, si hizo falta el fallback a
+  // /v1/payments/search, o si ninguno de los dos encontró un pago
+  // usable todavía para un preapproval que ya cambió de estado (ver el
+  // requisito de "no inventar acceso, dejarlo como confirmando" más
+  // abajo en calcularAccesoHasta/esAccesoVigente).
+  console.log(
+    "[mercadopago] sincronizarSuscripcion",
+    "preapproval:", preapproval.id,
+    "status:", preapproval.status,
+    "modalidad:", suscripcionExistente?.modalidad ?? "sin registrar",
+    "authorized_payments:", busqueda ? `${busqueda.results.length} resultado(s)` : "consulta falló",
+    "pago_encontrado_por:", origenPago
+  );
 
   const pagoAprobado = esPagoAprobado(pagoReciente);
-  // Si la consulta a Mercado Pago falló (`busqueda === null`), no hay
-  // ningún dato nuevo que reportar — se conserva el último
-  // ultimo_pago_estado/ultimo_pago_detalle ya guardado en vez de pisarlo
-  // con null, igual criterio que
-  // fecha_proximo_pago/acceso_hasta/fecha_ultimo_pago.
-  const ultimoPagoEstado = busqueda ? estadoPagoReal(pagoReciente) : (suscripcionExistente?.ultimo_pago_estado ?? null);
-  const ultimoPagoDetalle = busqueda ? detallePagoReal(pagoReciente) : (suscripcionExistente?.ultimo_pago_detalle ?? null);
+  // Se conserva el último ultimo_pago_estado/ultimo_pago_detalle ya
+  // guardado (en vez de pisarlo con null) solo si NINGUNA consulta que se
+  // haya intentado tuvo éxito — si authorized_payments funcionó (aunque
+  // haya vuelto vacía) esa "nada encontrado" ya es información fresca y
+  // confiable; el fallback a payments_search solo suma una segunda
+  // oportunidad de encontrar algo, nunca resta confianza a la primera.
+  const huboConsultaExitosa = authorizedPaymentsOk || paymentsSearchOk === true;
+  const ultimoPagoEstado = huboConsultaExitosa ? estadoPagoReal(pagoReciente) : (suscripcionExistente?.ultimo_pago_estado ?? null);
+  const ultimoPagoDetalle = huboConsultaExitosa ? detallePagoReal(pagoReciente) : (suscripcionExistente?.ultimo_pago_detalle ?? null);
 
   // Log seguro para diagnosticar rechazos: `ultimoPagoDetalle` es un
   // código fijo que documenta Mercado Pago (ej. "cc_rejected_high_risk"),
@@ -143,8 +208,10 @@ export async function sincronizarSuscripcion(preapproval: Preapproval): Promise<
   // `fecha_ultimo_pago` (informativo, "cuándo fue el último cobro que sí
   // se acreditó") solo avanza con un pago aprobado — igual criterio que
   // acceso_hasta, nunca se pisa con la fecha de un intento rechazado.
+  // fechaPagoAprobado prefiere `date_approved` (solo lo trae el fallback
+  // a payments_search) sobre `dateCreated`.
   const fechaUltimoPago = pagoAprobado
-    ? pagoReciente?.dateCreated ?? preapproval.summarized?.last_charged_date ?? suscripcionExistente?.fecha_ultimo_pago ?? null
+    ? fechaPagoAprobado(pagoReciente) ?? preapproval.summarized?.last_charged_date ?? suscripcionExistente?.fecha_ultimo_pago ?? null
     : suscripcionExistente?.fecha_ultimo_pago ?? null;
 
   const { error: errorSuscripcion } = await supabase.from("suscripciones").upsert(

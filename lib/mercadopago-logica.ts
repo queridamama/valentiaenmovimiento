@@ -239,6 +239,13 @@ export interface InfoPagoAutorizado {
   // sin exponer nada sensible (ver detallePagoReal).
   paymentStatusDetail?: string | null;
   dateCreated?: string | null;
+  // Fecha real de acreditación del Payment (`date_approved`) — solo la
+  // trae el fallback a /v1/payments/search (ver más abajo); un Authorized
+  // Payment no la expone, así que queda undefined ahí y fechaPagoAprobado
+  // cae a `dateCreated` igual que antes. No participa en pagoMasReciente
+  // (que sigue ordenando por dateCreated) — solo en qué fecha se guarda
+  // como fecha_ultimo_pago.
+  dateApproved?: string | null;
 }
 
 // El cobro más reciente por fecha de creación — los resultados de
@@ -281,6 +288,73 @@ export function detallePagoReal(pago: InfoPagoAutorizado | null): string | null 
 // exclusivamente `status === "approved"`.
 export function esPagoAprobado(pago: InfoPagoAutorizado | null): boolean {
   return estadoPagoReal(pago) === "approved";
+}
+
+// Fecha real de acreditación para fecha_ultimo_pago: `date_approved` del
+// Payment cuando está disponible (fallback a /v1/payments/search, ver
+// más abajo), si no la fecha de creación del cobro — igual que se hacía
+// antes de que existiera `dateApproved`.
+export function fechaPagoAprobado(pago: InfoPagoAutorizado | null): string | null {
+  if (!pago) return null;
+  return pago.dateApproved ?? pago.dateCreated ?? null;
+}
+
+// ---------- Fallback a /v1/payments/search (solo checkout alojado) ----------
+// Caso real de producción: un preapproval del checkout alojado (creado
+// por crearPreapprovalSinPlan, sin preapproval_plan_id) quedó
+// "authorized", Mercado Pago mostraba el pago como aprobado, pero
+// /authorized_payments/search seguía devolviendo `[]` para ese
+// preapproval — el primer cobro de este flujo puede no aparecer ahí (o
+// nunca). Ese cobro sigue siendo, además, un Payment normal: la
+// documentación oficial de Mercado Pago para Suscripciones confirma que
+// se puede buscar por `external_reference` en GET /v1/payments/search
+// (ver buscarPagos en lib/mercadopago.ts). Nunca reemplaza a
+// /authorized_payments/search como fuente principal de cobros
+// recurrentes — es un fallback que solo se intenta cuando esa consulta
+// no devolvió nada usable, y solo para preapprovals sin plan asociado
+// (ver sincronizarSuscripcion en lib/suscripciones.ts).
+//
+// Nunca alcanza con que exista un Payment con ese external_reference:
+// como la búsqueda es por external_reference (nuestro usuario_id) y no
+// por preapproval_id, puede traer pagos de CUALQUIER cosa que esa
+// persona haya pagado alguna vez con esa referencia. Por eso se valida
+// que sea de verdad el cobro de ESTE preapproval: moneda y monto
+// coinciden con los de auto_recurring, y no es anterior a que el
+// preapproval existiera. `status === "approved"` NO se filtra acá a
+// propósito: un candidato rechazado tiene que poder llegar hasta
+// pagoMasReciente/estadoPagoReal para que ultimo_pago_estado/
+// ultimo_pago_detalle reflejen el rechazo (mismo criterio que ya usa
+// /authorized_payments/search) — la decisión de si otorga Premium sigue
+// siendo, siempre, esPagoAprobado() sobre el resultado ya filtrado acá.
+export interface CandidatoPagoBusqueda {
+  status: string | null;
+  statusDetail: string | null;
+  externalReference: string | null;
+  currencyId: string | null;
+  transactionAmount: number | null;
+  dateCreated: string | null;
+  dateApproved: string | null;
+}
+
+export interface CriteriosPreapprovalParaPago {
+  externalReference: string;
+  currencyId: string | null;
+  transactionAmount: number | null;
+  fechaCreacionPreapproval: string | null;
+}
+
+export function esCandidatoValidoParaPreapproval(pago: CandidatoPagoBusqueda, criterios: CriteriosPreapprovalParaPago): boolean {
+  if (pago.externalReference !== criterios.externalReference) return false;
+  if (criterios.currencyId !== null && pago.currencyId !== criterios.currencyId) return false;
+  if (criterios.transactionAmount !== null && pago.transactionAmount !== criterios.transactionAmount) return false;
+  if (criterios.fechaCreacionPreapproval && pago.dateCreated) {
+    if (Date.parse(pago.dateCreated) < Date.parse(criterios.fechaCreacionPreapproval)) return false;
+  }
+  return true;
+}
+
+export function filtrarCandidatosValidos(pagos: CandidatoPagoBusqueda[], criterios: CriteriosPreapprovalParaPago): CandidatoPagoBusqueda[] {
+  return pagos.filter((p) => esCandidatoValidoParaPreapproval(p, criterios));
 }
 
 // ---------- acceso_hasta: lo único que decide vigencia ----------

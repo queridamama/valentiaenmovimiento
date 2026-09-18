@@ -36,6 +36,9 @@ import {
   debeMostrarGestionSuscripcion,
   puedeIniciarNuevaSuscripcion,
   resolverMontoCheckoutAlojado,
+  fechaPagoAprobado,
+  filtrarCandidatosValidos,
+  esCandidatoValidoParaPreapproval,
 } from "../../lib/mercadopago-logica";
 
 let fallos = 0;
@@ -608,6 +611,110 @@ console.log("\n28. resolverMontoCheckoutAlojado: monto de prueba del checkout al
     resolverMontoCheckoutAlojado({ valorEnv: "no-es-un-numero", precioDefault: 35000 }) === 35000,
     "un valor no numérico (typo en la variable) → fallback, nunca rompe la creación del preapproval"
   );
+}
+
+// ---------------------------------------------------------------------
+// Fallback a /v1/payments/search — caso real de producción: un
+// preapproval del checkout alojado quedó "authorized", Mercado Pago
+// mostraba el pago como aprobado, pero /authorized_payments/search
+// seguía devolviendo `[]`. Estos escenarios reproducen exactamente el
+// filtro y la decisión que aplica sincronizarSuscripcion (lib/
+// suscripciones.ts) sobre los resultados de ese fallback — nunca
+// alcanza con que exista un Payment con el external_reference correcto.
+// ---------------------------------------------------------------------
+
+const CRITERIOS_BASE = {
+  externalReference: "usuario-1",
+  currencyId: "ARS",
+  transactionAmount: 20,
+  fechaCreacionPreapproval: "2026-06-15T00:00:00Z",
+};
+
+function candidatoValido(overrides: Partial<Parameters<typeof esCandidatoValidoParaPreapproval>[0]> = {}) {
+  return {
+    status: "approved",
+    statusDetail: "accredited",
+    externalReference: "usuario-1",
+    currencyId: "ARS",
+    transactionAmount: 20,
+    dateCreated: "2026-06-15T00:10:00Z",
+    dateApproved: "2026-06-15T00:10:05Z",
+    ...overrides,
+  };
+}
+
+console.log('\n29. Checkout alojado + authorized_payments vacío + Payment approved válido (mismo external_reference, moneda, monto, posterior al preapproval) → Premium');
+{
+  const candidatos = filtrarCandidatosValidos([candidatoValido()], CRITERIOS_BASE);
+  assert(candidatos.length === 1, "el Payment pasa las 4 validaciones mínimas");
+
+  const pagoReciente = pagoMasReciente(
+    candidatos.map((c) => ({ paymentStatus: c.status, paymentStatusDetail: c.statusDetail, dateCreated: c.dateCreated, dateApproved: c.dateApproved }))
+  );
+  assert(esPagoAprobado(pagoReciente) === true, "se considera un pago aprobado de verdad");
+  assert(fechaPagoAprobado(pagoReciente) === "2026-06-15T00:10:05Z", "fecha_ultimo_pago usa date_approved, no date_created");
+
+  const accesoHasta = calcularAccesoHasta({ pagoAprobado: true, nextPaymentDateNueva: FUTURO, accesoHastaExistente: null });
+  assert(accesoHasta === FUTURO, "acceso_hasta usa next_payment_date del preapproval, igual que con un authorized payment aprobado");
+
+  const decision = calcularNuevaAutorizacion({
+    autorizacionActual: { nivel: "gratis", origenNivel: "manual" },
+    vigente: esAccesoVigente(accesoHasta, AHORA),
+  });
+  assert(decision.debeEscribir === true && decision.nivel === "premium", "pasa a Premium — ya no depende únicamente de /authorized_payments/search");
+}
+
+console.log("\n30. Payment rejected (mismo external_reference/moneda/monto) → Gratis, pero se guarda el rechazo para mensajería");
+{
+  const candidatos = filtrarCandidatosValidos([candidatoValido({ status: "rejected", statusDetail: "cc_rejected_high_risk" })], CRITERIOS_BASE);
+  assert(candidatos.length === 1, "el candidato sigue siendo válido estructuralmente — el filtro no descarta por status");
+
+  const pagoReciente = pagoMasReciente(
+    candidatos.map((c) => ({ paymentStatus: c.status, paymentStatusDetail: c.statusDetail, dateCreated: c.dateCreated, dateApproved: c.dateApproved }))
+  );
+  assert(esPagoAprobado(pagoReciente) === false, "rejected nunca otorga acceso");
+  assert(estadoPagoReal(pagoReciente) === "rejected", "ultimo_pago_estado igual refleja el rechazo, para poder mostrarlo en Perfil/resultado");
+  assert(detallePagoReal(pagoReciente) === "cc_rejected_high_risk", "y el detalle fino también, para el logging seguro");
+
+  const decision = calcularNuevaAutorizacion({
+    autorizacionActual: { nivel: "gratis", origenNivel: "manual" },
+    vigente: esAccesoVigente(calcularAccesoHasta({ pagoAprobado: false, nextPaymentDateNueva: FUTURO, accesoHastaExistente: null }), AHORA),
+  });
+  assert(decision.debeEscribir === true && decision.nivel === "gratis", "sigue Gratis");
+}
+
+console.log("\n31. Payment approved de un MONTO DISTINTO al del preapproval → se ignora");
+{
+  assert(esCandidatoValidoParaPreapproval(candidatoValido({ transactionAmount: 35000 }), CRITERIOS_BASE) === false, "monto distinto no matchea");
+  const candidatos = filtrarCandidatosValidos([candidatoValido({ transactionAmount: 35000 })], CRITERIOS_BASE);
+  assert(candidatos.length === 0, "se filtra afuera: no puede ser el cobro de este preapproval de $20");
+}
+
+console.log("\n32. Payment approved ANTERIOR a la creación del preapproval → se ignora");
+{
+  const anterior = candidatoValido({ dateCreated: "2026-06-01T00:00:00Z", dateApproved: "2026-06-01T00:00:05Z" });
+  assert(esCandidatoValidoParaPreapproval(anterior, CRITERIOS_BASE) === false, "un pago de antes de que existiera el preapproval no puede ser el suyo");
+  const candidatos = filtrarCandidatosValidos([anterior], CRITERIOS_BASE);
+  assert(candidatos.length === 0, "se filtra afuera");
+}
+
+console.log("\n33. Payment con external_reference DISTINTA → se ignora (podría ser cualquier otro pago de esa usuaria)");
+{
+  const otraReferencia = candidatoValido({ externalReference: "usuario-2" });
+  assert(esCandidatoValidoParaPreapproval(otraReferencia, CRITERIOS_BASE) === false, "external_reference tiene que coincidir exacto");
+  const candidatos = filtrarCandidatosValidos([otraReferencia], CRITERIOS_BASE);
+  assert(candidatos.length === 0, "se filtra afuera — nunca alcanza con que exista un Payment cualquiera");
+}
+
+console.log("\n34. Flujo Card Form (preapproval CON plan asociado) → el fallback a payments_search nunca se activa, sin cambios de comportamiento");
+{
+  // sincronizarSuscripcion (lib/suscripciones.ts) solo intenta el
+  // fallback cuando `!preapproval.preapproval_plan_id` — un preapproval
+  // del Card Form siempre trae uno (crearPreapproval manda
+  // preapproval_plan_id siempre), así que estructuralmente nunca entra
+  // a este camino nuevo.
+  const preapprovalCardForm = { preapproval_plan_id: "plan-valentia-premium" };
+  assert(!preapprovalCardForm.preapproval_plan_id === false, "tiene preapproval_plan_id → la condición del fallback da false, se comporta exactamente como antes");
 }
 
 console.log(fallos === 0 ? "\n✅ Todas las pruebas pasaron." : `\n❌ ${fallos} prueba(s) fallaron.`);

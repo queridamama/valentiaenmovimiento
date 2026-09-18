@@ -356,3 +356,33 @@ export async function obtenerAuthorizedPayment(id: string | number): Promise<Pag
 export async function buscarPagosAutorizados(preapprovalId: string): Promise<{ results: PagoAutorizado[] }> {
   return mpFetch<{ results: PagoAutorizado[] }>(`/authorized_payments/search?preapproval_id=${encodeURIComponent(preapprovalId)}`);
 }
+
+// Recurso "Payment" (el pago real, no el "Authorized Payment" de arriba)
+// — solo los campos que necesita el fallback de checkout alojado (ver
+// buscarPagos más abajo y el comentario grande en lib/mercadopago-
+// logica.ts).
+export interface PagoMercadoPago {
+  id: number | string;
+  status?: string;
+  status_detail?: string;
+  external_reference?: string | null;
+  currency_id?: string;
+  transaction_amount?: number;
+  date_created?: string;
+  date_approved?: string;
+}
+
+// Fallback SOLO para preapprovals sin plan asociado (checkout alojado,
+// ver crearPreapprovalSinPlan): un caso real de producción mostró
+// Mercado Pago confirmando el primer pago como aprobado mientras
+// /authorized_payments/search seguía devolviendo vacío para ese mismo
+// preapproval. Documentación oficial de Mercado Pago para Suscripciones
+// confirma que ese cobro sigue siendo, además, un Payment normal,
+// buscable por `external_reference` acá. NUNCA reemplaza a
+// buscarPagosAutorizados como fuente principal para cobros recurrentes
+// programados, y su sola existencia nunca alcanza — sincronizarSuscripcion
+// (lib/suscripciones.ts) valida moneda/monto/fecha antes de considerar
+// un resultado (filtrarCandidatosValidos, lib/mercadopago-logica.ts).
+export async function buscarPagos(externalReference: string): Promise<{ results: PagoMercadoPago[] }> {
+  return mpFetch<{ results: PagoMercadoPago[] }>(`/v1/payments/search?external_reference=${encodeURIComponent(externalReference)}`);
+}
