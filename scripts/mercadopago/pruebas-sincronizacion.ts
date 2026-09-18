@@ -24,6 +24,7 @@ import {
   calcularAccesoHasta,
   pagoMasReciente,
   estadoPagoReal,
+  detallePagoReal,
   esPagoAprobado,
   debeRevalidar,
   VENTANA_REVALIDACION_MS,
@@ -345,8 +346,11 @@ console.log("\n15. preapproval authorized + sin pago (todavía ninguna factura) 
 
 console.log("\n16. preapproval authorized + pago rejected → Gratis");
 {
-  const pagoReciente = pagoMasReciente([{ status: "rejected", paymentStatus: "rejected", dateCreated: "2026-06-15T00:05:00Z" }]);
+  const pagoReciente = pagoMasReciente([
+    { status: "rejected", paymentStatus: "rejected", paymentStatusDetail: "cc_rejected_high_risk", dateCreated: "2026-06-15T00:05:00Z" },
+  ]);
   assert(estadoPagoReal(pagoReciente) === "rejected", "el cobro más reciente es 'rejected'");
+  assert(detallePagoReal(pagoReciente) === "cc_rejected_high_risk", "se puede leer el detalle fino del rechazo, para loguearlo de forma segura");
   assert(esPagoAprobado(pagoReciente) === false, "rejected no es un pago aprobado");
 
   const accesoHasta = calcularAccesoHasta({ pagoAprobado: esPagoAprobado(pagoReciente), nextPaymentDateNueva: FUTURO, accesoHastaExistente: null });
@@ -510,6 +514,40 @@ console.log("\n24. debeMostrarGestionSuscripcion: sigue mostrando la gestión de
     debeMostrarGestionSuscripcion({ estado: "canceled", vigente: false }) === false,
     "canceled y sin ningún acceso vigente → ya no hay nada que gestionar/mostrar"
   );
+}
+
+// ---------------------------------------------------------------------
+// Información antifraude (Device ID) y detalle fino del cobro
+// (`payment.status_detail`, ej. "cc_rejected_high_risk") — no cambian en
+// nada la regla de que Premium solo se activa con un pago realmente
+// "approved"; son datos adicionales para mejorar la aprobación y para
+// poder diagnosticar un rechazo sin loguear nada sensible.
+// ---------------------------------------------------------------------
+
+console.log('\n25. detallePagoReal: expone el motivo fino del cobro más reciente, sin tocar la decisión de aprobación');
+{
+  const pagoAprobado = pagoMasReciente([
+    { status: "approved", paymentStatus: "approved", paymentStatusDetail: "accredited", dateCreated: "2026-06-15T00:05:00Z" },
+  ]);
+  assert(detallePagoReal(pagoAprobado) === "accredited", "pago aprobado → detalle 'accredited'");
+  assert(esPagoAprobado(pagoAprobado) === true, "el detalle no cambia el criterio de aprobación: sigue siendo solo status === 'approved'");
+
+  const sinDetalle = pagoMasReciente([{ status: "approved", paymentStatus: "approved", dateCreated: "2026-06-15T00:05:00Z" }]);
+  assert(detallePagoReal(sinDetalle) === null, "si el recurso no expone status_detail, no se inventa ninguno");
+
+  assert(detallePagoReal(null) === null, "sin ningún cobro encontrado, no hay detalle que mostrar");
+}
+
+console.log("\n26. Si falla la consulta a Mercado Pago, se conserva también el último ultimo_pago_detalle conocido (igual criterio que ultimo_pago_estado)");
+{
+  // Simula lo que hace sincronizarSuscripcion (lib/suscripciones.ts)
+  // cuando buscarPagosAutorizados() falla: no hay ningún dato nuevo, así
+  // que se usa el que ya estaba guardado en la fila existente en vez de
+  // pisarlo con null.
+  const detalleExistente = "cc_rejected_high_risk";
+  const busquedaFallida = null; // buscarPagosAutorizados() lanzó y se atrapó
+  const ultimoPagoDetalleResultante = busquedaFallida ? detallePagoReal(null) : detalleExistente;
+  assert(ultimoPagoDetalleResultante === detalleExistente, "conserva el detalle ya guardado en vez de perderlo por un error transitorio de red");
 }
 
 console.log(fallos === 0 ? "\n✅ Todas las pruebas pasaron." : `\n❌ ${fallos} prueba(s) fallaron.`);

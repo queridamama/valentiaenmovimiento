@@ -2,6 +2,7 @@
 
 import { useCallback, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
+import Script from "next/script";
 import { loadMercadoPago } from "@mercadopago/sdk-js";
 import { iniciarSuscripcion } from "@/lib/acciones/membresia";
 import { PREMIUM_PLAN, formatearPrecio } from "@/lib/config/premium";
@@ -45,6 +46,14 @@ interface InstanciaMercadoPago {
 declare global {
   interface Window {
     MercadoPago: new (publicKey: string, options?: { locale?: string }) => InstanciaMercadoPago;
+    // Lo setea el script de seguridad de Mercado Pago
+    // (https://www.mercadopago.com/v2/security.js, ver más abajo) una vez
+    // que termina de generar el Device ID antifraude — no es parte de
+    // @mercadopago/sdk-js. Puede no estar listo todavía si el script
+    // tardó en cargar o fue bloqueado (ad blockers, red lenta): es
+    // best-effort, nunca bloquea el flujo de pago si falta (ver
+    // lib/acciones/membresia.ts).
+    MP_DEVICE_SESSION_ID?: string;
   }
 }
 
@@ -62,6 +71,12 @@ const clasesInput =
 // viaja a nuestra Server Action es el `token` efímero que ya generó
 // Mercado Pago (card_token_id) — nunca un número de tarjeta ni un CVV,
 // y nunca se guarda en ningún lado (ver lib/acciones/membresia.ts).
+//
+// También carga el script de seguridad de Mercado Pago (Device ID
+// antifraude, documentado para Suscripciones/Checkout API) y manda lo que
+// haya generado junto con el token — mejora la tasa de aprobación de
+// pagos, es información técnica del dispositivo/sesión, nunca un dato de
+// la tarjeta (ver crearPreapproval en lib/mercadopago.ts).
 export default function BotonSuscribirse({ email }: { email: string }) {
   const router = useRouter();
   const [mostrarFormulario, setMostrarFormulario] = useState(false);
@@ -132,7 +147,16 @@ export default function BotonSuscribirse({ email }: { email: string }) {
                 return;
               }
 
-              iniciarSuscripcion(token)
+              // Device ID antifraude que genera el script de seguridad de
+              // Mercado Pago (ver <Script> más abajo) — información
+              // técnica del dispositivo/sesión del navegador, nunca un
+              // dato de la tarjeta. Si todavía no está listo, se manda
+              // igual la suscripción sin él (ver lib/acciones/membresia.ts):
+              // mejora la aprobación del pago, no es un requisito estricto
+              // de la API.
+              const deviceId = window.MP_DEVICE_SESSION_ID ?? null;
+
+              iniciarSuscripcion(token, deviceId)
                 .then((resultado) => {
                   if ("error" in resultado) {
                     setEnviando(false);
@@ -155,20 +179,38 @@ export default function BotonSuscribirse({ email }: { email: string }) {
       });
   }, [router]);
 
+  // Se carga apenas monta este componente (no recién al tocar el botón)
+  // para que el Device ID tenga tiempo de generarse antes de que la
+  // usuaria llegue a confirmar el pago — Mercado Pago lo deja en
+  // `window.MP_DEVICE_SESSION_ID` una vez que termina. `strategy=
+  // "afterInteractive"` (default recomendado de next/script para scripts
+  // de terceros no críticos para el primer render) evita bloquear la
+  // carga de la página. `view` no es un atributo que tipe `ScriptProps`
+  // (no es un atributo HTML estándar de <script>) pero Next.js sí lo
+  // reenvía al elemento real — se arma como variable aparte para no
+  // disparar el chequeo de propiedades excedentes de TypeScript sobre un
+  // objeto literal.
+  const propsScriptSeguridad = { src: "https://www.mercadopago.com/v2/security.js", view: "checkout", strategy: "afterInteractive" as const };
+  const scriptSeguridad = <Script {...propsScriptSeguridad} />;
+
   if (!mostrarFormulario) {
     return (
-      <button
-        type="button"
-        onClick={() => setMostrarFormulario(true)}
-        className="block w-full rounded-full bg-marca px-6 py-4 text-center text-[15px] font-semibold text-white transition active:scale-[0.98]"
-      >
-        Sumarme a Premium
-      </button>
+      <>
+        {scriptSeguridad}
+        <button
+          type="button"
+          onClick={() => setMostrarFormulario(true)}
+          className="block w-full rounded-full bg-marca px-6 py-4 text-center text-[15px] font-semibold text-white transition active:scale-[0.98]"
+        >
+          Sumarme a Premium
+        </button>
+      </>
     );
   }
 
   return (
     <div className="space-y-3 rounded-[24px] bg-white p-5">
+      {scriptSeguridad}
       {cargandoSdk && <p className="text-center text-[13px] text-texto/50">Cargando el formulario seguro de pago…</p>}
 
       <form id={ID_FORM} ref={montarFormularioTarjeta} className="space-y-3">

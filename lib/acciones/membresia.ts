@@ -14,15 +14,30 @@ function backUrlResultado(): string {
 // Confirma la suscripción de la usuaria logueada usando el `card_token_id`
 // que ya generó Mercado Pago del lado del cliente (Card Form de
 // @mercadopago/sdk-js — ver components/BotonSuscribirse.tsx). Es lo
-// ÚNICO que se acepta del cliente acá: el usuario, su email y el plan/
-// precio salen siempre de la sesión y de la configuración del servidor,
-// nunca de lo que mande el navegador — así nadie puede activar Premium
-// propio (ni de otra persona) mandando un userId, email o precio
-// distinto. Server Action, no route handler: el ACCESS TOKEN (usado
-// dentro de lib/mercadopago.ts) nunca se acerca al cliente.
-export async function iniciarSuscripcion(cardTokenId: string): Promise<{ ok: true } | { error: string }> {
+// ÚNICO que se acepta del cliente acá, junto con `deviceId`: el usuario,
+// su email y el plan/precio salen siempre de la sesión y de la
+// configuración del servidor, nunca de lo que mande el navegador — así
+// nadie puede activar Premium propio (ni de otra persona) mandando un
+// userId, email o precio distinto. Server Action, no route handler: el
+// ACCESS TOKEN (usado dentro de lib/mercadopago.ts) nunca se acerca al
+// cliente.
+//
+// `deviceId` es el Device ID antifraude que genera el script de
+// seguridad de Mercado Pago en el navegador (`window.MP_DEVICE_SESSION_ID`,
+// ver components/BotonSuscribirse.tsx) — información técnica del
+// dispositivo/sesión, nunca un dato de la tarjeta. Mercado Pago lo
+// recomienda para mejorar la aprobación de pagos, pero no es un
+// requisito estricto del endpoint: si el script todavía no terminó de
+// generarlo (carga lenta, bloqueado), se sigue igual sin bloquear a la
+// usuaria — solo queda una suscripción con peor información antifraude,
+// no un error.
+export async function iniciarSuscripcion(cardTokenId: string, deviceId: string | null): Promise<{ ok: true } | { error: string }> {
   if (typeof cardTokenId !== "string" || cardTokenId.trim().length === 0) {
     return { error: "No pudimos validar los datos de la tarjeta. Probá de nuevo." };
+  }
+  const deviceIdLimpio = typeof deviceId === "string" && deviceId.trim().length > 0 ? deviceId.trim() : null;
+  if (!deviceIdLimpio) {
+    console.warn("[membresia] iniciando suscripción sin Device ID de Mercado Pago (antifraude) — MP_DEVICE_SESSION_ID no estaba disponible");
   }
 
   const supabase = await crearClienteServidor();
@@ -71,6 +86,7 @@ export async function iniciarSuscripcion(cardTokenId: string): Promise<{ ok: tru
       externalReference: user.id,
       backUrl: backUrlResultado(),
       cardTokenId: cardTokenId.trim(),
+      deviceId: deviceIdLimpio,
     });
   } catch (err) {
     // El token de tarjeta es efímero y de un solo uso — nunca se loguea

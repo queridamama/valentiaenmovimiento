@@ -9,6 +9,7 @@ import {
   debeRevalidar,
   pagoMasReciente,
   estadoPagoReal,
+  detallePagoReal,
   esPagoAprobado,
 } from "@/lib/mercadopago-logica";
 
@@ -61,7 +62,7 @@ export async function sincronizarSuscripcion(preapproval: Preapproval): Promise<
   // reemplacen (ver calcularFechaProximoPago/calcularAccesoHasta).
   const { data: suscripcionExistente } = await supabase
     .from("suscripciones")
-    .select("fecha_proximo_pago, fecha_ultimo_pago, acceso_hasta, ultimo_pago_estado")
+    .select("fecha_proximo_pago, fecha_ultimo_pago, acceso_hasta, ultimo_pago_estado, ultimo_pago_detalle")
     .eq("usuario_id", usuarioId)
     .eq("proveedor", "mercadopago")
     .maybeSingle();
@@ -91,6 +92,7 @@ export async function sincronizarSuscripcion(preapproval: Preapproval): Promise<
         busqueda.results.map((p) => ({
           status: p.status ?? null,
           paymentStatus: p.payment?.status ?? null,
+          paymentStatusDetail: p.payment?.status_detail ?? null,
           dateCreated: p.date_created ?? null,
         }))
       )
@@ -99,9 +101,19 @@ export async function sincronizarSuscripcion(preapproval: Preapproval): Promise<
   const pagoAprobado = esPagoAprobado(pagoReciente);
   // Si la consulta a Mercado Pago falló (`busqueda === null`), no hay
   // ningún dato nuevo que reportar — se conserva el último
-  // ultimo_pago_estado ya guardado en vez de pisarlo con null, igual
-  // criterio que fecha_proximo_pago/acceso_hasta/fecha_ultimo_pago.
+  // ultimo_pago_estado/ultimo_pago_detalle ya guardado en vez de pisarlo
+  // con null, igual criterio que
+  // fecha_proximo_pago/acceso_hasta/fecha_ultimo_pago.
   const ultimoPagoEstado = busqueda ? estadoPagoReal(pagoReciente) : (suscripcionExistente?.ultimo_pago_estado ?? null);
+  const ultimoPagoDetalle = busqueda ? detallePagoReal(pagoReciente) : (suscripcionExistente?.ultimo_pago_detalle ?? null);
+
+  // Log seguro para diagnosticar rechazos: `ultimoPagoDetalle` es un
+  // código fijo que documenta Mercado Pago (ej. "cc_rejected_high_risk"),
+  // nunca un dato de la tarjeta — nunca se loguea el `preapproval`
+  // completo (podría traer payer_email u otros datos de la persona).
+  if (ultimoPagoEstado === "rejected") {
+    console.error("[mercadopago] pago rechazado", preapproval.id, "detalle:", ultimoPagoDetalle ?? "sin detalle");
+  }
 
   const accesoHasta = calcularAccesoHasta({
     pagoAprobado,
@@ -132,6 +144,7 @@ export async function sincronizarSuscripcion(preapproval: Preapproval): Promise<
       fecha_proximo_pago: fechaProximoPago,
       acceso_hasta: accesoHasta,
       ultimo_pago_estado: ultimoPagoEstado,
+      ultimo_pago_detalle: ultimoPagoDetalle,
       cancelada_en: preapproval.status === "canceled" ? new Date().toISOString() : null,
       actualizado_en: new Date().toISOString(),
     },

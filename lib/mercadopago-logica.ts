@@ -214,6 +214,12 @@ export interface InfoPagoAutorizado {
   // usa esta cuenta en particular, así que se leen los dos.
   status?: string | null;
   paymentStatus?: string | null;
+  // `payment.status_detail` (ej. "accredited", "cc_rejected_high_risk",
+  // "cc_rejected_insufficient_amount") — el motivo fino del resultado del
+  // cobro. Nunca contiene datos de la tarjeta: es un código fijo que
+  // documenta Mercado Pago, útil para loguear por qué se rechazó un pago
+  // sin exponer nada sensible (ver detallePagoReal).
+  paymentStatusDetail?: string | null;
   dateCreated?: string | null;
 }
 
@@ -237,6 +243,16 @@ export function pagoMasReciente(pagos: InfoPagoAutorizado[]): InfoPagoAutorizado
 export function estadoPagoReal(pago: InfoPagoAutorizado | null): string | null {
   if (!pago) return null;
   return pago.paymentStatus ?? pago.status ?? null;
+}
+
+// El detalle fino del cobro más reciente (ej. "cc_rejected_high_risk"
+// ante un rechazo, "accredited" ante un pago aprobado). Solo viene
+// anidado en `payment.status_detail` — a diferencia de `estadoPagoReal`,
+// acá no hay un equivalente de primer nivel en el recurso Authorized
+// Payment que tenga sentido usar como fallback.
+export function detallePagoReal(pago: InfoPagoAutorizado | null): string | null {
+  if (!pago) return null;
+  return pago.paymentStatusDetail ?? null;
 }
 
 // Solo "approved" cuenta como pago exitoso. `status_detail=accredited`

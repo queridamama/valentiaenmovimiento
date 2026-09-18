@@ -179,14 +179,27 @@ function planId(): string {
 // real del endpoint. La activación/mantenimiento/cancelación de Premium
 // NO dependen de que llegue ningún webhook — ver lib/suscripciones.ts
 // (revalidación server-side por polling contra GET /preapproval/{id}).
+//
+// `deviceId`, si vino, se manda como header `X-meli-session-id` — es el
+// Device ID antifraude que la documentación oficial de Mercado Pago para
+// Suscripciones recomienda para mejorar la aprobación de pagos. Lo genera
+// el script de seguridad de Mercado Pago en el navegador
+// (`window.MP_DEVICE_SESSION_ID`, ver components/BotonSuscribirse.tsx) —
+// es información técnica del dispositivo/sesión, nunca un dato de la
+// tarjeta. Es opcional a propósito: si el script no llegó a generarlo a
+// tiempo, se crea igual el preapproval sin el header en vez de bloquear
+// la suscripción por un dato que Mercado Pago documenta como
+// recomendado, no requerido.
 export async function crearPreapproval(params: {
   payerEmail: string;
   externalReference: string;
   backUrl: string;
   cardTokenId: string;
+  deviceId: string | null;
 }): Promise<Preapproval> {
   const cuerpo = await mpFetch<Record<string, unknown> & { status: string }>("/preapproval", {
     method: "POST",
+    headers: params.deviceId ? { "X-meli-session-id": params.deviceId } : undefined,
     body: JSON.stringify({
       preapproval_plan_id: planId(),
       reason: PREMIUM_PLAN.reason,
