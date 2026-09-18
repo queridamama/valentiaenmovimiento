@@ -213,6 +213,58 @@ export async function crearPreapproval(params: {
   return normalizarPreapproval(cuerpo);
 }
 
+// Prueba en paralelo del OTRO flujo oficial de Mercado Pago:
+// "Suscripciones sin plan asociado" + pago pendiente + checkout alojado.
+// No reemplaza crearPreapproval() (que sigue siendo el flujo real de
+// producción, Card Form + card_token_id + status authorized) — convive
+// con ella, detrás del flag NEXT_PUBLIC_MERCADOPAGO_CHECKOUT_ALOJADO_BETA
+// (ver components/BotonSuscribirseAlojado.tsx). Revertir esta prueba es
+// no llamar más a esta función; no borra ni modifica nada de
+// crearPreapproval().
+//
+// Diferencias clave con crearPreapproval():
+//   - Nunca manda `card_token_id`: acá nuestra app no recibe ni tokeniza
+//     ninguna tarjeta. Todo el ingreso del medio de pago ocurre en
+//     Mercado Pago.
+//   - Nunca manda `preapproval_plan_id`: es "sin plan asociado", así que
+//     el monto/frecuencia van inline en `auto_recurring`.
+//   - `status: "pending"` (no "authorized"): la documentación oficial
+//     para este modelo (sin plan, pago pendiente) dice que así se crea,
+//     y la respuesta trae `init_point` — el link al checkout alojado de
+//     Mercado Pago al que hay que redirigir a la usuaria.
+//
+// Igual que con crearPreapproval(): que esta llamada devuelva
+// status "pending" (o que, al volver del checkout, el preapproval ya
+// figure "authorized") NUNCA implica un pago aprobado. Quien llama a
+// esta función tiene que pasar el resultado por sincronizarSuscripcion
+// (lib/suscripciones.ts) exactamente igual que el otro flujo — esa
+// función es la única que confirma el pago real contra
+// /authorized_payments/search antes de otorgar Premium, sin importar por
+// cuál de los dos flujos se haya creado el preapproval.
+export async function crearPreapprovalSinPlan(params: {
+  payerEmail: string;
+  externalReference: string;
+  backUrl: string;
+}): Promise<Preapproval> {
+  const cuerpo = await mpFetch<Record<string, unknown> & { status: string }>("/preapproval", {
+    method: "POST",
+    body: JSON.stringify({
+      reason: PREMIUM_PLAN.reason,
+      external_reference: params.externalReference,
+      payer_email: params.payerEmail,
+      back_url: params.backUrl,
+      status: "pending",
+      auto_recurring: {
+        frequency: PREMIUM_PLAN.frequency,
+        frequency_type: PREMIUM_PLAN.frequencyType,
+        transaction_amount: PREMIUM_PLAN.price,
+        currency_id: PREMIUM_PLAN.currency,
+      },
+    }),
+  });
+  return normalizarPreapproval(cuerpo);
+}
+
 export async function obtenerPreapproval(id: string): Promise<Preapproval> {
   const cuerpo = await mpFetch<Record<string, unknown> & { status: string }>(`/preapproval/${encodeURIComponent(id)}`);
   return normalizarPreapproval(cuerpo);

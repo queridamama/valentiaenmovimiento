@@ -5,15 +5,28 @@ import { revalidarSuscripcionAhora } from "@/lib/suscripciones";
 import { Titulo, Subtitulo } from "@/components/ui";
 import RefrescoAutomatico from "@/components/RefrescoAutomatico";
 
-// Página a la que redirige BotonSuscribirse.tsx después de que la Server
-// Action ya confirmó (o no) el pago con el card_token_id — no es una
-// vuelta redirigida por Mercado Pago (esta integración no usa
-// init_point/Checkout hospedado, ver lib/mercadopago.ts). Igual, a
-// propósito NO se decide nada mirando el resultado que ya devolvió esa
-// llamada ni ningún query param: `revalidarSuscripcionAhora` vuelve a
-// preguntarle a la API de Mercado Pago el estado real antes de elegir
-// qué mostrar — es la única forma confiable de saberlo justo acá, y
-// además cubre el caso de que se llegue a esta URL de otra forma.
+// Página a la que se llega desde dos flujos distintos (ver `modalidad`
+// en `suscripciones`, solo observabilidad — acá no importa cuál fue):
+//   - BotonSuscribirse.tsx (Card Form): después de que la Server Action
+//     ya confirmó (o no) el pago con el card_token_id, sin haber pasado
+//     por ningún redirect de Mercado Pago.
+//   - BotonSuscribirseAlojado.tsx (checkout alojado, prueba en paralelo
+//     detrás del flag NEXT_PUBLIC_MERCADOPAGO_CHECKOUT_ALOJADO_BETA):
+//     acá SÍ es la vuelta real del `back_url` después de que la usuaria
+//     completó (o no) el pago en el checkout hospedado de Mercado Pago.
+// En los dos casos, a propósito NO se decide nada mirando el resultado
+// que ya devolvió la Server Action ni ningún query param que traiga la
+// URL: `revalidarSuscripcionAhora` siempre vuelve a preguntarle a la API
+// de Mercado Pago el estado real antes de elegir qué mostrar — es la
+// única forma confiable de saberlo justo acá (para el checkout alojado
+// en particular, es además la primera vez que confirmamos algo: hasta
+// este momento la usuaria estuvo pagando en Mercado Pago, no en nuestra
+// app), y además cubre el caso de que se llegue a esta URL de otra
+// forma. Si el pago con el que volvió todavía no aparece en
+// /authorized_payments/search (puede tardar más en confirmarse desde un
+// checkout alojado que desde el card_token del Card Form), esto no
+// inventa acceso ni marca error: cae en la rama de abajo
+// ("confirmando").
 export default async function ResultadoMembresiaPage() {
   const supabase = await crearClienteServidor();
   const {

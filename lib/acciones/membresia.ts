@@ -1,14 +1,51 @@
 "use server";
 
+import type { SupabaseClient } from "@supabase/supabase-js";
 import { revalidatePath } from "next/cache";
 import { crearClienteServidor } from "@/lib/supabase/server";
-import { crearPreapproval, cancelarPreapproval, type EstadoPreapproval } from "@/lib/mercadopago";
-import { sincronizarSuscripcion } from "@/lib/suscripciones";
+import { crearPreapproval, crearPreapprovalSinPlan, cancelarPreapproval, type EstadoPreapproval } from "@/lib/mercadopago";
+import { sincronizarSuscripcion, marcarModalidadSuscripcion } from "@/lib/suscripciones";
 import { puedeIniciarNuevaSuscripcion } from "@/lib/mercadopago-logica";
 
 function backUrlResultado(): string {
   const base = (process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000").replace(/\/$/, "");
   return `${base}/membresia/resultado`;
+}
+
+// Guard compartido por iniciarSuscripcion() e iniciarSuscripcionAlojada():
+// ninguna de las dos puede crear un preapproval nuevo mientras exista
+// otro sin cancelar para esta usuaria — sea cual sea el flujo que lo haya
+// creado (Card Form o checkout alojado comparten la misma fila,
+// usuario_id + proveedor='mercadopago') y sea cual sea su `estado`
+// (pending/authorized/paused). Es exactamente lo que evita terminar con
+// dos preapprovals, y eventualmente dos cobros, activos a la vez para la
+// misma usuaria. Tiene que cancelar el anterior primero (ver
+// BotonCancelarSuscripcion en Perfil) — una vez cancelado, cualquiera de
+// los dos flujos puede iniciar uno nuevo (puedeIniciarNuevaSuscripcion).
+async function verificarSinSuscripcionActiva(supabase: SupabaseClient, usuarioId: string): Promise<{ ok: true } | { error: string }> {
+  const { data: suscripcionExistente } = await supabase
+    .from("suscripciones")
+    .select("estado")
+    .eq("usuario_id", usuarioId)
+    .eq("proveedor", "mercadopago")
+    .maybeSingle();
+
+  if (!puedeIniciarNuevaSuscripcion((suscripcionExistente?.estado as EstadoPreapproval) ?? null)) {
+    return { error: "Ya tenés una suscripción de Mercado Pago en curso. Cancelala desde tu Perfil antes de probar otro método de pago." };
+  }
+
+  // Premium otorgado a mano (cortesía/alumna histórica) y sin ninguna
+  // fila de Mercado Pago propia: no hay nada que cancelar, pero tampoco
+  // tiene sentido dejarla iniciar un cobro real encima de un Premium ya
+  // otorgado.
+  if (!suscripcionExistente) {
+    const { data: autorizacionActual } = await supabase.from("autorizaciones").select("nivel").eq("usuario_id", usuarioId).maybeSingle();
+    if (autorizacionActual?.nivel === "premium") {
+      return { error: "Ya sos parte de Valentía Premium." };
+    }
+  }
+
+  return { ok: true };
 }
 
 // Confirma la suscripción de la usuaria logueada usando el `card_token_id`
@@ -46,38 +83,8 @@ export async function iniciarSuscripcion(cardTokenId: string, deviceId: string |
   } = await supabase.auth.getUser();
   if (!user?.email) return { error: "Necesitás iniciar sesión para sumarte a Premium." };
 
-  // Nunca se crea un preapproval nuevo mientras ya exista uno sin
-  // cancelar para esta usuaria — sea cual sea su `estado`
-  // (pending/authorized/paused) y sea cual sea el nivel actual (Gratis
-  // incluido: un preapproval "authorized" con el primer cobro rechazado
-  // deja a la usuaria en Gratis, pero Mercado Pago puede seguir
-  // reintentando ese mismo preapproval en segundo plano — dejar crear
-  // otro acá terminaría en dos preapprovals, y eventualmente dos cobros,
-  // activos a la vez). Tiene que cancelar el anterior primero (ver
-  // BotonCancelarSuscripcion en Perfil, ahora visible también en ese
-  // caso). Una vez cancelado, sí puede iniciar uno nuevo con otra
-  // tarjeta — ver puedeIniciarNuevaSuscripcion.
-  const { data: suscripcionExistente } = await supabase
-    .from("suscripciones")
-    .select("estado")
-    .eq("usuario_id", user.id)
-    .eq("proveedor", "mercadopago")
-    .maybeSingle();
-
-  if (!puedeIniciarNuevaSuscripcion((suscripcionExistente?.estado as EstadoPreapproval) ?? null)) {
-    return { error: "Ya tenés una suscripción de Mercado Pago en curso. Cancelala desde tu Perfil antes de probar con otra tarjeta." };
-  }
-
-  // Premium otorgado a mano (cortesía/alumna histórica) y sin ninguna
-  // fila de Mercado Pago propia: no hay nada que cancelar, pero tampoco
-  // tiene sentido dejarla iniciar un cobro real encima de un Premium ya
-  // otorgado.
-  if (!suscripcionExistente) {
-    const { data: autorizacionActual } = await supabase.from("autorizaciones").select("nivel").eq("usuario_id", user.id).maybeSingle();
-    if (autorizacionActual?.nivel === "premium") {
-      return { error: "Ya sos parte de Valentía Premium." };
-    }
-  }
+  const chequeo = await verificarSinSuscripcionActiva(supabase, user.id);
+  if ("error" in chequeo) return chequeo;
 
   let preapproval;
   try {
@@ -103,6 +110,7 @@ export async function iniciarSuscripcion(cardTokenId: string, deviceId: string |
   // la revalidación/webhook, así que es idempotente y no depende de este
   // llamado para mantenerse correcto después.
   const resultado = await sincronizarSuscripcion(preapproval);
+  await marcarModalidadSuscripcion(user.id, "card_form");
 
   revalidatePath("/perfil");
   revalidatePath("/membresia");
@@ -112,6 +120,70 @@ export async function iniciarSuscripcion(cardTokenId: string, deviceId: string |
     return { error: "Mercado Pago rechazó el pago con esa tarjeta. Probá con otra tarjeta o medio de pago." };
   }
   return { error: "Estamos confirmando tu pago con Mercado Pago. Puede tardar unos minutos — te avisamos apenas se confirme." };
+}
+
+// Prueba en paralelo del OTRO flujo oficial de Mercado Pago:
+// "Suscripciones sin plan asociado" + pago pendiente + checkout alojado
+// (ver crearPreapprovalSinPlan en lib/mercadopago.ts). No reemplaza
+// iniciarSuscripcion() — convive con ella detrás del flag
+// NEXT_PUBLIC_MERCADOPAGO_CHECKOUT_ALOJADO_BETA (ver
+// components/BotonSuscribirseAlojado.tsx, app/(app)/membresia/page.tsx).
+//
+// No recibe NADA del cliente relacionado a un medio de pago — ni token
+// ni tarjeta: acá nuestra app nunca los recibe. Usuario, email, plan y
+// precio salen de la sesión y de la configuración del servidor, igual
+// que en iniciarSuscripcion(). Devuelve únicamente el `init_point` para
+// que el navegador redirija — nunca el Access Token.
+//
+// Igual que iniciarSuscripcion(): "pending" (o que al volver del
+// checkout el preapproval ya figure "authorized") nunca activa Premium
+// por sí solo. sincronizarSuscripcion es quien confirma el pago real
+// contra /authorized_payments/search — si esa consulta todavía no
+// encuentra ningún cobro (algo esperable apenas se crea, o incluso justo
+// al volver del checkout si Mercado Pago tarda en procesarlo), la
+// usuaria queda en Gratis con la suscripción en estado real "pending"/
+// "authorized" — nunca se le inventa acceso ni se le marca un error,
+// queda como "confirmando" (ver /membresia/resultado).
+export async function iniciarSuscripcionAlojada(): Promise<{ ok: true; initPoint: string } | { error: string }> {
+  const supabase = await crearClienteServidor();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user?.email) return { error: "Necesitás iniciar sesión para sumarte a Premium." };
+
+  const chequeo = await verificarSinSuscripcionActiva(supabase, user.id);
+  if ("error" in chequeo) return chequeo;
+
+  let preapproval;
+  try {
+    preapproval = await crearPreapprovalSinPlan({
+      payerEmail: user.email,
+      externalReference: user.id,
+      backUrl: backUrlResultado(),
+    });
+  } catch (err) {
+    console.error("[membresia] error creando preapproval sin plan (checkout alojado)", err instanceof Error ? err.message : err);
+    return { error: "No pudimos iniciar la suscripción con Mercado Pago. Probá de nuevo en unos minutos." };
+  }
+
+  if (!preapproval.init_point) {
+    console.error("[membresia] preapproval sin plan creado sin init_point", preapproval.id);
+    return { error: "Mercado Pago no nos devolvió el link de pago. Probá de nuevo en unos minutos." };
+  }
+
+  // Se sincroniza (deja la fila guardada con esta usuaria y el
+  // proveedor_suscripcion_id real) ANTES de redirigir — así, si hace
+  // doble click o se abre dos pestañas, verificarSinSuscripcionActiva ya
+  // encuentra esta fila y bloquea un segundo preapproval sin depender de
+  // que la usuaria complete el checkout. Todavía "pending", nunca activa
+  // Premium acá.
+  await sincronizarSuscripcion(preapproval);
+  await marcarModalidadSuscripcion(user.id, "checkout_alojado");
+
+  revalidatePath("/perfil");
+  revalidatePath("/membresia");
+
+  return { ok: true, initPoint: preapproval.init_point };
 }
 
 // Cancela la suscripción real en Mercado Pago (API oficial, no un flag

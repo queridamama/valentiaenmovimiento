@@ -550,5 +550,36 @@ console.log("\n26. Si falla la consulta a Mercado Pago, se conserva también el 
   assert(ultimoPagoDetalleResultante === detalleExistente, "conserva el detalle ya guardado en vez de perderlo por un error transitorio de red");
 }
 
+// ---------------------------------------------------------------------
+// Checkout alojado (prueba en paralelo, preapproval sin plan asociado +
+// pending + init_point): NO se asume que el primer pago aparezca en
+// /authorized_payments/search apenas la usuaria vuelve del checkout de
+// Mercado Pago — la búsqueda puede devolver `[]` todavía un rato, aunque
+// el preapproval ya haya cambiado de estado. El criterio es el mismo que
+// ya usa el resto del archivo (pagoAprobado solo con un cobro
+// "approved" encontrado), sin ninguna lógica nueva — este escenario
+// verifica exactamente eso para el caso puntual que preocupa acá.
+// ---------------------------------------------------------------------
+
+console.log(
+  '\n27. Checkout alojado: preapproval ya "authorized" pero /authorized_payments/search todavía devuelve [] → no inventa acceso, ni error: queda "confirmando"'
+);
+{
+  const pagoReciente = pagoMasReciente([]); // la búsqueda ya respondió, pero sin resultados todavía
+  assert(pagoReciente === null, "todavía no aparece ningún cobro, aunque el preapproval ya cambió de pending a authorized");
+  assert(estadoPagoReal(pagoReciente) === null, "ultimo_pago_estado queda null — ni 'approved' ni 'rejected'");
+  assert(esPagoAprobado(pagoReciente) === false, "sin cobro encontrado, no hay pago aprobado");
+
+  const accesoHasta = calcularAccesoHasta({ pagoAprobado: false, nextPaymentDateNueva: FUTURO, accesoHastaExistente: null });
+  assert(accesoHasta === null, "no se inventa acceso_hasta solo porque el preapproval esté 'authorized'");
+
+  const decision = calcularNuevaAutorizacion({
+    autorizacionActual: { nivel: "gratis", origenNivel: "manual" },
+    vigente: esAccesoVigente(accesoHasta, AHORA),
+  });
+  assert(decision.debeEscribir === true, "se registra el origen mercadopago");
+  assert(decision.debeEscribir && decision.nivel === "gratis", "sigue Gratis — nunca 'error': la UI cae en la rama de 'confirmando' (ver /membresia/resultado), no en la de 'rechazado'");
+}
+
 console.log(fallos === 0 ? "\n✅ Todas las pruebas pasaron." : `\n❌ ${fallos} prueba(s) fallaron.`);
 process.exit(fallos === 0 ? 0 : 1);

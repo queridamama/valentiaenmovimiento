@@ -19,6 +19,11 @@ export interface ResultadoSincronizacion {
   accesoHasta: string | null;
 }
 
+// Solo observabilidad durante la prueba en paralelo del checkout alojado
+// (ver crearPreapprovalSinPlan en lib/mercadopago.ts) — nunca participa
+// en ninguna decisión de acceso. Ver marcarModalidadSuscripcion.
+export type ModalidadSuscripcion = "card_form" | "checkout_alojado";
+
 // Único punto de escritura para el estado real de una suscripción de
 // Mercado Pago. La llaman: iniciarSuscripcion/cancelarSuscripcion (Server
 // Actions de Perfil/Membresía), la revalidación server-side por polling
@@ -62,7 +67,7 @@ export async function sincronizarSuscripcion(preapproval: Preapproval): Promise<
   // reemplacen (ver calcularFechaProximoPago/calcularAccesoHasta).
   const { data: suscripcionExistente } = await supabase
     .from("suscripciones")
-    .select("fecha_proximo_pago, fecha_ultimo_pago, acceso_hasta, ultimo_pago_estado, ultimo_pago_detalle")
+    .select("fecha_proximo_pago, fecha_ultimo_pago, acceso_hasta, ultimo_pago_estado, ultimo_pago_detalle, modalidad")
     .eq("usuario_id", usuarioId)
     .eq("proveedor", "mercadopago")
     .maybeSingle();
@@ -86,6 +91,20 @@ export async function sincronizarSuscripcion(preapproval: Preapproval): Promise<
     );
     return null;
   });
+
+  // Log seguro (sin email, sin tarjeta, sin ningún dato de la persona) —
+  // sirve especialmente para la prueba en paralelo del checkout alojado:
+  // acá se ve, para cada sync, si /authorized_payments/search ya
+  // devolvió algún resultado o sigue en `[]` para un preapproval que ya
+  // cambió de estado (ver el requisito de "no inventar acceso, dejarlo
+  // como confirmando" más abajo en calcularAccesoHasta/esAccesoVigente).
+  console.log(
+    "[mercadopago] sincronizarSuscripcion",
+    "preapproval:", preapproval.id,
+    "status:", preapproval.status,
+    "modalidad:", suscripcionExistente?.modalidad ?? "sin registrar",
+    "authorized_payments:", busqueda ? `${busqueda.results.length} resultado(s)` : "consulta falló"
+  );
 
   const pagoReciente = busqueda
     ? pagoMasReciente(
@@ -176,6 +195,25 @@ export async function sincronizarSuscripcion(preapproval: Preapproval): Promise<
   if (errorAutorizacion) throw errorAutorizacion;
 
   return { nivel: decision.nivel, ultimoPagoEstado, accesoHasta };
+}
+
+// Marca UNA sola vez qué flujo generó el preapproval actual de la
+// usuaria — solo para poder distinguirlos en Supabase/logs mientras se
+// prueba el checkout alojado en paralelo del Card Form. A propósito NO
+// se llama desde sincronizarSuscripcion ni desde ningún otro lugar que
+// corra en cada sync/polling/webhook: solo la llaman iniciarSuscripcion
+// e iniciarSuscripcionAlojada (lib/acciones/membresia.ts), una vez,
+// justo después de crear el preapproval. Como el upsert de
+// sincronizarSuscripcion nunca incluye la columna `modalidad`, una
+// revalidación posterior no la pisa ni la borra. Nunca lanza: es
+// puramente observabilidad, un fallo acá no puede frenar ni afectar el
+// flujo real de suscripción.
+export async function marcarModalidadSuscripcion(usuarioId: string, modalidad: ModalidadSuscripcion): Promise<void> {
+  const supabase = crearClienteServicio();
+  const { error } = await supabase.from("suscripciones").update({ modalidad }).eq("usuario_id", usuarioId).eq("proveedor", "mercadopago");
+  if (error) {
+    console.error("[mercadopago] no se pudo registrar modalidad (solo observabilidad, no afecta el acceso)", usuarioId, error.message);
+  }
 }
 
 // Le vuelve a preguntar a Mercado Pago el estado real de la suscripción

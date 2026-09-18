@@ -6,6 +6,13 @@ import { IconoPastel } from "@/components/iconos";
 import type { TipoIcono } from "@/components/iconos";
 import { PREMIUM_PLAN, formatearPrecio } from "@/lib/config/premium";
 import BotonSuscribirse from "@/components/BotonSuscribirse";
+import BotonSuscribirseAlojado from "@/components/BotonSuscribirseAlojado";
+
+// Prueba en paralelo, detrás de un flag — ver components/BotonSuscribirseAlojado.tsx
+// y lib/acciones/membresia.ts (iniciarSuscripcionAlojada). Revertir: sacar
+// esta variable de Vercel/.env (o dejarla en cualquier valor distinto de
+// "true"), no requiere ningún otro cambio.
+const CHECKOUT_ALOJADO_BETA = process.env.NEXT_PUBLIC_MERCADOPAGO_CHECKOUT_ALOJADO_BETA === "true";
 
 const ETAPAS: { nombre: string; texto: string; icono: TipoIcono }[] = [
   { nombre: "DEFINÍ", texto: "Tu sueño, tu para qué y de dónde partís.", icono: "estrella" },
@@ -223,6 +230,7 @@ export default async function MembresiaPage() {
               quieras.
             </Subtitulo>
             <BotonSuscribirse email={user.email ?? ""} />
+            {CHECKOUT_ALOJADO_BETA && <BotonSuscribirseAlojado />}
           </section>
         </div>
       )}
