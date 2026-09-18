@@ -5,15 +5,7 @@ import { Subtitulo, Subrayado, Etiqueta } from "@/components/ui";
 import { IconoPastel } from "@/components/iconos";
 import type { TipoIcono } from "@/components/iconos";
 import { PREMIUM_PLAN, formatearPrecio } from "@/lib/config/premium";
-import { montoCheckoutAlojadoBeta } from "@/lib/mercadopago";
-import BotonSuscribirse from "@/components/BotonSuscribirse";
 import BotonSuscribirseAlojado from "@/components/BotonSuscribirseAlojado";
-
-// Prueba en paralelo, detrás de un flag — ver components/BotonSuscribirseAlojado.tsx
-// y lib/acciones/membresia.ts (iniciarSuscripcionAlojada). Revertir: sacar
-// esta variable de Vercel/.env (o dejarla en cualquier valor distinto de
-// "true"), no requiere ningún otro cambio.
-const CHECKOUT_ALOJADO_BETA = process.env.NEXT_PUBLIC_MERCADOPAGO_CHECKOUT_ALOJADO_BETA === "true";
 
 const ETAPAS: { nombre: string; texto: string; icono: TipoIcono }[] = [
   { nombre: "DEFINÍ", texto: "Tu sueño, tu para qué y de dónde partís.", icono: "estrella" },
@@ -25,9 +17,9 @@ const ETAPAS: { nombre: string; texto: string; icono: TipoIcono }[] = [
 
 const PASTELES = ["bg-acento/20", "bg-acentoLima/30", "bg-acentoCeleste/45", "bg-acentoRosa", "bg-acento/20"];
 
-// Sin promesas de frecuencia (nada de "1 encuentro por mes" ni "3
-// meditaciones nuevas") — la propuesta es el método y el acompañamiento,
-// no una cantidad fija de contenido.
+// El corazón sigue siendo el método y el acompañamiento — esto es el
+// trabajo en sí, no la frecuencia de contenidos (esa vive en "Un ritmo
+// para sostenerte", más abajo).
 const LO_QUE_VAMOS_A_TRABAJAR: { texto: string; icono: TipoIcono }[] = [
   { texto: "Convertir tu sueño en un Proyecto de Valentía de 90 días.", icono: "documento" },
   { texto: "Diseñar una ruta concreta.", icono: "pasos" },
@@ -36,6 +28,27 @@ const LO_QUE_VAMOS_A_TRABAJAR: { texto: string; icono: TipoIcono }[] = [
   { texto: "Elegir movimientos semanales posibles en tu vida real.", icono: "montana" },
   { texto: "Registrar evidencias de avance.", icono: "calendario" },
   { texto: "Revisar, ajustar y seguir construyendo.", icono: "corona" },
+];
+
+// El ritmo que sostiene la experiencia y la comunidad — no reemplaza al
+// método, lo acompaña. Encuentro en vivo: Admin → Eventos (tipo "Taller
+// mensual", nivel_acceso Premium — ver obtenerProximoEventoPremium en
+// lib/datos.ts). Meditación semanal: Admin → Biblioteca, marcada
+// "Meditación de la semana" con su fecha de habilitación (ver
+// obtenerMeditacionSemanal).
+const RITMO_PREMIUM: { titulo: string; texto: string; icono: TipoIcono; color: string }[] = [
+  {
+    titulo: "Encuentro en vivo cada mes",
+    texto: "Un espacio virtual para encontrarnos, trabajar juntas, conversar sobre el proceso y volver a poner en movimiento lo que necesites.",
+    icono: "gente",
+    color: "bg-acentoCeleste/45",
+  },
+  {
+    titulo: "Una nueva meditación cada semana",
+    texto: "Una práctica nueva para acompañarte en el momento que estés atravesando y seguir construyendo la identidad que necesita tu sueño.",
+    icono: "corazon",
+    color: "bg-acentoRosa",
+  },
 ];
 
 const GRATIS_BULLETS = [
@@ -49,14 +62,14 @@ const GRATIS_BULLETS = [
 ];
 const PREMIUM_BULLETS = [
   "Todo lo de Gratis.",
-  "Convertís tu sueño en un Proyecto de Valentía de 90 días.",
+  "Tu Proyecto de Valentía de 90 días.",
   "Ruta completa: Definí · Construíte · Diseñá · Movete · Sostené.",
   "Estrategia, hitos y decisiones.",
   "Trabajo de identidad.",
+  "Un encuentro virtual en vivo por mes.",
+  "Una nueva meditación cada semana.",
   "Clases, meditaciones y preguntas de integración del método.",
-  "Registro de movimientos y evidencias del proceso.",
   "Comunidad Premium y grupo privado de WhatsApp.",
-  "Encuentros y recursos Premium.",
   "Acompañamiento para implementar, revisar y ajustar tu proyecto.",
 ];
 
@@ -157,6 +170,25 @@ export default async function MembresiaPage() {
             </div>
           </section>
 
+          {/* Peso visual propio, aparte de "Lo que vamos a trabajar": el
+              encuentro en vivo y la meditación semanal son el ritmo que
+              sostiene la experiencia, no dos ítems más en una lista larga
+              de beneficios. */}
+          <section className="space-y-3">
+            <h2 className="font-display text-lg font-bold text-marca">Un ritmo para sostenerte</h2>
+            <div className="space-y-3">
+              {RITMO_PREMIUM.map((item) => (
+                <div key={item.titulo} className={`flex items-start gap-4 rounded-[24px] ${item.color} p-5`}>
+                  <IconoPastel tipo={item.icono} color="blanco" />
+                  <div className="min-w-0 flex-1 space-y-1">
+                    <p className="text-[15.5px] font-bold text-marca">{item.titulo}</p>
+                    <p className="text-[13.5px] leading-relaxed text-marca/70">{item.texto}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </section>
+
           <section className="space-y-3">
             <h2 className="font-display text-lg font-bold text-marca">Lo que vamos a trabajar</h2>
             <ul className="space-y-2.5">
@@ -230,8 +262,7 @@ export default async function MembresiaPage() {
               Trabajás tu sueño en ciclos de 90 días. Tu membresía se renueva mensualmente y podés cancelarla cuando
               quieras.
             </Subtitulo>
-            <BotonSuscribirse email={user.email ?? ""} />
-            {CHECKOUT_ALOJADO_BETA && <BotonSuscribirseAlojado monto={montoCheckoutAlojadoBeta()} />}
+            <BotonSuscribirseAlojado />
           </section>
         </div>
       )}

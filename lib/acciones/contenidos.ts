@@ -25,6 +25,8 @@ export async function guardarContenido(contenidoId: string | null, formData: For
     throw new Error("Estado inválido.");
   }
 
+  const disponibleDesde = String(formData.get("disponible_desde") ?? "").trim();
+
   const datos = {
     titulo,
     tipo,
@@ -35,6 +37,12 @@ export async function guardarContenido(contenidoId: string | null, formData: For
     audio_url: String(formData.get("audio_url") ?? "").trim() || null,
     archivo_url: String(formData.get("archivo_url") ?? "").trim() || null,
     duracion: String(formData.get("duracion") ?? "").trim() || null,
+    // Serie "meditación semanal" de Premium (ver migración 0017) — nunca
+    // reemplaza el Gratis/Premium real, que sigue viviendo en
+    // contenido_ubicaciones.nivel_acceso vía "Agregar a Biblioteca" más
+    // abajo.
+    es_meditacion_semanal: formData.get("es_meditacion_semanal") === "on",
+    disponible_desde: disponibleDesde ? new Date(disponibleDesde).toISOString() : null,
     estado,
     actualizado_en: new Date().toISOString(),
   };

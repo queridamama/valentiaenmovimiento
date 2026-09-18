@@ -212,6 +212,83 @@ export function TarjetaNovedad({
   );
 }
 
+// "Próximo encuentro" Premium (Inicio) — el encuentro en vivo mensual con
+// Meli y la comunidad Premium, cargado desde Admin → Eventos. Si todavía
+// no hay ninguno cargado, la página de Inicio directamente no renderiza
+// esta tarjeta (no se inventa nada acá). El link de Meet solo llega hasta
+// acá si RLS ya dejó ver el evento (nivel_acceso='membresia' +
+// nivel_actual()='premium') — nunca se resuelve para una cuenta Gratis.
+export function TarjetaProximoEncuentro({
+  fecha,
+  hora,
+  titulo,
+  href,
+}: {
+  fecha: string;
+  hora: string;
+  titulo: string;
+  href?: string | null;
+}) {
+  return (
+    <div className="space-y-3 rounded-[26px] bg-acentoCeleste/45 p-5">
+      <div className="flex items-start gap-3">
+        <IconoPastel tipo="gente" color="blanco" />
+        <div className="min-w-0 flex-1 space-y-1">
+          <Etiqueta>Próximo encuentro</Etiqueta>
+          <p className="text-[13px] font-medium text-marca/70">
+            {fecha} · {hora}
+          </p>
+          <p className="text-[15px] font-bold leading-snug text-marca">{titulo}</p>
+        </div>
+      </div>
+      {href ? (
+        <a
+          href={href}
+          target="_blank"
+          rel="noreferrer"
+          className="inline-flex items-center gap-1.5 rounded-full bg-marca px-5 py-2.5 text-[13px] font-semibold text-white transition active:scale-[0.98]"
+        >
+          Entrar al encuentro <span aria-hidden="true">→</span>
+        </a>
+      ) : (
+        <p className="text-[12.5px] text-marca/55">El link se confirma antes del encuentro.</p>
+      )}
+    </div>
+  );
+}
+
+// Meditación de la semana (Inicio) — la actual, lista para escuchar, o la
+// próxima todavía bloqueada con su fecha de habilitación. Nunca recibe el
+// audio: solo enlaza a Biblioteca (obtenerArchivosContenido resuelve la
+// URL firmada recién ahí, cuando ya corresponde reproducirla).
+export function TarjetaMeditacionSemanal({
+  titulo,
+  disponible,
+  fechaDisponible,
+  href,
+}: {
+  titulo: string;
+  disponible: boolean;
+  fechaDisponible?: string | null;
+  href: string;
+}) {
+  return (
+    <div className={`flex items-center gap-3 rounded-[22px] p-4 ${disponible ? FONDOS_BLOQUE.lima : "bg-texto/6"}`}>
+      <IconoPastel tipo="corazon" color={disponible ? "blanco" : "marca"} tamano="chico" className={disponible ? "" : "opacity-40"} />
+      <div className="min-w-0 flex-1">
+        <Etiqueta className={disponible ? undefined : "!text-texto/35"}>Meditación de la semana</Etiqueta>
+        <p className={`truncate text-[14px] font-bold leading-snug ${disponible ? "text-marca" : "text-texto/40"}`}>{titulo}</p>
+        {!disponible && fechaDisponible && <p className="text-[12px] text-texto/45">Disponible el {fechaDisponible}</p>}
+      </div>
+      {disponible && (
+        <Link href={href} className="shrink-0 text-[12.5px] font-semibold text-marca underline decoration-marca/30 underline-offset-4">
+          Escuchar →
+        </Link>
+      )}
+    </div>
+  );
+}
+
 // Biblioteca + Comunidad, en dos columnas chicas — reemplaza dos tarjetas
 // grandes verticales por un cierre compacto de Inicio, sin repetir
 // explicaciones largas que ya están en las páginas propias.

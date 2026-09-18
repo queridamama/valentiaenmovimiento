@@ -1,11 +1,6 @@
 import "server-only";
 import { PREMIUM_PLAN } from "@/lib/config/premium";
-import {
-  normalizarEstadoPreapproval,
-  esErrorStatusPreapprovalInvalido,
-  resolverMontoCheckoutAlojado,
-  type EstadoPreapproval,
-} from "@/lib/mercadopago-logica";
+import { normalizarEstadoPreapproval, esErrorStatusPreapprovalInvalido, type EstadoPreapproval } from "@/lib/mercadopago-logica";
 
 export type { EstadoPreapproval } from "@/lib/mercadopago-logica";
 export { validarTokenWebhook, validarFirmaWebhook } from "@/lib/mercadopago-logica";
@@ -147,28 +142,6 @@ function planId(): string {
   return id;
 }
 
-// Monto que usa crearPreapprovalSinPlan() (checkout alojado, prueba en
-// paralelo) — nunca crearPreapproval() (Card Form, producción) ni el
-// precio que se muestra en /membresia, que siguen leyendo
-// PREMIUM_PLAN.price directo. Server-side únicamente (NO
-// NEXT_PUBLIC_): MERCADOPAGO_CHECKOUT_ALOJADO_BETA_AMOUNT permite cobrar
-// un monto de prueba bajo (ej. $10) para poder hacer una transacción
-// real sin pagar $35.000 en cada prueba. Exportada (no solo de uso
-// interno) para que /membresia pueda mostrar ese mismo monto en el botón
-// beta sin duplicar la lectura de la variable de entorno.
-export function montoCheckoutAlojadoBeta(): number {
-  const valorEnv = process.env.MERCADOPAGO_CHECKOUT_ALOJADO_BETA_AMOUNT;
-  if (valorEnv) {
-    const monto = Number(valorEnv);
-    if (!Number.isFinite(monto) || monto <= 0) {
-      console.warn(
-        `[mercadopago] MERCADOPAGO_CHECKOUT_ALOJADO_BETA_AMOUNT="${valorEnv}" no es un monto válido — se usa PREMIUM_PLAN.price ($${PREMIUM_PLAN.price}) como fallback.`
-      );
-    }
-  }
-  return resolverMontoCheckoutAlojado({ valorEnv, precioDefault: PREMIUM_PLAN.price });
-}
-
 // Crea una suscripción (preapproval) asociada al plan único de Valentía
 // Premium. `external_reference` es nuestro usuario_id — no es secreto,
 // pero tampoco hace falta que lo sea: nunca se confía en un
@@ -185,8 +158,12 @@ export function montoCheckoutAlojadoBeta(): number {
 // components/BotonSuscribirse.tsx — el número/CVV viajan dentro de
 // iframes de Mercado Pago, nunca tocan nuestro JS ni nuestro backend).
 // El modelo "pending sin medio de pago, esperando un init_point" que
-// usaba esta función antes es el de Suscripciones SIN plan asociado —
-// no el nuestro.
+// usaba esta función antes es el de Suscripciones SIN plan asociado — el
+// que ahora usa crearPreapprovalSinPlan() más abajo, y es el que se
+// muestra a las usuarias en /membresia. Esta función (Card Form,
+// card_token_id + status authorized) queda en el código sin usarse desde
+// la UI, a propósito, como camino de rollback — ver el comentario grande
+// en crearPreapprovalSinPlan().
 //
 // OJO — que esta llamada devuelva status "authorized" NO significa que
 // haya un pago aprobado: es el estado del preapproval, no del cobro. Un
@@ -240,14 +217,13 @@ export async function crearPreapproval(params: {
   return normalizarPreapproval(cuerpo);
 }
 
-// Prueba en paralelo del OTRO flujo oficial de Mercado Pago:
-// "Suscripciones sin plan asociado" + pago pendiente + checkout alojado.
-// No reemplaza crearPreapproval() (que sigue siendo el flujo real de
-// producción, Card Form + card_token_id + status authorized) — convive
-// con ella, detrás del flag NEXT_PUBLIC_MERCADOPAGO_CHECKOUT_ALOJADO_BETA
-// (ver components/BotonSuscribirseAlojado.tsx). Revertir esta prueba es
-// no llamar más a esta función; no borra ni modifica nada de
-// crearPreapproval().
+// Flujo oficial de Mercado Pago que usa /membresia desde que se validó
+// con una transacción real: "Suscripciones sin plan asociado" + pago
+// pendiente + checkout alojado. crearPreapproval() (Card Form,
+// card_token_id + status authorized) queda en el código sin usarse desde
+// la UI — se conserva como camino de rollback fácil (ver
+// components/BotonSuscribirse.tsx, ya no se renderiza en /membresia) en
+// vez de borrarla, no porque siga activa.
 //
 // Diferencias clave con crearPreapproval():
 //   - Nunca manda `card_token_id`: acá nuestra app no recibe ni tokeniza
@@ -269,11 +245,6 @@ export async function crearPreapproval(params: {
 // /authorized_payments/search antes de otorgar Premium, sin importar por
 // cuál de los dos flujos se haya creado el preapproval.
 //
-// `transaction_amount` usa montoCheckoutAlojadoBeta() — normalmente
-// PREMIUM_PLAN.price, pero configurable a un monto de prueba bajo vía
-// MERCADOPAGO_CHECKOUT_ALOJADO_BETA_AMOUNT para poder hacer una
-// transacción real sin pagar el precio completo en cada prueba. El resto
-// (reason, frequency, currency) sigue igual que el precio real.
 export async function crearPreapprovalSinPlan(params: {
   payerEmail: string;
   externalReference: string;
@@ -290,7 +261,7 @@ export async function crearPreapprovalSinPlan(params: {
       auto_recurring: {
         frequency: PREMIUM_PLAN.frequency,
         frequency_type: PREMIUM_PLAN.frequencyType,
-        transaction_amount: montoCheckoutAlojadoBeta(),
+        transaction_amount: PREMIUM_PLAN.price,
         currency_id: PREMIUM_PLAN.currency,
       },
     }),

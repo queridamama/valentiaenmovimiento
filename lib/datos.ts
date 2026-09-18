@@ -647,7 +647,7 @@ export async function obtenerBiblioteca(supabase: SupabaseClient) {
   const { data } = await supabase
     .from("contenido_ubicaciones")
     .select(
-      "id, nivel_acceso, orden, contenidos!inner(id, tipo, titulo, descripcion, contenido_html, portada_url, video_url, audio_url, archivo_url, duracion)"
+      "id, nivel_acceso, orden, contenidos!inner(id, tipo, titulo, descripcion, contenido_html, portada_url, video_url, audio_url, archivo_url, duracion, es_meditacion_semanal, disponible_desde)"
     )
     .eq("contexto", "biblioteca")
     .order("orden", { ascending: true });
@@ -663,7 +663,11 @@ export async function obtenerBiblioteca(supabase: SupabaseClient) {
     audio_url: string | null;
     archivo_url: string | null;
     duracion: string | null;
+    es_meditacion_semanal: boolean;
+    disponible_desde: string | null;
   };
+
+  const ahora = Date.now();
 
   return (data ?? [])
     .map((u) => ({
@@ -671,7 +675,14 @@ export async function obtenerBiblioteca(supabase: SupabaseClient) {
       nivelAcceso: u.nivel_acceso as "gratis" | "membresia",
       contenido: unoDeRelacion(u.contenidos as unknown as ContenidoBiblioteca | ContenidoBiblioteca[] | null),
     }))
-    .filter((u): u is typeof u & { contenido: NonNullable<(typeof u)["contenido"]> } => u.contenido !== null);
+    .filter((u): u is typeof u & { contenido: NonNullable<(typeof u)["contenido"]> } => u.contenido !== null)
+    // Una meditación semanal (ver migración 0017) todavía no habilitada
+    // (disponible_desde en el futuro) no aparece en el listado general de
+    // Biblioteca — el teaser "Disponible el…" es cosa de Inicio
+    // (obtenerMeditacionSemanal); acá, hasta que llega la fecha, es como
+    // si no existiera todavía. Una vez habilitada, aparece acá sola, sin
+    // ningún cambio de código.
+    .filter((u) => !u.contenido.es_meditacion_semanal || !u.contenido.disponible_desde || Date.parse(u.contenido.disponible_desde) <= ahora);
 }
 
 export async function obtenerContenido(supabase: SupabaseClient, contenidoId: string) {
@@ -783,4 +794,78 @@ export async function obtenerSemanasEnMovimiento(supabase: SupabaseClient, userI
   }).length;
 
   return { total: semanas.size, esteMes };
+}
+
+// ---------- Próximo encuentro Premium (Inicio) ----------
+// Reutiliza `eventos` tal cual ya existe (Admin → Eventos: tipo, título,
+// descripción, portada, fecha/hora, link externo, grabación, nivel de
+// acceso, estado — ver supabase/schema.sql) — nada nuevo que administrar.
+// "Encuentro en vivo cada mes" (Premium) es `tipo = 'taller_mensual'`.
+// Se filtra `nivel_acceso = 'membresia'` de forma explícita (no alcanza
+// con la policy de RLS sola): una Premium consultando `eventos` sin este
+// filtro vería, por esa misma policy, también los eventos Gratis —
+// acá se quiere específicamente "el próximo con acceso Premium". El
+// link de Meet (`link_externo`) de un evento nivel_acceso='membresia'
+// nunca llega a una cuenta Gratis: la policy `eventos_lectura` exige
+// `nivel_actual() = 'premium'` para esa fila completa, no solo para
+// mostrarla — RLS, no un chequeo en la app.
+export async function obtenerProximoEventoPremium(supabase: SupabaseClient) {
+  const { data } = await supabase
+    .from("eventos")
+    .select("id, titulo, fecha_hora, link_externo")
+    .eq("estado", "publicado")
+    .eq("nivel_acceso", "membresia")
+    .gte("fecha_hora", new Date().toISOString())
+    .order("fecha_hora", { ascending: true })
+    .limit(1)
+    .maybeSingle();
+  return data;
+}
+
+// ---------- Meditación de la semana (Inicio + Biblioteca) ----------
+// Ver migración 0017: reutiliza `contenidos` (tipo 'meditacion') con dos
+// columnas nuevas, `es_meditacion_semanal` y `disponible_desde`. Nunca
+// borra ni oculta una meditación semanal anterior — cada una sigue
+// existiendo y disponible en Biblioteca (ver obtenerBiblioteca); acá solo
+// se elige CUÁL es "la actual": la más reciente ya habilitada
+// (disponible_desde en el pasado, o sin fecha) o, si ninguna lo está
+// todavía, la próxima por venir (para el teaser "Disponible el…").
+// Nunca devuelve el audio: eso requiere una URL firmada (bucket privado,
+// ver obtenerArchivosContenido en lib/acciones/almacenamiento.ts) que
+// solo tiene sentido pedir cuando la meditación ya está disponible — acá
+// solo se resuelve CUÁL mostrar, no el archivo en sí.
+export interface MeditacionSemanal {
+  id: string;
+  titulo: string;
+  disponible: boolean;
+  disponibleDesde: string | null;
+}
+
+export async function obtenerMeditacionSemanal(supabase: SupabaseClient): Promise<MeditacionSemanal | null> {
+  const { data } = await supabase
+    .from("contenidos")
+    .select("id, titulo, disponible_desde")
+    .eq("estado", "publicado")
+    .eq("es_meditacion_semanal", true);
+
+  const meditaciones = data ?? [];
+  if (meditaciones.length === 0) return null;
+
+  const ahoraMs = Date.now();
+  const disponibles = meditaciones.filter((m) => !m.disponible_desde || Date.parse(m.disponible_desde) <= ahoraMs);
+
+  if (disponibles.length > 0) {
+    const actual = disponibles.reduce((masReciente, m) => {
+      const fechaActual = m.disponible_desde ? Date.parse(m.disponible_desde) : -Infinity;
+      const fechaMasReciente = masReciente.disponible_desde ? Date.parse(masReciente.disponible_desde) : -Infinity;
+      return fechaActual >= fechaMasReciente ? m : masReciente;
+    });
+    return { id: actual.id, titulo: actual.titulo, disponible: true, disponibleDesde: actual.disponible_desde };
+  }
+
+  const futuras = meditaciones.filter((m): m is typeof m & { disponible_desde: string } => Boolean(m.disponible_desde) && Date.parse(m.disponible_desde!) > ahoraMs);
+  if (futuras.length === 0) return null;
+
+  const proxima = futuras.reduce((masProxima, m) => (Date.parse(m.disponible_desde) < Date.parse(masProxima.disponible_desde) ? m : masProxima));
+  return { id: proxima.id, titulo: proxima.titulo, disponible: false, disponibleDesde: proxima.disponible_desde };
 }

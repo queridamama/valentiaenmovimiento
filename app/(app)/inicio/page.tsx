@@ -6,10 +6,34 @@ import {
   obtenerSemanasEnMovimiento,
   obtenerSeguimientoInicio,
   obtenerNovedadActiva,
+  obtenerProximoEventoPremium,
+  obtenerMeditacionSemanal,
 } from "@/lib/datos";
 import { Badge } from "@/components/ui";
-import { TarjetaSueno, TarjetaCamino, TarjetaContinuar, TarjetaNovedad, TarjetaCompacta } from "@/components/tarjetas";
+import {
+  TarjetaSueno,
+  TarjetaCamino,
+  TarjetaContinuar,
+  TarjetaNovedad,
+  TarjetaCompacta,
+  TarjetaProximoEncuentro,
+  TarjetaMeditacionSemanal,
+} from "@/components/tarjetas";
 import InstalarPWA from "@/components/pwa/InstalarPWA";
+
+// "[fecha] · [hora]" para la tarjeta de Próximo encuentro.
+function formatearFechaHoraEvento(iso: string): { fecha: string; hora: string } {
+  const fecha = new Date(iso);
+  return {
+    fecha: fecha.toLocaleDateString("es-AR", { day: "numeric", month: "long" }),
+    hora: fecha.toLocaleTimeString("es-AR", { hour: "2-digit", minute: "2-digit" }),
+  };
+}
+
+// "Disponible el XX/XX" para la meditación de la semana todavía bloqueada.
+function formatearFechaCorta(iso: string): string {
+  return new Date(iso).toLocaleDateString("es-AR", { day: "2-digit", month: "2-digit" });
+}
 
 export default async function InicioPage() {
   const supabase = await crearClienteServidor();
@@ -22,12 +46,17 @@ export default async function InicioPage() {
   const autorizacion = await obtenerAutorizacion(supabase, user.id);
   const esPremium = autorizacion.nivel === "premium";
 
-  const [sueno, movimiento, semanas, seguimiento, novedad] = await Promise.all([
+  const [sueno, movimiento, semanas, seguimiento, novedad, proximoEncuentro, meditacionSemanal] = await Promise.all([
     obtenerSuenoActivo(supabase, user.id),
     obtenerMovimientoActual(supabase, user.id),
     obtenerSemanasEnMovimiento(supabase, user.id),
     obtenerSeguimientoInicio(supabase, user.id, esPremium),
     obtenerNovedadActiva(supabase),
+    // Solo Premium: ni siquiera se consulta para una cuenta Gratis (RLS
+    // igual lo protegería, ver obtenerProximoEventoPremium, pero así no
+    // se gasta la consulta en la inmensa mayoría de las cuentas).
+    esPremium ? obtenerProximoEventoPremium(supabase) : Promise.resolve(null),
+    esPremium ? obtenerMeditacionSemanal(supabase) : Promise.resolve(null),
   ]);
 
   // Ritual semanal, adentro de la app (no hay infraestructura de push
@@ -95,6 +124,27 @@ export default async function InicioPage() {
 
       {novedad && (
         <TarjetaNovedad titulo={novedad.titulo} descripcion={novedad.descripcion} href={novedad.href} />
+      )}
+
+      {/* El ritmo de Premium: el encuentro en vivo mensual y la
+          meditación de la semana. Si todavía no hay un evento cargado, o
+          ninguna meditación marcada como semanal, no se inventa nada acá
+          — el bloque correspondiente simplemente no aparece. */}
+      {proximoEncuentro && (
+        <TarjetaProximoEncuentro
+          {...formatearFechaHoraEvento(proximoEncuentro.fecha_hora)}
+          titulo={proximoEncuentro.titulo}
+          href={proximoEncuentro.link_externo}
+        />
+      )}
+
+      {meditacionSemanal && (
+        <TarjetaMeditacionSemanal
+          titulo={meditacionSemanal.titulo}
+          disponible={meditacionSemanal.disponible}
+          fechaDisponible={meditacionSemanal.disponibleDesde ? formatearFechaCorta(meditacionSemanal.disponibleDesde) : null}
+          href={`/biblioteca/${meditacionSemanal.id}`}
+        />
       )}
 
       {sueno && <TarjetaSueno descripcion={sueno.descripcion} href="/mi-sueno" cta="Ver / editar" />}

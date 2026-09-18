@@ -11,6 +11,15 @@ import { ETIQUETA_TIPO_CONTENIDO, TIPOS_CONTENIDO, ESTADOS_CMS } from "@/lib/tip
 import CampoArchivo from "@/components/admin/CampoArchivo";
 import EditorEnriquecido from "@/components/admin/EditorEnriquecido";
 
+// datetime-local necesita "YYYY-MM-DDTHH:mm" en hora local, no el ISO con
+// zona horaria que devuelve la base (mismo patrón que /admin/eventos).
+function aInputDatetimeLocal(fechaIso: string | null): string {
+  if (!fechaIso) return "";
+  const fecha = new Date(fechaIso);
+  const offsetMs = fecha.getTimezoneOffset() * 60000;
+  return new Date(fecha.getTime() - offsetMs).toISOString().slice(0, 16);
+}
+
 export default async function EditarContenidoPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const supabase = await crearClienteServidor();
@@ -111,6 +120,27 @@ export default async function EditarContenidoPage({ params }: { params: Promise<
             className="rounded-lg border border-texto/15 px-3 py-2"
           />
         </label>
+
+        <div className="space-y-2 rounded-lg border border-texto/10 p-3">
+          <label className="flex items-center gap-2 text-sm font-medium text-texto/70">
+            <input type="checkbox" name="es_meditacion_semanal" defaultChecked={contenido.es_meditacion_semanal} />
+            Es la meditación de la semana
+          </label>
+          <label className="flex flex-col gap-1">
+            <span className="text-sm font-medium text-texto/70">Disponible desde</span>
+            <input
+              type="datetime-local"
+              name="disponible_desde"
+              defaultValue={aInputDatetimeLocal(contenido.disponible_desde)}
+              className="rounded-lg border border-texto/15 px-3 py-2"
+            />
+            <span className="text-xs text-texto/45">
+              Se muestra bloqueada en Inicio (&quot;Disponible el…&quot;) hasta esta fecha, y ahí pasa a ser la actual
+              sola, sin que haga falta publicarla ese día. Las meditaciones semanales anteriores siguen disponibles
+              después. Solo aplica si marcaste &quot;Es la meditación de la semana&quot; arriba.
+            </span>
+          </label>
+        </div>
 
         <EditorEnriquecido name="contenido_html" label="Texto" contenidoInicial={contenido.contenido_html ?? ""} />
 

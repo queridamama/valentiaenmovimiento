@@ -5,15 +5,14 @@ import { revalidarSuscripcionAhora } from "@/lib/suscripciones";
 import { Titulo, Subtitulo } from "@/components/ui";
 import RefrescoAutomatico from "@/components/RefrescoAutomatico";
 
-// Página a la que se llega desde dos flujos distintos (ver `modalidad`
-// en `suscripciones`, solo observabilidad — acá no importa cuál fue):
-//   - BotonSuscribirse.tsx (Card Form): después de que la Server Action
-//     ya confirmó (o no) el pago con el card_token_id, sin haber pasado
-//     por ningún redirect de Mercado Pago.
-//   - BotonSuscribirseAlojado.tsx (checkout alojado, prueba en paralelo
-//     detrás del flag NEXT_PUBLIC_MERCADOPAGO_CHECKOUT_ALOJADO_BETA):
-//     acá SÍ es la vuelta real del `back_url` después de que la usuaria
-//     completó (o no) el pago en el checkout hospedado de Mercado Pago.
+// Página a la que se llega desde el checkout alojado
+// (BotonSuscribirseAlojado.tsx): es la vuelta real del `back_url`
+// después de que la usuaria completó (o no) el pago en el checkout
+// hospedado de Mercado Pago. También sigue cubriendo el Card Form
+// histórico (BotonSuscribirse.tsx, ya no se muestra en /membresia pero
+// queda como rollback) para el caso de que se vuelva a habilitar — ver
+// `modalidad` en `suscripciones`, solo observabilidad, acá no importa
+// cuál fue.
 // En los dos casos, a propósito NO se decide nada mirando el resultado
 // que ya devolvió la Server Action ni ningún query param que traiga la
 // URL: `revalidarSuscripcionAhora` siempre vuelve a preguntarle a la API

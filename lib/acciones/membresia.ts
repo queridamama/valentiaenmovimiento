@@ -48,9 +48,13 @@ async function verificarSinSuscripcionActiva(supabase: SupabaseClient, usuarioId
   return { ok: true };
 }
 
-// Confirma la suscripción de la usuaria logueada usando el `card_token_id`
-// que ya generó Mercado Pago del lado del cliente (Card Form de
-// @mercadopago/sdk-js — ver components/BotonSuscribirse.tsx). Es lo
+// Card Form + card_token_id: flujo histórico, reemplazado en la UI por
+// iniciarSuscripcionAlojada() (checkout alojado, más abajo) desde que ese
+// flujo se validó con una transacción real. Se conserva sin usarse desde
+// /membresia como camino de rollback — components/BotonSuscribirse.tsx
+// ya no se renderiza ahí, pero sigue existiendo. Confirma la suscripción
+// de la usuaria logueada usando el `card_token_id` que ya generó Mercado
+// Pago del lado del cliente (Card Form de @mercadopago/sdk-js). Es lo
 // ÚNICO que se acepta del cliente acá, junto con `deviceId`: el usuario,
 // su email y el plan/precio salen siempre de la sesión y de la
 // configuración del servidor, nunca de lo que mande el navegador — así
@@ -122,12 +126,12 @@ export async function iniciarSuscripcion(cardTokenId: string, deviceId: string |
   return { error: "Estamos confirmando tu pago con Mercado Pago. Puede tardar unos minutos — te avisamos apenas se confirme." };
 }
 
-// Prueba en paralelo del OTRO flujo oficial de Mercado Pago:
-// "Suscripciones sin plan asociado" + pago pendiente + checkout alojado
-// (ver crearPreapprovalSinPlan en lib/mercadopago.ts). No reemplaza
-// iniciarSuscripcion() — convive con ella detrás del flag
-// NEXT_PUBLIC_MERCADOPAGO_CHECKOUT_ALOJADO_BETA (ver
-// components/BotonSuscribirseAlojado.tsx, app/(app)/membresia/page.tsx).
+// Flujo oficial de Mercado Pago que usa /membresia: "Suscripciones sin
+// plan asociado" + pago pendiente + checkout alojado (ver
+// crearPreapprovalSinPlan en lib/mercadopago.ts), validado con una
+// transacción real. Reemplaza a iniciarSuscripcion() (Card Form) en la
+// UI — ver components/BotonSuscribirseAlojado.tsx,
+// app/(app)/membresia/page.tsx.
 //
 // No recibe NADA del cliente relacionado a un medio de pago — ni token
 // ni tarjeta: acá nuestra app nunca los recibe. Usuario, email, plan y
