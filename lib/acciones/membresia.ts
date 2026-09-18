@@ -2,8 +2,9 @@
 
 import { revalidatePath } from "next/cache";
 import { crearClienteServidor } from "@/lib/supabase/server";
-import { crearPreapproval, cancelarPreapproval } from "@/lib/mercadopago";
+import { crearPreapproval, cancelarPreapproval, type EstadoPreapproval } from "@/lib/mercadopago";
 import { sincronizarSuscripcion } from "@/lib/suscripciones";
+import { puedeIniciarNuevaSuscripcion } from "@/lib/mercadopago-logica";
 
 function backUrlResultado(): string {
   const base = (process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000").replace(/\/$/, "");
@@ -30,18 +31,37 @@ export async function iniciarSuscripcion(cardTokenId: string): Promise<{ ok: tru
   } = await supabase.auth.getUser();
   if (!user?.email) return { error: "Necesitás iniciar sesión para sumarte a Premium." };
 
-  // Anti doble-click / anti-duplicado: si ya es Premium de verdad (nivel,
-  // no el status del preapproval — un preapproval puede estar
-  // "authorized" sin que haya ningún pago aprobado, ver
-  // lib/suscripciones.ts), no se crea otra suscripción.
-  const { data: autorizacionActual } = await supabase
-    .from("autorizaciones")
-    .select("nivel")
+  // Nunca se crea un preapproval nuevo mientras ya exista uno sin
+  // cancelar para esta usuaria — sea cual sea su `estado`
+  // (pending/authorized/paused) y sea cual sea el nivel actual (Gratis
+  // incluido: un preapproval "authorized" con el primer cobro rechazado
+  // deja a la usuaria en Gratis, pero Mercado Pago puede seguir
+  // reintentando ese mismo preapproval en segundo plano — dejar crear
+  // otro acá terminaría en dos preapprovals, y eventualmente dos cobros,
+  // activos a la vez). Tiene que cancelar el anterior primero (ver
+  // BotonCancelarSuscripcion en Perfil, ahora visible también en ese
+  // caso). Una vez cancelado, sí puede iniciar uno nuevo con otra
+  // tarjeta — ver puedeIniciarNuevaSuscripcion.
+  const { data: suscripcionExistente } = await supabase
+    .from("suscripciones")
+    .select("estado")
     .eq("usuario_id", user.id)
+    .eq("proveedor", "mercadopago")
     .maybeSingle();
 
-  if (autorizacionActual?.nivel === "premium") {
-    return { error: "Ya sos parte de Valentía Premium." };
+  if (!puedeIniciarNuevaSuscripcion((suscripcionExistente?.estado as EstadoPreapproval) ?? null)) {
+    return { error: "Ya tenés una suscripción de Mercado Pago en curso. Cancelala desde tu Perfil antes de probar con otra tarjeta." };
+  }
+
+  // Premium otorgado a mano (cortesía/alumna histórica) y sin ninguna
+  // fila de Mercado Pago propia: no hay nada que cancelar, pero tampoco
+  // tiene sentido dejarla iniciar un cobro real encima de un Premium ya
+  // otorgado.
+  if (!suscripcionExistente) {
+    const { data: autorizacionActual } = await supabase.from("autorizaciones").select("nivel").eq("usuario_id", user.id).maybeSingle();
+    if (autorizacionActual?.nivel === "premium") {
+      return { error: "Ya sos parte de Valentía Premium." };
+    }
   }
 
   let preapproval;

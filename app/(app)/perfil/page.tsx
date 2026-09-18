@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { obtenerAutorizacion, obtenerSuscripcionPropia } from "@/lib/datos";
 import { Badge, Titulo, Etiqueta, BotonSecundario } from "@/components/ui";
 import { formatearPrecio } from "@/lib/config/premium";
+import { esAccesoVigente, debeMostrarGestionSuscripcion, type EstadoPreapproval } from "@/lib/mercadopago-logica";
 import BotonCancelarSuscripcion from "@/components/BotonCancelarSuscripcion";
 
 const ETIQUETA_ESTADO_SUSCRIPCION: Record<string, string> = {
@@ -33,6 +34,23 @@ export default async function PerfilPage() {
   const esStaff = autorizacion.rol === "admin" || autorizacion.rol === "editor";
   const esPremium = autorizacion.nivel === "premium";
   const premiumPorMercadoPago = esPremium && autorizacion.origen_nivel === "mercadopago" && suscripcion;
+
+  // Caso real de producción: un preapproval "authorized" cuyo primer
+  // cobro fue rechazado deja a la usuaria en Gratis, pero Mercado Pago
+  // puede seguir reintentando ESE MISMO preapproval en segundo plano — si
+  // acá solo se mostrara la gestión cuando esPremium, esa cuenta perdía
+  // la posibilidad de cancelarlo. Se muestra siempre que exista una fila
+  // de Mercado Pago propia que no esté cancelada (aunque el nivel sea
+  // Gratis), o que sí lo esté pero todavía conserve acceso de gracia
+  // vigente (el caso ya existente, que ahí sí cae dentro de `esPremium`).
+  const gestionSuscripcionVisible =
+    autorizacion.origen_nivel === "mercadopago" &&
+    !!suscripcion &&
+    debeMostrarGestionSuscripcion({
+      estado: suscripcion.estado as EstadoPreapproval,
+      vigente: esAccesoVigente(suscripcion.acceso_hasta),
+    });
+  const soloIntentoSinPremium = !esPremium && gestionSuscripcionVisible && suscripcion;
 
   async function cerrarSesion() {
     "use server";
@@ -92,6 +110,27 @@ export default async function PerfilPage() {
                 Ver mi Proyecto →
               </Link>
             </>
+          )}
+        </div>
+      ) : soloIntentoSinPremium ? (
+        <div className="space-y-2.5 rounded-[24px] bg-texto/5 p-5">
+          <Etiqueta>Tu cuenta</Etiqueta>
+          <p className="text-[15px] font-semibold text-marca">Valentía Gratis</p>
+          <p className="text-[13px] text-texto/55">
+            Estado del intento: {ETIQUETA_ESTADO_SUSCRIPCION[suscripcion.estado] ?? suscripcion.estado}
+          </p>
+          {suscripcion.ultimo_pago_estado === "rejected" ? (
+            <p className="text-[13px] font-medium text-alerta">Mercado Pago rechazó tu pago. Tu acceso Premium no se activó.</p>
+          ) : (
+            <p className="text-[13px] leading-relaxed text-texto/60">
+              Estamos confirmando tu pago con Mercado Pago — puede tardar unos minutos.
+            </p>
+          )}
+          <p className="text-[13px] leading-relaxed text-texto/60">Cancelá este intento para poder probar con otra tarjeta.</p>
+          {suscripcion.estado !== "canceled" && (
+            <div className="pt-1">
+              <BotonCancelarSuscripcion contexto="intento" />
+            </div>
           )}
         </div>
       ) : (

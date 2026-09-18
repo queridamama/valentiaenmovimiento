@@ -274,6 +274,38 @@ export function esAccesoVigente(accesoHasta: string | null, ahora: number = Date
   return accesoHasta !== null && new Date(accesoHasta).getTime() > ahora;
 }
 
+// ---------- Gestión en Perfil / bloqueo de doble preapproval ----------
+// Caso real: con el pago rechazado no confirmando Premium (arriba), una
+// usuaria puede quedar Gratis con un preapproval que Mercado Pago sigue
+// reintentando en segundo plano ("authorized" sin acceso). Perfil solo
+// mostraba la gestión/cancelación cuando nivel==="premium" — esa cuenta
+// perdía la posibilidad de cancelar ese intento. Y sin este chequeo,
+// iniciarSuscripcion() (lib/acciones/membresia.ts) dejaba crear un
+// segundo preapproval mientras el primero seguía activo, con el riesgo
+// de terminar cobrando dos veces a la misma usuaria.
+
+// Se debe poder ver/gestionar la fila de Mercado Pago en Perfil aunque la
+// usuaria sea Gratis, siempre que exista una fila que no esté cancelada
+// (el caso nuevo: authorized con pago rechazado/todavía confirmando), o
+// que sí esté cancelada pero todavía conserve acceso vigente (el caso ya
+// existente: canceló a mitad de ciclo y sigue Premium hasta agotar lo
+// pagado — ahí no hay nada nuevo que cancelar, pero sigue siendo
+// información real de su cuenta).
+export function debeMostrarGestionSuscripcion(params: { estado: EstadoPreapproval; vigente: boolean }): boolean {
+  return params.estado !== "canceled" || params.vigente;
+}
+
+// iniciarSuscripcion() nunca puede crear un preapproval nuevo mientras ya
+// exista uno sin cancelar para la misma usuaria (sea cual sea su
+// `estado`: pending/authorized/paused) — evita dos preapprovals, y
+// eventualmente dos cobros, activos a la vez. Una vez que el existente
+// quedó realmente "canceled" (con o sin acceso de gracia todavía
+// vigente, ver debeMostrarGestionSuscripcion) sí se puede iniciar uno
+// nuevo con otra tarjeta.
+export function puedeIniciarNuevaSuscripcion(estadoExistente: EstadoPreapproval | null): boolean {
+  return estadoExistente === null || estadoExistente === "canceled";
+}
+
 export interface AutorizacionActual {
   nivel: "gratis" | "premium";
   origenNivel: "manual" | "mercadopago";

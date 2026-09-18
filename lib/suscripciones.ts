@@ -61,7 +61,7 @@ export async function sincronizarSuscripcion(preapproval: Preapproval): Promise<
   // reemplacen (ver calcularFechaProximoPago/calcularAccesoHasta).
   const { data: suscripcionExistente } = await supabase
     .from("suscripciones")
-    .select("fecha_proximo_pago, fecha_ultimo_pago, acceso_hasta")
+    .select("fecha_proximo_pago, fecha_ultimo_pago, acceso_hasta, ultimo_pago_estado")
     .eq("usuario_id", usuarioId)
     .eq("proveedor", "mercadopago")
     .maybeSingle();
@@ -97,7 +97,11 @@ export async function sincronizarSuscripcion(preapproval: Preapproval): Promise<
     : null;
 
   const pagoAprobado = esPagoAprobado(pagoReciente);
-  const ultimoPagoEstado = estadoPagoReal(pagoReciente);
+  // Si la consulta a Mercado Pago falló (`busqueda === null`), no hay
+  // ningún dato nuevo que reportar — se conserva el último
+  // ultimo_pago_estado ya guardado en vez de pisarlo con null, igual
+  // criterio que fecha_proximo_pago/acceso_hasta/fecha_ultimo_pago.
+  const ultimoPagoEstado = busqueda ? estadoPagoReal(pagoReciente) : (suscripcionExistente?.ultimo_pago_estado ?? null);
 
   const accesoHasta = calcularAccesoHasta({
     pagoAprobado,

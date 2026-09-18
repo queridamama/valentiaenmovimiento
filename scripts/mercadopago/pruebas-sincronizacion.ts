@@ -32,6 +32,8 @@ import {
   validarFirmaWebhook,
   normalizarEstadoPreapproval,
   esErrorStatusPreapprovalInvalido,
+  debeMostrarGestionSuscripcion,
+  puedeIniciarNuevaSuscripcion,
 } from "../../lib/mercadopago-logica";
 
 let fallos = 0;
@@ -466,6 +468,48 @@ console.log('\n21. normalizarEstadoPreapproval: "cancelled" (variante histórica
   assert(normalizarEstadoPreapproval("canceled") === "canceled", '"canceled" (el documentado) queda igual');
   assert(normalizarEstadoPreapproval("authorized") === "authorized", "cualquier otro estado real no se toca");
   assert(normalizarEstadoPreapproval("pending") === "pending", "cualquier otro estado real no se toca");
+}
+
+// ---------------------------------------------------------------------
+// Último caso real: un preapproval "authorized" con el primer cobro
+// rechazado deja a la usuaria en Gratis, pero Mercado Pago puede seguir
+// reintentando ESE MISMO preapproval en segundo plano. Perfil solo
+// mostraba la gestión/cancelación cuando nivel==="premium" — esa cuenta
+// perdía la posibilidad de cancelarlo. Y sin este chequeo,
+// iniciarSuscripcion() dejaba crear un segundo preapproval mientras el
+// primero seguía activo (riesgo de dos cobros).
+// ---------------------------------------------------------------------
+
+console.log('\n22. Gratis + pago rejected + preapproval todavía "authorized" → debe poder cancelarlo desde Perfil');
+{
+  // Vigente=false porque nunca hubo un pago aprobado (acceso_hasta null,
+  // ver escenario 16) — exactamente el estado real de esta cuenta.
+  const debeMostrarse = debeMostrarGestionSuscripcion({ estado: "authorized", vigente: false });
+  assert(debeMostrarse === true, "la gestión se muestra en Perfil aunque la usuaria sea Gratis");
+  // Perfil solo oculta el botón de cancelar cuando estado === "canceled"
+  // (ver app/(app)/perfil/page.tsx) — acá el preapproval sigue
+  // "authorized", así que el botón de cancelar también se muestra.
+}
+
+console.log("\n23. Gratis + preapproval no cancelado → NO puede crear un segundo preapproval");
+{
+  assert(puedeIniciarNuevaSuscripcion("authorized") === false, "con un preapproval 'authorized' sin cancelar, no puede iniciar uno nuevo");
+  assert(puedeIniciarNuevaSuscripcion("pending") === false, "tampoco mientras el anterior sigue 'pending'");
+  assert(puedeIniciarNuevaSuscripcion("paused") === false, "tampoco mientras el anterior está 'paused'");
+  assert(puedeIniciarNuevaSuscripcion("canceled") === true, "una vez cancelado el anterior, sí puede iniciar uno nuevo con otra tarjeta");
+  assert(puedeIniciarNuevaSuscripcion(null) === true, "sin ningún preapproval previo, puede iniciar el primero sin restricciones");
+}
+
+console.log("\n24. debeMostrarGestionSuscripcion: sigue mostrando la gestión de un preapproval cancelado mientras dure el acceso de gracia ya pagado");
+{
+  assert(
+    debeMostrarGestionSuscripcion({ estado: "canceled", vigente: true }) === true,
+    "canceled con acceso todavía vigente (período ya pagado) → se sigue mostrando (aunque ahí no haya ya nada para cancelar)"
+  );
+  assert(
+    debeMostrarGestionSuscripcion({ estado: "canceled", vigente: false }) === false,
+    "canceled y sin ningún acceso vigente → ya no hay nada que gestionar/mostrar"
+  );
 }
 
 console.log(fallos === 0 ? "\n✅ Todas las pruebas pasaron." : `\n❌ ${fallos} prueba(s) fallaron.`);
