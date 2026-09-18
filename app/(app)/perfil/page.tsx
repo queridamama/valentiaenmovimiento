@@ -63,9 +63,14 @@ export default async function PerfilPage() {
               {suscripcion.estado === "authorized" && suscripcion.fecha_proximo_pago && (
                 <p className="text-[13.5px] text-white/80">Próximo cobro: {formatearFecha(suscripcion.fecha_proximo_pago)}</p>
               )}
-              {suscripcion.estado === "canceled" && suscripcion.fecha_proximo_pago && (
+              {suscripcion.ultimo_pago_estado === "rejected" && suscripcion.estado !== "canceled" && (
+                <p className="text-[13.5px] font-medium text-acentoRosa">
+                  Mercado Pago rechazó tu último cobro. Actualizá el medio de pago para no perder el acceso.
+                </p>
+              )}
+              {suscripcion.estado === "canceled" && suscripcion.acceso_hasta && (
                 <p className="text-[13.5px] text-white/80">
-                  Cancelada — conservás el acceso hasta el {formatearFecha(suscripcion.fecha_proximo_pago)}.
+                  Cancelada — conservás el acceso hasta el {formatearFecha(suscripcion.acceso_hasta)}.
                 </p>
               )}
               <div className="flex flex-wrap items-center gap-3 pt-1">

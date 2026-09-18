@@ -56,6 +56,23 @@ export default async function ResultadoMembresiaPage() {
     );
   }
 
+  // El preapproval puede seguir "authorized" (Mercado Pago no lo cancela
+  // solo porque un cobro puntual se rechace, ver lib/suscripciones.ts) —
+  // por eso este caso se distingue por `ultimo_pago_estado`, no por
+  // `estado`. Sin esto, un pago rechazado caía en la rama de "estamos
+  // confirmando" de abajo y quedaba reintentando para siempre.
+  if (suscripcion?.ultimo_pago_estado === "rejected") {
+    return (
+      <main className="mx-auto max-w-md space-y-5 px-6 pb-10 pt-16 text-center">
+        <Titulo>Mercado Pago rechazó el pago</Titulo>
+        <Subtitulo>Probá de nuevo con otra tarjeta o medio de pago.</Subtitulo>
+        <Link href="/membresia" className="mt-2 inline-block rounded-full bg-marca px-6 py-3.5 text-sm font-semibold text-white">
+          Volver a Premium
+        </Link>
+      </main>
+    );
+  }
+
   if (suscripcion?.estado === "paused") {
     return (
       <main className="mx-auto max-w-md space-y-5 px-6 pb-10 pt-16 text-center">

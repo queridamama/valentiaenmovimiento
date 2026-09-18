@@ -30,16 +30,17 @@ export async function iniciarSuscripcion(cardTokenId: string): Promise<{ ok: tru
   } = await supabase.auth.getUser();
   if (!user?.email) return { error: "Necesitás iniciar sesión para sumarte a Premium." };
 
-  // Anti doble-click / anti-duplicado: si ya está autorizada, no se crea
-  // otra suscripción.
-  const { data: existente } = await supabase
-    .from("suscripciones")
-    .select("estado")
+  // Anti doble-click / anti-duplicado: si ya es Premium de verdad (nivel,
+  // no el status del preapproval — un preapproval puede estar
+  // "authorized" sin que haya ningún pago aprobado, ver
+  // lib/suscripciones.ts), no se crea otra suscripción.
+  const { data: autorizacionActual } = await supabase
+    .from("autorizaciones")
+    .select("nivel")
     .eq("usuario_id", user.id)
-    .eq("proveedor", "mercadopago")
     .maybeSingle();
 
-  if (existente?.estado === "authorized") {
+  if (autorizacionActual?.nivel === "premium") {
     return { error: "Ya sos parte de Valentía Premium." };
   }
 
@@ -59,19 +60,22 @@ export async function iniciarSuscripcion(cardTokenId: string): Promise<{ ok: tru
     return { error: "No pudimos procesar tu tarjeta con Mercado Pago. Verificá los datos e intentá de nuevo." };
   }
 
-  // Guarda el resultado real y, si corresponde, activa Premium — el
-  // mismo camino que usa la revalidación/webhook, así que es idempotente
-  // y no depende de este llamado para mantenerse correcto después.
-  await sincronizarSuscripcion(preapproval);
+  // sincronizarSuscripcion es quien de verdad decide si corresponde
+  // Premium: vuelve a consultar el cobro real contra Mercado Pago (nunca
+  // alcanza con que el preapproval haya quedado "authorized", ver el
+  // comentario grande en lib/suscripciones.ts) — el mismo camino que usa
+  // la revalidación/webhook, así que es idempotente y no depende de este
+  // llamado para mantenerse correcto después.
+  const resultado = await sincronizarSuscripcion(preapproval);
 
   revalidatePath("/perfil");
   revalidatePath("/membresia");
 
-  if (preapproval.status === "authorized") return { ok: true };
-  if (preapproval.status === "pending") {
-    return { error: "Mercado Pago todavía está confirmando el pago. Volvé a intentar en un momento." };
+  if (resultado.nivel === "premium") return { ok: true };
+  if (resultado.ultimoPagoEstado === "rejected") {
+    return { error: "Mercado Pago rechazó el pago con esa tarjeta. Probá con otra tarjeta o medio de pago." };
   }
-  return { error: "No pudimos confirmar el pago con Mercado Pago. Probá con otra tarjeta." };
+  return { error: "Estamos confirmando tu pago con Mercado Pago. Puede tardar unos minutos — te avisamos apenas se confirme." };
 }
 
 // Cancela la suscripción real en Mercado Pago (API oficial, no un flag

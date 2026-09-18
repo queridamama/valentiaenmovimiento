@@ -1,42 +1,67 @@
 import "server-only";
 import { crearClienteServicio } from "@/lib/supabase/servicio";
-import { obtenerPreapproval, type Preapproval, type EstadoPreapproval } from "@/lib/mercadopago";
-import { calcularFechaProximoPago, esAccesoVigente, calcularNuevaAutorizacion, debeRevalidar } from "@/lib/mercadopago-logica";
+import { obtenerPreapproval, buscarPagosAutorizados, type Preapproval, type EstadoPreapproval } from "@/lib/mercadopago";
+import {
+  calcularFechaProximoPago,
+  calcularAccesoHasta,
+  esAccesoVigente,
+  calcularNuevaAutorizacion,
+  debeRevalidar,
+  pagoMasReciente,
+  estadoPagoReal,
+  esPagoAprobado,
+} from "@/lib/mercadopago-logica";
+
+export interface ResultadoSincronizacion {
+  nivel: "gratis" | "premium";
+  ultimoPagoEstado: string | null;
+  accesoHasta: string | null;
+}
 
 // Único punto de escritura para el estado real de una suscripción de
-// Mercado Pago. La llaman: la cancelación manual desde Perfil, la
-// revalidación server-side por polling (revalidarSuscripcionAhora/
-// revalidarSiCorresponde, más abajo — el mecanismo principal, ya que la
-// activación/mantenimiento/cancelación de Premium NO dependen de que
-// llegue ningún webhook) y, si algún día se confirma una forma oficial
-// de registrarlo, el webhook opcional en /api/webhooks/mercadopago.
-// Idempotente (upsert por usuario_id+proveedor) y nunca pisa un Premium
-// otorgado a mano (nivel=premium + origen_nivel='manual') — esa es la
-// protección contra que la sincronización le baje el nivel a una
-// cortesía o alumna histórica. Un Gratis con origen 'manual' (el default
-// de cualquier cuenta nueva) sí puede pasar a Premium por Mercado Pago:
-// ver calcularNuevaAutorizacion en lib/mercadopago-logica.ts.
+// Mercado Pago. La llaman: iniciarSuscripcion/cancelarSuscripcion (Server
+// Actions de Perfil/Membresía), la revalidación server-side por polling
+// (revalidarSuscripcionAhora/revalidarSiCorresponde, más abajo — el
+// mecanismo principal, ya que la activación/mantenimiento/cancelación de
+// Premium NO dependen de que llegue ningún webhook) y, si algún día se
+// confirma una forma oficial de registrarlo, el webhook opcional en
+// /api/webhooks/mercadopago. Idempotente (upsert por usuario_id+proveedor)
+// y nunca pisa un Premium otorgado a mano (nivel=premium +
+// origen_nivel='manual') — esa es la protección contra que la
+// sincronización le baje el nivel a una cortesía o alumna histórica. Un
+// Gratis con origen 'manual' (el default de cualquier cuenta nueva) sí
+// puede pasar a Premium por Mercado Pago: ver calcularNuevaAutorizacion
+// en lib/mercadopago-logica.ts.
+//
+// NUNCA activa/mantiene Premium solo porque `preapproval.status ===
+// "authorized"` — ese fue exactamente el bug real de producción: el
+// preapproval quedó "authorized" pero el cobro real fue rechazado
+// minutos después, y la usuaria siguió Premium sin haber pagado. Acá
+// siempre se vuelve a preguntar por el cobro real
+// (buscarPagosAutorizados) antes de decidir nada — igual que
+// crearPreapproval() nunca se confía en un external_reference que venga
+// del navegador, acá nunca se confía en el `status` del preapproval solo.
 //
 // Deja que cualquier error de Supabase se propague (no lo atrapa): quien
 // llama necesita saber si la escritura falló — revalidarConMercadoPago
 // (más abajo) es quien decide qué hacer con ese error (conservar el
 // último estado conocido, nunca degradar Premium por no poder consultar).
-export async function sincronizarSuscripcion(preapproval: Preapproval, extra?: { fechaUltimoPago?: string }) {
+export async function sincronizarSuscripcion(preapproval: Preapproval): Promise<ResultadoSincronizacion> {
   const usuarioId = preapproval.external_reference;
   if (!usuarioId) {
     console.error("[mercadopago] preapproval sin external_reference, se ignora:", preapproval.id);
-    return;
+    return { nivel: "gratis", ultimoPagoEstado: null, accesoHasta: null };
   }
 
   const supabase = crearClienteServicio();
 
   // Se lee el registro existente ANTES de escribir: es lo que permite no
-  // perder `fecha_proximo_pago` si la respuesta de Mercado Pago para un
-  // preapproval recién cancelado/pausado no vuelve a traer
-  // next_payment_date (ver calcularFechaProximoPago).
+  // perder `fecha_proximo_pago`/`acceso_hasta`/`fecha_ultimo_pago` si la
+  // respuesta de Mercado Pago no vuelve a traer datos nuevos que los
+  // reemplacen (ver calcularFechaProximoPago/calcularAccesoHasta).
   const { data: suscripcionExistente } = await supabase
     .from("suscripciones")
-    .select("fecha_proximo_pago")
+    .select("fecha_proximo_pago, fecha_ultimo_pago, acceso_hasta")
     .eq("usuario_id", usuarioId)
     .eq("proveedor", "mercadopago")
     .maybeSingle();
@@ -46,6 +71,46 @@ export async function sincronizarSuscripcion(preapproval: Preapproval, extra?: {
     status: preapproval.status,
     fechaProximoPagoExistente: suscripcionExistente?.fecha_proximo_pago ?? null,
   });
+
+  // Si Mercado Pago está caído justo en este llamado, se prefiere no
+  // inventar ningún pago: `pagoReciente` queda null, exactamente como si
+  // no existiera ningún cobro todavía (nunca se activa Premium por un
+  // error de red, y tampoco se le baja el nivel a nadie por lo mismo —
+  // ver más abajo, `accesoHasta` conserva el valor existente).
+  const busqueda = await buscarPagosAutorizados(preapproval.id).catch((err) => {
+    console.error(
+      "[mercadopago] no se pudo consultar /authorized_payments/search, se conserva el último pago conocido",
+      preapproval.id,
+      err instanceof Error ? err.message : err
+    );
+    return null;
+  });
+
+  const pagoReciente = busqueda
+    ? pagoMasReciente(
+        busqueda.results.map((p) => ({
+          status: p.status ?? null,
+          paymentStatus: p.payment?.status ?? null,
+          dateCreated: p.date_created ?? null,
+        }))
+      )
+    : null;
+
+  const pagoAprobado = esPagoAprobado(pagoReciente);
+  const ultimoPagoEstado = estadoPagoReal(pagoReciente);
+
+  const accesoHasta = calcularAccesoHasta({
+    pagoAprobado,
+    nextPaymentDateNueva: preapproval.next_payment_date ?? null,
+    accesoHastaExistente: suscripcionExistente?.acceso_hasta ?? null,
+  });
+
+  // `fecha_ultimo_pago` (informativo, "cuándo fue el último cobro que sí
+  // se acreditó") solo avanza con un pago aprobado — igual criterio que
+  // acceso_hasta, nunca se pisa con la fecha de un intento rechazado.
+  const fechaUltimoPago = pagoAprobado
+    ? pagoReciente?.dateCreated ?? preapproval.summarized?.last_charged_date ?? suscripcionExistente?.fecha_ultimo_pago ?? null
+    : suscripcionExistente?.fecha_ultimo_pago ?? null;
 
   const { error: errorSuscripcion } = await supabase.from("suscripciones").upsert(
     {
@@ -59,8 +124,10 @@ export async function sincronizarSuscripcion(preapproval: Preapproval, extra?: {
       moneda: preapproval.auto_recurring?.currency_id ?? null,
       payer_email: preapproval.payer_email ?? null,
       fecha_inicio: preapproval.date_created ?? null,
-      fecha_ultimo_pago: extra?.fechaUltimoPago ?? preapproval.summarized?.last_charged_date ?? null,
+      fecha_ultimo_pago: fechaUltimoPago,
       fecha_proximo_pago: fechaProximoPago,
+      acceso_hasta: accesoHasta,
+      ultimo_pago_estado: ultimoPagoEstado,
       cancelada_en: preapproval.status === "canceled" ? new Date().toISOString() : null,
       actualizado_en: new Date().toISOString(),
     },
@@ -78,16 +145,20 @@ export async function sincronizarSuscripcion(preapproval: Preapproval, extra?: {
     autorizacionActual: autorizacionActual
       ? { nivel: autorizacionActual.nivel, origenNivel: autorizacionActual.origen_nivel }
       : null,
-    vigente: esAccesoVigente(preapproval.status, fechaProximoPago),
+    vigente: esAccesoVigente(accesoHasta),
   });
 
-  if (!decision.debeEscribir) return;
+  if (!decision.debeEscribir) {
+    return { nivel: autorizacionActual?.nivel ?? "gratis", ultimoPagoEstado, accesoHasta };
+  }
 
   const { error: errorAutorizacion } = await supabase
     .from("autorizaciones")
     .update({ nivel: decision.nivel, origen_nivel: decision.origenNivel })
     .eq("usuario_id", usuarioId);
   if (errorAutorizacion) throw errorAutorizacion;
+
+  return { nivel: decision.nivel, ultimoPagoEstado, accesoHasta };
 }
 
 // Le vuelve a preguntar a Mercado Pago el estado real de la suscripción
@@ -125,7 +196,7 @@ async function revalidarConMercadoPago(usuarioId: string, proveedorSuscripcionId
 // registro viejo/residual en `suscripciones`.
 async function obtenerSuscripcionRevalidable(
   usuarioId: string
-): Promise<{ proveedorSuscripcionId: string; estado: EstadoPreapproval; actualizadoEn: string } | null> {
+): Promise<{ proveedorSuscripcionId: string; estado: EstadoPreapproval; actualizadoEn: string; accesoHasta: string | null } | null> {
   const supabase = crearClienteServicio();
 
   const { data: autorizacion } = await supabase
@@ -137,7 +208,7 @@ async function obtenerSuscripcionRevalidable(
 
   const { data: suscripcion } = await supabase
     .from("suscripciones")
-    .select("proveedor_suscripcion_id, estado, actualizado_en")
+    .select("proveedor_suscripcion_id, estado, actualizado_en, acceso_hasta")
     .eq("usuario_id", usuarioId)
     .eq("proveedor", "mercadopago")
     .maybeSingle();
@@ -147,6 +218,7 @@ async function obtenerSuscripcionRevalidable(
     proveedorSuscripcionId: suscripcion.proveedor_suscripcion_id,
     estado: suscripcion.estado as EstadoPreapproval,
     actualizadoEn: suscripcion.actualizado_en,
+    accesoHasta: suscripcion.acceso_hasta,
   };
 }
 
@@ -176,7 +248,7 @@ export async function revalidarSuscripcionAhora(usuarioId: string): Promise<void
 export async function revalidarSiCorresponde(usuarioId: string): Promise<void> {
   const info = await obtenerSuscripcionRevalidable(usuarioId);
   if (!info) return;
-  if (!debeRevalidar(info.actualizadoEn, info.estado)) return;
+  if (!debeRevalidar(info.actualizadoEn, info.estado, info.accesoHasta)) return;
 
   await revalidarConMercadoPago(usuarioId, info.proveedorSuscripcionId);
 }

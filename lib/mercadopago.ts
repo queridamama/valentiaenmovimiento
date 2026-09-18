@@ -1,6 +1,6 @@
 import "server-only";
 import { PREMIUM_PLAN } from "@/lib/config/premium";
-import type { EstadoPreapproval } from "@/lib/mercadopago-logica";
+import { normalizarEstadoPreapproval, esErrorStatusPreapprovalInvalido, type EstadoPreapproval } from "@/lib/mercadopago-logica";
 
 export type { EstadoPreapproval } from "@/lib/mercadopago-logica";
 export { validarTokenWebhook, validarFirmaWebhook } from "@/lib/mercadopago-logica";
@@ -27,6 +27,27 @@ function accessToken(): string {
   return token;
 }
 
+// Error estructurado (no solo un mensaje de texto) para poder: (a) verlo
+// en los logs sin adivinarlo, y (b) que quien llama pueda tomar
+// decisiones programáticas sobre un error puntual (ver
+// esErrorStatusPreapprovalInvalido/cancelarPreapproval más abajo) sin
+// tener que parsear el mensaje. Nunca lleva el access token, el token de
+// tarjeta, ni ningún dato de pago — `mensajeMp`/`errorSlug`/`causa` son
+// el motivo del rechazo que documenta Mercado Pago, no la tarjeta.
+export class MercadoPagoApiError extends Error {
+  readonly status: number;
+  readonly mensajeMp: string | null;
+  readonly errorSlug: string | null;
+
+  constructor(path: string, status: number, mensajeMp: string | null, errorSlug: string | null, detalle: string) {
+    super(`Mercado Pago ${path} respondió ${status}: ${detalle}`);
+    this.name = "MercadoPagoApiError";
+    this.status = status;
+    this.mensajeMp = mensajeMp;
+    this.errorSlug = errorSlug;
+  }
+}
+
 async function mpFetch<T>(path: string, init: RequestInit = {}): Promise<T> {
   const res = await fetch(`${API_BASE}${path}`, {
     ...init,
@@ -39,9 +60,21 @@ async function mpFetch<T>(path: string, init: RequestInit = {}): Promise<T> {
   });
   const cuerpo = await res.json().catch(() => null);
   if (!res.ok) {
-    // Nunca se loguea el access token ni el body completo si trae datos
-    // de pago — solo el status y el mensaje de error que devuelve MP.
-    throw new Error(`Mercado Pago ${path} respondió ${res.status}: ${cuerpo?.message ?? "sin detalle"}`);
+    // Nunca se loguea el access token, ni el token de tarjeta, ni ningún
+    // dato de pago — pero SÍ conviene ver el detalle real que manda
+    // Mercado Pago (status HTTP, el slug de `error` y el/los código y
+    // descripción de `cause`, ej. "invalid_token" o "card_token_id is
+    // required") para poder diagnosticar un fallo real de producción
+    // (ej. cancelación) sin tener que adivinarlo solo por el status.
+    // Ninguno de estos tres campos documenta datos sensibles: son el
+    // motivo del rechazo, no la tarjeta.
+    const causa = Array.isArray(cuerpo?.cause)
+      ? cuerpo.cause
+          .map((c: { code?: string | number; description?: string }) => `${c.code ?? "?"}${c.description ? `: ${c.description}` : ""}`)
+          .join("; ")
+      : undefined;
+    const detalle = [cuerpo?.message, cuerpo?.error && `error=${cuerpo.error}`, causa].filter(Boolean).join(" | ") || "sin detalle";
+    throw new MercadoPagoApiError(path, res.status, cuerpo?.message ?? null, cuerpo?.error ?? null, detalle);
   }
   return cuerpo as T;
 }
@@ -69,12 +102,38 @@ export interface Preapproval {
   };
 }
 
-export interface AuthorizedPayment {
+// Recurso "Authorized Payment" — tanto el que devuelve
+// GET /authorized_payments/{id} como cada elemento de
+// GET /authorized_payments/search?preapproval_id=. Es el cobro puntual
+// de una cuota de la suscripción, DISTINTO del estado del preapproval en
+// sí (ver el comentario grande en lib/mercadopago-logica.ts): un
+// preapproval puede seguir "authorized" con un cobro "rejected" acá.
+//
+// `status` (primer nivel, del recurso Authorized Payment) y
+// `payment.status` (anidado, del Payment real) no están confirmados como
+// el mismo campo en todas las integraciones — se declaran los dos como
+// opcionales y se leen ambos (ver estadoPagoReal en
+// lib/mercadopago-logica.ts) en vez de apostar a uno solo.
+export interface PagoAutorizado {
   id: number | string;
   preapproval_id: string;
-  status: string;
-  transaction_amount: number;
+  status?: string;
+  payment?: {
+    id?: number | string;
+    status?: string;
+    status_detail?: string;
+  };
+  transaction_amount?: number;
   date_created?: string;
+}
+
+// Normaliza el `status` crudo que devuelve Mercado Pago (puede venir
+// "cancelled", variante histórica — ver normalizarEstadoPreapproval en
+// lib/mercadopago-logica.ts) a nuestro único valor interno ANTES de que
+// el resultado salga de este archivo — así el resto del código nunca
+// tiene que contemplar la variante.
+function normalizarPreapproval(cuerpo: Record<string, unknown> & { status: string }): Preapproval {
+  return { ...(cuerpo as unknown as Preapproval), status: normalizarEstadoPreapproval(cuerpo.status) };
 }
 
 function planId(): string {
@@ -102,6 +161,15 @@ function planId(): string {
 // usaba esta función antes es el de Suscripciones SIN plan asociado —
 // no el nuestro.
 //
+// OJO — que esta llamada devuelva status "authorized" NO significa que
+// haya un pago aprobado: es el estado del preapproval, no del cobro. Un
+// bug real de producción activó Premium solo por esto, y minutos después
+// Mercado Pago informó el cobro real como rechazado. Quien llama a esta
+// función SIEMPRE tiene que pasar el resultado por sincronizarSuscripcion
+// (lib/suscripciones.ts), que es quien de verdad confirma el pago
+// consultando buscarPagosAutorizados antes de otorgar Premium — nunca
+// alcanza con mirar el `status` que devuelve este POST.
+//
 // A propósito NO manda `notification_url`: el código fuente oficial de
 // los SDK de Go y PHP para crear un preapproval no declara ese campo en
 // su tipo de request (github.com/mercadopago/sdk-go/pkg/preapproval:
@@ -117,7 +185,7 @@ export async function crearPreapproval(params: {
   backUrl: string;
   cardTokenId: string;
 }): Promise<Preapproval> {
-  return mpFetch<Preapproval>("/preapproval", {
+  const cuerpo = await mpFetch<Record<string, unknown> & { status: string }>("/preapproval", {
     method: "POST",
     body: JSON.stringify({
       preapproval_plan_id: planId(),
@@ -129,21 +197,64 @@ export async function crearPreapproval(params: {
       status: "authorized",
     }),
   });
+  return normalizarPreapproval(cuerpo);
 }
 
 export async function obtenerPreapproval(id: string): Promise<Preapproval> {
-  return mpFetch<Preapproval>(`/preapproval/${encodeURIComponent(id)}`);
+  const cuerpo = await mpFetch<Record<string, unknown> & { status: string }>(`/preapproval/${encodeURIComponent(id)}`);
+  return normalizarPreapproval(cuerpo);
 }
 
-// Estado real de Mercado Pago: "canceled" (una sola "l"). Ver el
-// comentario en lib/mercadopago-logica.ts.
+// Mercado Pago documenta `status: "canceled"` (una sola "l") para
+// PUT /preapproval/{id} — pero un error real de producción mostró que
+// nuestra cuenta lo rechaza con 400 "Invalid preapproval status param:
+// canceled". Mercado Pago tiene integraciones históricas que usan
+// "cancelled" (dos "l"); no hay forma de saber cuál acepta esta cuenta
+// sin probar, así que NUNCA se reemplaza un valor por el otro a ciegas:
+//
+//   1. Primer intento: el valor documentado, "canceled".
+//   2. Si (y SOLO si) Mercado Pago responde exactamente con ese 400 +
+//      "Invalid preapproval status param: canceled", segundo y último
+//      intento con la variante histórica, "cancelled".
+//   3. Cualquier otro error (401, 404, otro 400 distinto, o el segundo
+//      intento fallando también) se propaga tal cual — nunca se llama a
+//      sincronizarSuscripcion con datos parciales, así que Supabase
+//      nunca queda tocado si la cancelación real falló.
+//
+// El resultado (cualquiera de los dos intentos que haya funcionado) pasa
+// por normalizarPreapproval, así que quien llama a esta función siempre
+// recibe `status: "canceled"` sin importar cuál de los dos aceptó Mercado
+// Pago.
 export async function cancelarPreapproval(id: string): Promise<Preapproval> {
-  return mpFetch<Preapproval>(`/preapproval/${encodeURIComponent(id)}`, {
-    method: "PUT",
-    body: JSON.stringify({ status: "canceled" }),
-  });
+  const intentar = (status: "canceled" | "cancelled") =>
+    mpFetch<Record<string, unknown> & { status: string }>(`/preapproval/${encodeURIComponent(id)}`, {
+      method: "PUT",
+      body: JSON.stringify({ status }),
+    });
+
+  try {
+    return normalizarPreapproval(await intentar("canceled"));
+  } catch (err) {
+    if (!(err instanceof MercadoPagoApiError) || !esErrorStatusPreapprovalInvalido({ status: err.status, mensajeMp: err.mensajeMp }, "canceled")) {
+      throw err;
+    }
+    console.error(
+      '[mercadopago] la cuenta rechazó status "canceled" (Invalid preapproval status param) — reintentando la cancelación con la variante histórica "cancelled"',
+      id
+    );
+    return normalizarPreapproval(await intentar("cancelled"));
+  }
 }
 
-export async function obtenerAuthorizedPayment(id: string | number): Promise<AuthorizedPayment> {
-  return mpFetch<AuthorizedPayment>(`/authorized_payments/${encodeURIComponent(String(id))}`);
+export async function obtenerAuthorizedPayment(id: string | number): Promise<PagoAutorizado> {
+  return mpFetch<PagoAutorizado>(`/authorized_payments/${encodeURIComponent(String(id))}`);
+}
+
+// Todos los cobros asociados a un preapproval — es la consulta que
+// confirma si de verdad hubo un pago aprobado (nunca se activa/mantiene
+// Premium solo porque preapproval.status === "authorized", ver
+// sincronizarSuscripcion en lib/suscripciones.ts y el comentario grande
+// en lib/mercadopago-logica.ts).
+export async function buscarPagosAutorizados(preapprovalId: string): Promise<{ results: PagoAutorizado[] }> {
+  return mpFetch<{ results: PagoAutorizado[] }>(`/authorized_payments/search?preapproval_id=${encodeURIComponent(preapprovalId)}`);
 }

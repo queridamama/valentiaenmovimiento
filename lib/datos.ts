@@ -1,7 +1,7 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { AreaRespuesta } from "@/lib/tipos";
 import { crearClienteServicio } from "@/lib/supabase/servicio";
-import { esAccesoVigente, type EstadoPreapproval } from "@/lib/mercadopago-logica";
+import { esAccesoVigente } from "@/lib/mercadopago-logica";
 import { revalidarSiCorresponde } from "@/lib/suscripciones";
 
 // La forma en que supabase-js tipa una relación embebida a-uno (ej. la
@@ -72,17 +72,18 @@ export async function obtenerAutorizacion(supabase: SupabaseClient, userId: stri
   // la que ya pagó termina de vencer — eso no depende de ningún aviso
   // externo, así que se revisa siempre con el último dato que tengamos
   // guardado. Solo aplica si, después de todo lo anterior, sigue siendo
-  // Premium por Mercado Pago.
+  // Premium por Mercado Pago. `acceso_hasta` es la única fecha que decide
+  // esto — nunca el status del preapproval ni `fecha_proximo_pago` (ver
+  // esAccesoVigente en lib/mercadopago-logica.ts).
   if (autorizacion.nivel === "premium" && autorizacion.origen_nivel === "mercadopago") {
     const { data: suscripcion } = await supabase
       .from("suscripciones")
-      .select("estado, fecha_proximo_pago")
+      .select("acceso_hasta")
       .eq("usuario_id", userId)
       .eq("proveedor", "mercadopago")
       .maybeSingle();
 
-    const periodoVencido =
-      suscripcion && !esAccesoVigente(suscripcion.estado as EstadoPreapproval, suscripcion.fecha_proximo_pago);
+    const periodoVencido = suscripcion && !esAccesoVigente(suscripcion.acceso_hasta);
 
     if (periodoVencido) {
       const servicio = crearClienteServicio();
@@ -101,7 +102,7 @@ export async function obtenerAutorizacion(supabase: SupabaseClient, userId: stri
 export async function obtenerSuscripcionPropia(supabase: SupabaseClient, userId: string) {
   const { data } = await supabase
     .from("suscripciones")
-    .select("estado, monto, moneda, fecha_proximo_pago, fecha_ultimo_pago, cancelada_en")
+    .select("estado, monto, moneda, fecha_proximo_pago, fecha_ultimo_pago, acceso_hasta, ultimo_pago_estado, cancelada_en")
     .eq("usuario_id", userId)
     .eq("proveedor", "mercadopago")
     .maybeSingle();

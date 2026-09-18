@@ -8,12 +8,39 @@
 
 import { createHmac, timingSafeEqual } from "node:crypto";
 
-// Estados reales del recurso Preapproval de Mercado Pago. Ojo: es
-// "canceled" (una sola "l"), no "cancelled" — así lo documenta la API
-// actual (PUT /preapproval/{id} con status: "canceled"). Escribirlo con
-// dos "l" no rompe nada a nivel de TypeScript, pero nunca va a matchear
-// un estado real que devuelva Mercado Pago.
+// Estados reales del recurso Preapproval de Mercado Pago, ya
+// NORMALIZADOS a un solo valor por nuestra cuenta ("canceled", una sola
+// "l" — el valor que usa nuestro CHECK constraint en Supabase). Un error
+// real de producción mostró que PUT /preapproval/{id} con
+// status:"canceled" (el documentado) puede ser rechazado por esta cuenta
+// con "Invalid preapproval status param: canceled", y que Mercado Pago
+// tiene integraciones históricas que usan "cancelled" (dos "l"). Nunca se
+// reemplaza un valor por el otro a ciegas: cancelarPreapproval() (ver
+// lib/mercadopago.ts) intenta primero el documentado y solo ante ESE
+// error puntual reintenta con la variante alternativa; y cualquier
+// "cancelled" que Mercado Pago devuelva en una respuesta (a esta cuenta o
+// a cualquier otra) se normaliza acá mismo, en el borde de I/O, a
+// "canceled" — el resto del código (este archivo, lib/suscripciones.ts,
+// el CHECK de la tabla) nunca necesita saber que existió la variante.
 export type EstadoPreapproval = "pending" | "authorized" | "paused" | "canceled";
+
+export function normalizarEstadoPreapproval(status: string): EstadoPreapproval {
+  if (status === "cancelled") return "canceled";
+  return status as EstadoPreapproval;
+}
+
+// Mercado Pago puede rechazar un valor de `status` documentado (ej.
+// "canceled") con este mensaje puntual si la cuenta en particular espera
+// la variante histórica ("cancelled") — o viceversa. Solo se reintenta
+// ante ESTE mensaje exacto (comparado sin importar mayúsculas, por las
+// dudas), nunca ante cualquier 400: reintentar ante un error no
+// relacionado (token vencido, preapproval inexistente, otro campo
+// inválido) ocultaría un problema real en vez de resolverlo.
+export function esErrorStatusPreapprovalInvalido(params: { status: number; mensajeMp: string | null }, valorIntentado: string): boolean {
+  if (params.status !== 400) return false;
+  if (!params.mensajeMp) return false;
+  return params.mensajeMp.trim().toLowerCase() === `invalid preapproval status param: ${valorIntentado.toLowerCase()}`;
+}
 
 // ---------- Validación del webhook ----------
 // Mercado Pago documenta la firma HMAC (header x-signature) como parte
@@ -101,19 +128,23 @@ export function validarFirmaWebhook(params: { xSignature: string | null; xReques
 // el último dato guardado ya es "viejo" — para no pegarle a la API de
 // Mercado Pago en cada request. La ventana depende del estado guardado:
 //
-//   - "pending": la usuaria ya inició el pago (existe una fila en
-//     `suscripciones`) pero todavía figura Gratis — es exactamente el
-//     caso de "pagó, pero nunca volvió bien a /membresia/resultado"
-//     (cerró Mercado Pago, se le cortó la conexión, etc.). Acá conviene
-//     una ventana corta: no hay ningún Premium que "mantener" todavía,
-//     así que revisar seguido no tiene el costo de una usuaria Premium
-//     ya estable, y es justo la ventana crítica en la que queremos
-//     enterarnos rápido de que Mercado Pago ya la autorizó.
-//   - cualquier otro estado (authorized/paused/canceled): ya se resolvió
-//     una vez, así que alcanza con la ventana larga de siempre — una
-//     usuaria Premium activa entra varias veces por día, la mayoría de
-//     esas visitas no generan ningún llamado a la API; y si canceló o
-//     se le rechazó el cobro, nos enteramos en horas, no en días.
+//   - "pending", o "authorized" sin ningún pago aprobado todavía
+//     (acceso_hasta null — la usuaria ya inició el pago pero Mercado
+//     Pago todavía no confirmó ningún cobro, o el primero fue rechazado):
+//     es exactamente el caso de "pagó, pero nunca volvió bien a
+//     /membresia/resultado" (cerró Mercado Pago, se le cortó la
+//     conexión, etc.) o el caso del bug real de producción (preapproval
+//     authorized, primer cobro todavía sin resolver). Acá conviene una
+//     ventana corta: no hay ningún Premium que "mantener" todavía, así
+//     que revisar seguido no tiene el costo de una usuaria Premium ya
+//     estable, y es justo la ventana crítica en la que queremos
+//     enterarnos rápido de qué pasó con ese primer cobro.
+//   - cualquier otro caso (ya hay un acceso_hasta guardado, sea que siga
+//     vigente o ya haya vencido): ya se resolvió una vez, así que alcanza
+//     con la ventana larga de siempre — una usuaria Premium activa entra
+//     varias veces por día, la mayoría de esas visitas no generan ningún
+//     llamado a la API; y si canceló o se le rechazó una renovación, nos
+//     enteramos en horas, no en días.
 //
 // Ninguno de los dos números lo documenta Mercado Pago: son decisiones
 // de producto nuestras. El caso "recién volvió del checkout" no espera
@@ -122,13 +153,19 @@ export function validarFirmaWebhook(params: { xSignature: string | null; xReques
 export const VENTANA_REVALIDACION_MS = 6 * 60 * 60 * 1000; // 6 horas
 export const VENTANA_REVALIDACION_PENDIENTE_MS = 5 * 60 * 1000; // 5 minutos
 
-export function debeRevalidar(actualizadoEnIso: string, estado: EstadoPreapproval, ahora: number = Date.now()): boolean {
-  const ventana = estado === "pending" ? VENTANA_REVALIDACION_PENDIENTE_MS : VENTANA_REVALIDACION_MS;
+export function debeRevalidar(
+  actualizadoEnIso: string,
+  estado: EstadoPreapproval,
+  accesoHasta: string | null,
+  ahora: number = Date.now()
+): boolean {
+  const esperandoPrimerPago = estado === "pending" || (estado === "authorized" && accesoHasta === null);
+  const ventana = esperandoPrimerPago ? VENTANA_REVALIDACION_PENDIENTE_MS : VENTANA_REVALIDACION_MS;
   const antiguedadMs = ahora - new Date(actualizadoEnIso).getTime();
   return antiguedadMs >= ventana;
 }
 
-// ---------- Acceso vigente y "pagado hasta" ----------
+// ---------- "Próximo cobro" (informativo, NO decide vigencia) ----------
 // GET /preapproval/{id} sí expone `next_payment_date` (confirmado contra
 // la documentación oficial de Mercado Pago) — la cautela real no es si
 // el campo existe, sino qué trae la respuesta INMEDIATAMENTE después de
@@ -139,6 +176,13 @@ export function debeRevalidar(actualizadoEnIso: string, estado: EstadoPreapprova
 // teníamos guardada — nunca se inventa una fecha que nunca existió (si
 // nunca hubo next_payment_date, el resultado es null y no hay período de
 // gracia que preservar).
+//
+// OJO: esto es puramente informativo ("próximo intento de cobro" en
+// Perfil) — desde el bug real de producción de "authorized sin pago
+// aprobado", `next_payment_date` YA NO decide si hay acceso vigente,
+// porque después de un cobro rechazado puede representar una fecha de
+// reintento, no el fin de un período realmente pagado. Ver acceso_hasta
+// / esAccesoVigente más abajo, que es lo único que decide vigencia.
 export function calcularFechaProximoPago(params: {
   nextPaymentDateNueva: string | null;
   status: EstadoPreapproval;
@@ -151,14 +195,83 @@ export function calcularFechaProximoPago(params: {
   return null;
 }
 
-// "authorized" siempre tiene acceso vigente. "pending" nunca (todavía no
-// pagó nada). "paused"/"canceled" conservan acceso solo si ya pagaron un
-// período que todavía no terminó (fechaProximoPago en el futuro).
-export function esAccesoVigente(status: EstadoPreapproval, fechaProximoPago: string | null, ahora: number = Date.now()): boolean {
-  if (status === "authorized") return true;
-  if (status === "pending") return false;
-  if (!fechaProximoPago) return false;
-  return new Date(fechaProximoPago).getTime() > ahora;
+// ---------- Pago real vs. estado del preapproval ----------
+// Mercado Pago separa dos conceptos: el preapproval (la "suscripción")
+// puede seguir en status "authorized" aunque el cobro de una cuota
+// puntual haya sido rechazado y entre en reintento — "authorized" en el
+// preapproval NUNCA es sinónimo de "pago aprobado". Este es exactamente
+// el bug real de producción que motiva esta sección: se activó Premium
+// solo por preapproval.status === "authorized", sin que existiera ningún
+// pago aprobado. La única fuente de verdad de si se cobró algo de verdad
+// es el cobro concreto — GET /authorized_payments/search?preapproval_id=
+// (ver buscarPagosAutorizados en lib/mercadopago.ts) — nunca el status
+// del preapproval solo.
+export interface InfoPagoAutorizado {
+  // Estado del recurso "Authorized Payment" en sí. Según la integración,
+  // el estado real del cobro (approved/rejected/in_process/pending/...)
+  // puede venir en este campo de primer nivel o anidado en `payment`
+  // (ver PagoAutorizado en lib/mercadopago.ts) — no está confirmado cuál
+  // usa esta cuenta en particular, así que se leen los dos.
+  status?: string | null;
+  paymentStatus?: string | null;
+  dateCreated?: string | null;
+}
+
+// El cobro más reciente por fecha de creación — los resultados de
+// /authorized_payments/search no vienen con orden garantizado. Si dos
+// traen exactamente la misma fecha (no debería pasar), se queda con
+// cualquiera de los dos: no cambia la decisión (misma fecha).
+export function pagoMasReciente(pagos: InfoPagoAutorizado[]): InfoPagoAutorizado | null {
+  if (pagos.length === 0) return null;
+  return pagos.reduce((masReciente, actual) => {
+    const fechaActual = actual.dateCreated ? Date.parse(actual.dateCreated) : -Infinity;
+    const fechaMasReciente = masReciente.dateCreated ? Date.parse(masReciente.dateCreated) : -Infinity;
+    return fechaActual >= fechaMasReciente ? actual : masReciente;
+  });
+}
+
+// `payment.status` (el estado del Payment real, cuando el recurso lo
+// expone anidado) gana sobre el `status` de primer nivel del Authorized
+// Payment, que en algunas integraciones es el estado del recurso de
+// cobro programado (scheduled/processed/...) y no el del pago en sí.
+export function estadoPagoReal(pago: InfoPagoAutorizado | null): string | null {
+  if (!pago) return null;
+  return pago.paymentStatus ?? pago.status ?? null;
+}
+
+// Solo "approved" cuenta como pago exitoso. `status_detail=accredited`
+// (cuando el recurso lo expone) sería una confirmación más fina, pero no
+// está garantizado que todos los medios de pago lo completen — exigirlo
+// siempre podría dejar afuera cobros legítimos que Mercado Pago ya marcó
+// approved por otro medio. Por eso el criterio duro y confiable es
+// exclusivamente `status === "approved"`.
+export function esPagoAprobado(pago: InfoPagoAutorizado | null): boolean {
+  return estadoPagoReal(pago) === "approved";
+}
+
+// ---------- acceso_hasta: lo único que decide vigencia ----------
+// Reemplaza el uso de next_payment_date/fecha_proximo_pago como "pagado
+// hasta" (ver nota arriba). Solo avanza cuando el cobro más reciente está
+// realmente aprobado — nunca por un preapproval "authorized" sin más,
+// nunca por un cobro rejected/pending/in_process, y nunca se inventa una
+// fecha que Mercado Pago no mandó.
+export function calcularAccesoHasta(params: {
+  pagoAprobado: boolean;
+  nextPaymentDateNueva: string | null;
+  accesoHastaExistente: string | null;
+}): string | null {
+  if (params.pagoAprobado && params.nextPaymentDateNueva) return params.nextPaymentDateNueva;
+  return params.accesoHastaExistente;
+}
+
+// Único criterio de vigencia de Premium por Mercado Pago: hay acceso
+// mientras `acceso_hasta` siga en el futuro, sin importar el status del
+// preapproval (authorized/paused/canceled) — un preapproval cancelado a
+// mitad de ciclo conserva acceso hasta el fin del período ya pagado,
+// exactamente igual que uno todavía "authorized" cuyo último cobro fue
+// rechazado no tiene acceso si nunca hubo un pago aprobado antes.
+export function esAccesoVigente(accesoHasta: string | null, ahora: number = Date.now()): boolean {
+  return accesoHasta !== null && new Date(accesoHasta).getTime() > ahora;
 }
 
 export interface AutorizacionActual {

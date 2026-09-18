@@ -79,24 +79,27 @@ export async function POST(req: NextRequest) {
       const preapproval = await obtenerPreapproval(dataId);
       await sincronizarSuscripcion(preapproval);
     } else if (tipo === "subscription_authorized_payment") {
+      // Solo se usa esta consulta para encontrar a qué preapproval
+      // pertenece el pago — sincronizarSuscripcion vuelve a preguntar por
+      // su cuenta el cobro real (buscarPagosAutorizados) antes de decidir
+      // nada, nunca se confía en el status de esta notificación puntual.
       const pago = await obtenerAuthorizedPayment(dataId);
       const preapproval = await obtenerPreapproval(pago.preapproval_id);
-      await sincronizarSuscripcion(preapproval, { fechaUltimoPago: pago.date_created });
+      await sincronizarSuscripcion(preapproval);
     }
     // "payment": la documentación general de Mercado Pago para
     // Suscripciones menciona activar también este tópico — no se
     // asume que sea seguro ignorarlo por eso solo, se deja explícito
     // qué cubrimos sin él. Este endpoint no es siquiera la vía
     // principal (ver el comentario de arriba: la fuente de verdad es
-    // el polling directo a GET /preapproval/{id}), y esa consulta
-    // devuelve, sobre el propio recurso, tanto el estado
-    // (pending/authorized/paused/canceled) como el último cobro y el
-    // próximo (`summarized.last_charged_date`/`next_payment_date`) —
-    // todo lo que `sincronizarSuscripcion` necesita ya sale de ahí, sin
-    // depender de ningún evento de Pagos. Si de todos modos llega una
-    // notificación de tipo "payment" acá, no entra en ningún `if` de
-    // arriba y se responde 200 sin hacer nada — recibirla y descartarla
-    // a propósito es más seguro que no tenerla contemplada.
+    // el polling directo a GET /preapproval/{id}), y `sincronizarSuscripcion`
+    // ya hace su propia consulta a GET /authorized_payments/search para
+    // confirmar el cobro real (nunca se activa Premium solo por el status
+    // del preapproval) — no depende de ningún evento de Pagos para eso.
+    // Si de todos modos llega una notificación de tipo "payment" acá, no
+    // entra en ningún `if` de arriba y se responde 200 sin hacer nada —
+    // recibirla y descartarla a propósito es más seguro que no tenerla
+    // contemplada.
   } catch (err) {
     // No se loguea el body completo (podría traer payer_email u otros
     // datos de la persona) ni el access token — solo lo mínimo para
