@@ -1,0 +1,7 @@
+Carpeta para las fuentes, solo si se quieren alojar en el propio hosting.
+Ver README.md, sección "Tipografías". Archivos esperados:
+  ClashDisplay-Semibold.woff2
+  ClashDisplay-Bold.woff2
+  GeneralSans-Regular.woff2
+  GeneralSans-Medium.woff2
+  GeneralSans-Semibold.woff2

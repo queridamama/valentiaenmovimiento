@@ -112,6 +112,8 @@ h1, h2, h3 { margin: 0; font-family: var(--font-display); font-weight: 700; line
 
 .btn-lg { min-height: 58px; padding: 16px 30px; font-size: 15.5px; }
 .btn-block { width: 100%; }
+@media (max-width: 399px) { .btn-lg { padding: 16px 18px; font-size: 14.5px; letter-spacing: .04em; } }
+@media (max-width: 359px) { .btn-lg { padding: 14px 14px; font-size: 13.5px; letter-spacing: .02em; } .btn-lg svg { display: none; } }
 
 .btn-text {
   display: inline-flex; align-items: center; gap: 8px;
