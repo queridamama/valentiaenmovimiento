@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { crearClienteServidor } from "@/lib/supabase/server";
 import {
   obtenerAutorizacion,
@@ -64,10 +65,11 @@ export default async function InicioPage() {
   // servidor; es un recordatorio suave, no algo crítico.
   const hoy = new Date().getDay();
   const necesitaElegirMovimiento = !movimiento || movimiento.estado === "cumplido";
+  const esRecordatorioViernes = hoy === 5 && movimiento && movimiento.estado === "planeado";
   const recordatorio =
     hoy === 1 && necesitaElegirMovimiento
       ? "Hoy es lunes: ¿qué movimiento vas a elegir esta semana?"
-      : hoy === 5 && movimiento && movimiento.estado === "planeado"
+      : esRecordatorioViernes
         ? "Hoy es viernes: ¿qué pasó con tu movimiento esta semana?"
         : null;
 
@@ -97,8 +99,16 @@ export default async function InicioPage() {
       )}
 
       {recordatorio && (
-        <div className="rounded-[20px] bg-acentoCeleste/40 px-4 py-3">
+        <div className="space-y-2 rounded-[20px] bg-acentoCeleste/40 px-4 py-3">
           <p className="text-[13.5px] font-medium text-marca">{recordatorio}</p>
+          {esRecordatorioViernes && (
+            <Link
+              href="/movimiento"
+              className="inline-block text-[13px] font-semibold text-marca underline decoration-marca/30 underline-offset-4"
+            >
+              Registrar mi movimiento →
+            </Link>
+          )}
         </div>
       )}
 
