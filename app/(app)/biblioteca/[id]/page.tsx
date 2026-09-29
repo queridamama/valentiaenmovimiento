@@ -4,6 +4,7 @@ import { obtenerContenido } from "@/lib/datos";
 import { obtenerArchivosContenido } from "@/lib/acciones/almacenamiento";
 import { ETIQUETA_TIPO_CONTENIDO, type TipoContenido } from "@/lib/tipos";
 import { Titulo, Subtitulo, Etiqueta } from "@/components/ui";
+import ReproductorVideo from "@/components/ReproductorVideo";
 
 export default async function ContenidoBibliotecaPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -49,16 +50,7 @@ export default async function ContenidoBibliotecaPage({ params }: { params: Prom
         {contenido.descripcion && <Subtitulo>{contenido.descripcion}</Subtitulo>}
       </div>
 
-      {contenido.video_url && (
-        <a
-          href={contenido.video_url}
-          target="_blank"
-          rel="noreferrer"
-          className="block rounded-full bg-marca px-6 py-4 text-center text-[15px] font-semibold text-white"
-        >
-          Ver el video →
-        </a>
-      )}
+      {contenido.video_url && <ReproductorVideo url={contenido.video_url} />}
 
       {audioUrl && <audio src={audioUrl} controls className="w-full" />}
 

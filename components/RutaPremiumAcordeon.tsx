@@ -1,7 +1,9 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { TarjetaPaso, COLORES_PASO } from "@/components/tarjetas";
+import { Badge } from "@/components/ui";
 import type { TipoIcono } from "@/components/iconos";
 
 const ICONOS_PASO: TipoIcono[] = ["estrella", "corazon", "montana", "documento"];
@@ -106,11 +108,20 @@ function Modulo({ modulo, abierto, onToggle }: { modulo: ModuloRuta; abierto: bo
   );
 }
 
-// La etapa actual y todas las anteriores ya se "alcanzaron" — deben poder
-// volver a abrirse para reentrar a experiencias, escuchar meditaciones de
-// nuevo o revisar respuestas, aunque el Proyecto ya haya avanzado. Solo
-// las etapas futuras (orden mayor a la actual) quedan bloqueadas. Esto es
-// puramente de navegación: no toca etapa_actual ni el progreso real.
+// El mapa de las 5 etapas es SIEMPRE el mismo componente para Gratis y
+// Premium — no hay una pantalla paralela. Lo que cambia es, por etapa, si
+// está accesible, y por qué no lo está cuando no lo está. Dos motivos de
+// bloqueo, que nunca se mezclan:
+//   - bloqueadaPorNivel: una usuaria Gratis mirando cualquier etapa que no
+//     sea la primera (DEFINÍ, el recorrido gratuito). No depende de su
+//     progreso ni de si tiene Proyecto: para abrirla hace falta Premium.
+//   - bloqueadaPorOrden: una usuaria Premium mirando una etapa futura que
+//     su Proyecto todavía no alcanzó. Se abre sola cuando llegue ahí — la
+//     etapa actual y todas las anteriores ya se "alcanzaron" y quedan
+//     accesibles para volver, reentrar a experiencias o revisar respuestas.
+// En ningún caso una etapa deja de LISTARSE: la visibilidad del mapa nunca
+// depende del contenido (módulos/experiencias publicadas) ni del nivel —
+// solo si se puede o no abrir cambia.
 //
 // Dentro de una etapa accesible, los módulos son secciones colapsables
 // propias: por ahora NO hay bloqueo duro entre ellos — cualquier módulo
@@ -118,8 +129,20 @@ function Modulo({ modulo, abierto, onToggle }: { modulo: ModuloRuta; abierto: bo
 // una etapa posterior del producto, ver brief). Por default se abre el
 // primer módulo con experiencias pendientes de la etapa actual; el resto
 // arranca cerrado pero clicable.
-export default function RutaPremiumAcordeon({ etapas, etapaActualId }: { etapas: EtapaRuta[]; etapaActualId: string | null }) {
-  const etapaActualOrden = etapas.find((e) => e.id === etapaActualId)?.orden ?? 0;
+export default function RutaPremiumAcordeon({
+  etapas,
+  etapaActualId,
+  esPremium,
+}: {
+  etapas: EtapaRuta[];
+  etapaActualId: string | null;
+  esPremium: boolean;
+}) {
+  // DEFINÍ es, por definición de producto, la etapa de menor orden — se usa
+  // el mínimo real en vez de hardcodear su nombre, así no se rompe si el
+  // catálogo de etapas_ruta cambia de orden algún día.
+  const ordenMinimo = etapas.length > 0 ? Math.min(...etapas.map((e) => e.orden)) : 0;
+  const etapaActualOrden = etapas.find((e) => e.id === etapaActualId)?.orden ?? ordenMinimo;
   const [etapasAbiertas, setEtapasAbiertas] = useState<Set<string>>(() => new Set(etapaActualId ? [etapaActualId] : []));
   const [modulosAbiertos, setModulosAbiertos] = useState<Set<string>>(() => {
     const etapaActual = etapas.find((e) => e.id === etapaActualId);
@@ -150,13 +173,24 @@ export default function RutaPremiumAcordeon({ etapas, etapaActualId }: { etapas:
   return (
     <div className="space-y-4">
       {etapas.map((etapa) => {
-        const esActual = etapa.id === etapaActualId;
-        const accesible = etapa.orden <= etapaActualOrden;
+        const esEtapaGratuita = etapa.orden === ordenMinimo;
+        const bloqueadaPorNivel = !esPremium && !esEtapaGratuita;
+        const bloqueadaPorOrden = esPremium && etapa.orden > etapaActualOrden;
+        const accesible = !bloqueadaPorNivel && !bloqueadaPorOrden;
+        const esActual = esPremium && etapa.id === etapaActualId;
         const abierta = accesible && etapasAbiertas.has(etapa.id);
         const totalExperiencias = etapa.modulos.reduce((n, m) => n + m.experiencias.length, 0) + etapa.experienciasSueltas.length;
         const hechas =
           etapa.modulos.reduce((n, m) => n + m.experiencias.filter((e) => e.completada).length, 0) +
           etapa.experienciasSueltas.filter((e) => e.completada).length;
+
+        const textoEstado = bloqueadaPorNivel
+          ? "Disponible en Premium"
+          : bloqueadaPorOrden
+            ? "Próximamente"
+            : totalExperiencias > 0
+              ? `${totalExperiencias} experiencia${totalExperiencias === 1 ? "" : "s"} · ${hechas} hecha${hechas === 1 ? "" : "s"}`
+              : "Todavía no hay experiencias cargadas";
 
         return (
           <div key={etapa.id} className="space-y-3">
@@ -166,21 +200,27 @@ export default function RutaPremiumAcordeon({ etapas, etapaActualId }: { etapas:
               disabled={!accesible}
               aria-expanded={accesible ? abierta : undefined}
               className={`flex w-full items-center justify-between gap-3 rounded-[22px] p-4 text-left transition ${
-                esActual ? "bg-marca text-white" : accesible ? "bg-texto/5" : "cursor-default bg-texto/5 opacity-50"
+                esActual ? "bg-marca text-white" : accesible ? "bg-texto/5" : "cursor-default bg-texto/5 opacity-60"
               }`}
             >
-              <div className="min-w-0">
-                <p className="text-[15px] font-bold tracking-wide">{etapa.nombre}</p>
-                <p className={`text-xs ${esActual ? "text-white/70" : "text-texto/50"}`}>
-                  {accesible
-                    ? totalExperiencias > 0
-                      ? `${totalExperiencias} experiencia${totalExperiencias === 1 ? "" : "s"} · ${hechas} hecha${hechas === 1 ? "" : "s"}`
-                      : "Todavía no hay contenido acá"
-                    : "Se abre más adelante"}
-                </p>
+              <div className="min-w-0 space-y-1">
+                <div className="flex items-center gap-2">
+                  <p className="text-[15px] font-bold tracking-wide">{etapa.nombre}</p>
+                  {bloqueadaPorNivel && <Badge tipo="premium" />}
+                </div>
+                <p className={`text-xs ${esActual ? "text-white/70" : "text-texto/50"}`}>{textoEstado}</p>
               </div>
               {accesible && <Chevron abierta={abierta} />}
             </button>
+
+            {bloqueadaPorNivel && (
+              <Link
+                href="/membresia"
+                className="-mt-1 inline-block pl-4 text-[12.5px] font-semibold text-marca underline decoration-marca/30 underline-offset-4"
+              >
+                Conocer Premium →
+              </Link>
+            )}
 
             {abierta && (
               <div className="flex flex-col gap-3 pl-2">

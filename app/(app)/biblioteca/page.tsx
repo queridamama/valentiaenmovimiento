@@ -1,73 +1,32 @@
 import Link from "next/link";
 import { crearClienteServidor } from "@/lib/supabase/server";
 import { obtenerAutorizacion, obtenerBiblioteca, obtenerCursosGratuitos } from "@/lib/datos";
-import { Titulo, Subtitulo, Etiqueta, Badge } from "@/components/ui";
-import { IconoPastel } from "@/components/iconos";
+import { Titulo, Subtitulo, Etiqueta } from "@/components/ui";
+import { TarjetaCamino } from "@/components/tarjetas";
 import type { TipoIcono } from "@/components/iconos";
 
-const ICONO_POR_TIPO: Record<string, TipoIcono> = {
-  meditacion: "corazon",
-  audio: "corazon",
-  plantilla: "documento",
-  recurso: "documento",
-  clase: "estrella",
-  taller_grabado: "estrella",
-  lectura: "documento",
+// Biblioteca como hub de categorías (antes: todos los contenidos listados
+// uno debajo del otro en una sola página — con 24+ lecturas, la mujer
+// tenía que scrollear muchísimo antes de llegar a clases u otro material).
+// Cada categoría es una tarjeta grande, mismo lenguaje visual que los "4
+// caminos" de Inicio (TarjetaCamino, reutilizada tal cual). Tocar una
+// categoría lleva a /biblioteca/categoria/[categoria], que lista sus
+// contenidos — sin duplicar la data ni el modelo, solo la agrupación visual.
+const COLOR_POR_CATEGORIA: Record<string, "rosa" | "celeste" | "lila" | "lima"> = {
+  escritos: "rosa",
+  meditaciones: "lila",
+  clases: "celeste",
+  recursos: "lima",
+  cursos: "rosa",
 };
 
-function Fila({
-  href,
-  titulo,
-  duracion,
-  portadaUrl,
-  icono,
-  premium,
-}: {
-  href: string;
-  titulo: string;
-  duracion?: string | null;
-  portadaUrl?: string | null;
-  icono: TipoIcono;
-  premium?: boolean;
-}) {
-  return (
-    <Link href={href} className="flex items-center gap-3 rounded-[20px] bg-white p-3.5 shadow-[0_6px_18px_-14px_rgba(37,93,120,0.6)]">
-      {portadaUrl ? (
-        // eslint-disable-next-line @next/next/no-img-element -- viene de Storage
-        <img src={portadaUrl} alt="" className="h-11 w-11 shrink-0 rounded-full object-cover" />
-      ) : (
-        <IconoPastel tipo={icono} color="lila" />
-      )}
-      <div className="min-w-0 flex-1">
-        <p className="truncate text-[14.5px] font-semibold text-marca">{titulo}</p>
-        {duracion && <p className="text-[12px] text-texto/45">{duracion}</p>}
-      </div>
-      {premium && <Badge tipo="premium" />}
-      <span className="text-marca/30">›</span>
-    </Link>
-  );
-}
-
-// Para la fila de una lectura, que no tiene `duracion` cargada como las
-// demás — un extracto corto de texto plano alcanza (mismo criterio que ya
-// usa /admin/comunidad para el extracto de una publicación).
-function extractoTexto(html: string | null, max = 90): string {
-  if (!html) return "";
-  const texto = html.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim();
-  return texto.length > max ? `${texto.slice(0, max)}…` : texto;
-}
-
-function Seccion({ titulo, texto, children }: { titulo: string; texto: string; children: React.ReactNode }) {
-  return (
-    <section className="space-y-3">
-      <div className="space-y-0.5">
-        <h2 className="font-display text-[19px] font-bold text-marca">{titulo}</h2>
-        <p className="text-[13px] text-texto/50">{texto}</p>
-      </div>
-      <div className="space-y-4">{children}</div>
-    </section>
-  );
-}
+const ICONO_POR_CATEGORIA: Record<string, TipoIcono> = {
+  escritos: "libro",
+  meditaciones: "corazon",
+  clases: "estrella",
+  recursos: "documento",
+  cursos: "pasos",
+};
 
 export default async function BibliotecaPage() {
   const supabase = await crearClienteServidor();
@@ -83,93 +42,62 @@ export default async function BibliotecaPage() {
   ]);
   const esPremium = autorizacion.nivel === "premium";
 
-  const meditaciones = biblioteca.filter((b) => ["meditacion", "audio"].includes(b.contenido.tipo));
-  const ejercicios = biblioteca.filter((b) => ["plantilla", "recurso"].includes(b.contenido.tipo));
-  const videos = biblioteca.filter((b) => ["clase", "taller_grabado"].includes(b.contenido.tipo));
-  const lecturas = biblioteca.filter((b) => b.contenido.tipo === "lectura");
+  const categorias = [
+    {
+      slug: "escritos",
+      eyebrow: "Escritos",
+      texto: "Reflexiones y textos para volver cuando necesites otra mirada.",
+      cantidad: biblioteca.filter((b) => b.contenido.tipo === "lectura").length,
+    },
+    {
+      slug: "meditaciones",
+      eyebrow: "Meditaciones",
+      texto: "Prácticas guiadas para acompañar tu proceso.",
+      cantidad: biblioteca.filter((b) => ["meditacion", "audio"].includes(b.contenido.tipo)).length,
+    },
+    {
+      slug: "clases",
+      eyebrow: "Videos y clases",
+      texto: "Clases, talleres y masterclasses para profundizar.",
+      cantidad: biblioteca.filter((b) => ["clase", "taller_grabado"].includes(b.contenido.tipo)).length,
+    },
+    {
+      slug: "recursos",
+      eyebrow: "Recursos",
+      texto: "Ejercicios, guías y materiales para llevar a la práctica.",
+      cantidad: biblioteca.filter((b) => ["plantilla", "recurso"].includes(b.contenido.tipo)).length,
+    },
+    {
+      slug: "cursos",
+      eyebrow: "Mini cursos",
+      texto: "Series cortas, con principio y fin.",
+      cantidad: cursos.length,
+    },
+  ].filter((c) => c.cantidad > 0);
 
   return (
-    <main className="mx-auto max-w-md space-y-8 px-5 pb-6 pt-6">
+    <main className="mx-auto max-w-md space-y-7 px-5 pb-6 pt-6">
       <div className="space-y-2">
         <Titulo>Biblioteca</Titulo>
         <Subtitulo>Videos, meditaciones y recursos para seguir trabajando en vos y en eso que querés construir.</Subtitulo>
       </div>
 
-      {meditaciones.length > 0 && (
-        <Seccion titulo="Meditaciones" texto="Audios y meditaciones guiadas.">
-          {meditaciones.map((b) => (
-            <Fila
-              key={b.ubicacionId}
-              href={`/biblioteca/${b.contenido.id}`}
-              titulo={b.contenido.titulo}
-              duracion={b.contenido.duracion}
-              portadaUrl={b.contenido.portada_url}
-              icono={ICONO_POR_TIPO[b.contenido.tipo] ?? "corazon"}
-              premium={b.nivelAcceso === "membresia"}
-            />
-          ))}
-        </Seccion>
-      )}
+      <div className="space-y-4">
+        {categorias.map((c) => (
+          <TarjetaCamino
+            key={c.slug}
+            eyebrow={c.eyebrow}
+            texto={c.texto}
+            nota={`${c.cantidad} contenido${c.cantidad === 1 ? "" : "s"}`}
+            cta="Explorar"
+            href={`/biblioteca/categoria/${c.slug}`}
+            color={COLOR_POR_CATEGORIA[c.slug]}
+            icono={ICONO_POR_CATEGORIA[c.slug]}
+          />
+        ))}
+      </div>
 
-      {ejercicios.length > 0 && (
-        <Seccion titulo="Ejercicios y recursos" texto="Guías, hojas de trabajo, preguntas y plantillas descargables.">
-          {ejercicios.map((b) => (
-            <Fila
-              key={b.ubicacionId}
-              href={`/biblioteca/${b.contenido.id}`}
-              titulo={b.contenido.titulo}
-              duracion={b.contenido.duracion}
-              portadaUrl={b.contenido.portada_url}
-              icono={ICONO_POR_TIPO[b.contenido.tipo] ?? "documento"}
-              premium={b.nivelAcceso === "membresia"}
-            />
-          ))}
-        </Seccion>
-      )}
-
-      {lecturas.length > 0 && (
-        <Seccion titulo="Lecturas y reflexiones" texto="Escritos de Meli para leer con calma.">
-          {lecturas.map((b) => (
-            <Fila
-              key={b.ubicacionId}
-              href={`/biblioteca/${b.contenido.id}`}
-              titulo={b.contenido.titulo}
-              duracion={b.contenido.duracion ?? extractoTexto(b.contenido.contenido_html)}
-              portadaUrl={b.contenido.portada_url}
-              icono={ICONO_POR_TIPO[b.contenido.tipo] ?? "documento"}
-              premium={b.nivelAcceso === "membresia"}
-            />
-          ))}
-        </Seccion>
-      )}
-
-      {cursos.length > 0 && (
-        <Seccion titulo="Mini cursos gratuitos" texto="Series cortas, con principio y fin.">
-          {cursos.map((c) => (
-            <Fila key={c.id} href={`/biblioteca/cursos/${c.id}`} titulo={c.titulo} duracion={`${c.cantidadModulos} módulo${c.cantidadModulos === 1 ? "" : "s"}`} icono="pasos" />
-          ))}
-        </Seccion>
-      )}
-
-      {videos.length > 0 && (
-        <Seccion titulo="Videos y clases" texto="Contenidos sueltos, para ver cuando quieras.">
-          {videos.map((b) => (
-            <Fila
-              key={b.ubicacionId}
-              href={`/biblioteca/${b.contenido.id}`}
-              titulo={b.contenido.titulo}
-              duracion={b.contenido.duracion}
-              portadaUrl={b.contenido.portada_url}
-              icono={ICONO_POR_TIPO[b.contenido.tipo] ?? "estrella"}
-              premium={b.nivelAcceso === "membresia"}
-            />
-          ))}
-        </Seccion>
-      )}
-
-      {meditaciones.length === 0 && ejercicios.length === 0 && lecturas.length === 0 && cursos.length === 0 && videos.length === 0 && (
-        <p className="text-sm italic text-texto/40">Todavía no hay contenidos publicados acá.</p>
-      )}
+      {categorias.length === 0 && <p className="text-sm italic text-texto/40">Todavía no hay contenidos publicados acá.</p>}
 
       {!esPremium && (
         <section className="space-y-2 rounded-[24px] bg-acento/15 p-5 text-center">

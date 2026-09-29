@@ -9,11 +9,8 @@ import {
   asegurarProyectoActivo,
 } from "@/lib/datos";
 import { Titulo, Subtitulo, Etiqueta, Progreso } from "@/components/ui";
-import { TarjetaPaso, TarjetaCamino, COLORES_PASO } from "@/components/tarjetas";
+import { TarjetaCamino } from "@/components/tarjetas";
 import RutaPremiumAcordeon from "@/components/RutaPremiumAcordeon";
-import type { TipoIcono } from "@/components/iconos";
-
-const ICONOS_PASO: TipoIcono[] = ["estrella", "corazon", "montana", "documento"];
 
 export default async function MiSuenoPage() {
   const supabase = await crearClienteServidor();
@@ -29,71 +26,47 @@ export default async function MiSuenoPage() {
   ]);
   const esPremium = autorizacion.nivel === "premium";
   const recorridoTerminado = recorrido.length > 0 && recorrido.every((e) => e.completada);
-  const primeraPendienteIdx = recorrido.findIndex((e) => !e.completada);
 
   let proyecto = esPremium ? await obtenerProyectoActivo(supabase, user.id) : null;
   if (esPremium && !proyecto) {
     proyecto = await asegurarProyectoActivo(supabase, user.id, sueno?.id ?? null);
   }
-  const ruta = esPremium ? await obtenerRuta(supabase, user.id) : [];
+
+  // El mapa de las 5 etapas es siempre el mismo, para Gratis y Premium —
+  // ver el comentario en RutaPremiumAcordeon.tsx. `etapas_ruta` es de
+  // lectura pública para cualquier autenticada (no depende de nivel), así
+  // que esto ya no se pide condicionalmente como antes.
+  const ruta = await obtenerRuta(supabase, user.id);
+
+  let subtitulo: string;
+  if (recorrido.length > 0 && !recorridoTerminado) {
+    subtitulo = "Hoy estás haciendo el recorrido de entrada. Es corto y es tuyo.";
+  } else if (esPremium) {
+    subtitulo = "El método completo: cinco etapas y noventa días.";
+  } else {
+    subtitulo = "Ya está tu sueño. Esto es lo que hiciste con él.";
+  }
 
   return (
     <main className="mx-auto max-w-md space-y-7 px-5 pb-6 pt-6">
       <div className="space-y-2">
         <Titulo>Mi Ruta</Titulo>
-        {!recorridoTerminado ? (
-          <Subtitulo>Hoy estás haciendo el recorrido de entrada. Es corto y es tuyo.</Subtitulo>
-        ) : esPremium ? (
-          <Subtitulo>El método completo: cinco etapas y noventa días.</Subtitulo>
-        ) : (
-          <Subtitulo>Ya está tu sueño. Esto es lo que hiciste con él.</Subtitulo>
-        )}
+        <Subtitulo>{subtitulo}</Subtitulo>
       </div>
 
-      {/* Para Premium con el recorrido ya terminado, estas mismas 4
-          experiencias vuelven a aparecer más abajo dentro del módulo
-          DEFINÍ de RutaPremiumAcordeon (desde que tienen etapa_id/
-          modulo_id asignados) — mostrarlas acá también sería duplicarlas. */}
-      {recorrido.length > 0 && !(esPremium && recorridoTerminado) && (
-        <section className="space-y-5">
-          <div className="space-y-3 rounded-[28px] bg-acentoRosa/60 p-5">
-            <Etiqueta>Tu proceso</Etiqueta>
-            <p className="font-display text-lg font-bold text-marca">
-              {recorrido.filter((e) => e.completada).length} de {recorrido.length} completados
-            </p>
-            <Progreso actual={recorrido.filter((e) => e.completada).length} total={recorrido.length} />
-            <p className="text-xs text-marca/50">Las clases completadas quedan disponibles para volver a verlas.</p>
-          </div>
-
-          <div className="flex flex-col gap-6">
-            {recorrido.map((e, i) => {
-              const estado = e.completada ? "hecha" : i === primeraPendienteIdx ? "ahora" : "pendiente";
-              const clicable = e.completada || i === primeraPendienteIdx;
-              return (
-                <TarjetaPaso
-                  key={e.id}
-                  titulo={e.titulo}
-                  descripcion={e.descripcion}
-                  estado={estado}
-                  color={COLORES_PASO[i % COLORES_PASO.length]}
-                  icono={ICONOS_PASO[i % ICONOS_PASO.length]}
-                  href={`/experiencias/${e.id}`}
-                  clicable={clicable}
-                />
-              );
-            })}
-          </div>
-
-          {!recorridoTerminado && (
-            <div className="space-y-2 pt-2">
-              <p className="text-sm font-medium text-texto/70">Después de esto</p>
-              <Subtitulo>La ruta completa del método son cinco etapas y noventa días.</Subtitulo>
-              <Subtitulo>
-                Definí, Construíte, Diseñá, Movete y Sostené: se abren cuando empezás tu Proyecto de Valentía.
-              </Subtitulo>
-            </div>
-          )}
-        </section>
+      {/* Resumen rápido del recorrido gratuito — las 4 experiencias en sí
+          se muestran una sola vez, dentro de la etapa DEFINÍ del mapa de
+          abajo (tienen etapa_id/modulo_id asignados a DEFINÍ), así que acá
+          va solo el vistazo de progreso, nunca la lista de tarjetas. */}
+      {recorrido.length > 0 && (
+        <div className="space-y-3 rounded-[28px] bg-acentoRosa/60 p-5">
+          <Etiqueta>Tu proceso</Etiqueta>
+          <p className="font-display text-lg font-bold text-marca">
+            {recorrido.filter((e) => e.completada).length} de {recorrido.length} completados
+          </p>
+          <Progreso actual={recorrido.filter((e) => e.completada).length} total={recorrido.length} />
+          <p className="text-xs text-marca/50">Las clases completadas quedan disponibles para volver a verlas.</p>
+        </div>
       )}
 
       {recorridoTerminado && sueno && (
@@ -150,17 +123,21 @@ export default async function MiSuenoPage() {
         </section>
       )}
 
-      {recorridoTerminado && esPremium && (
-        <section className="space-y-4">
-          <RutaPremiumAcordeon etapas={ruta} etapaActualId={proyecto?.etapa_actual ?? null} />
+      {/* El mapa completo: las 5 etapas, SIEMPRE visibles — para Gratis y
+          para Premium, tenga o no contenido publicado cada una. Ver
+          RutaPremiumAcordeon.tsx para cómo separa "visible" de
+          "accesible". */}
+      <section className="space-y-4">
+        <RutaPremiumAcordeon etapas={ruta} etapaActualId={proyecto?.etapa_actual ?? null} esPremium={esPremium} />
+        {esPremium && (
           <Link
             href="/mi-proyecto"
             className="block rounded-[22px] bg-marca px-5 py-4 text-center text-[14px] font-semibold text-white"
           >
             Ver mi Proyecto de Valentía →
           </Link>
-        </section>
-      )}
+        )}
+      </section>
     </main>
   );
 }
