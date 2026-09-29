@@ -28,7 +28,7 @@ import "dotenv/config";
 
 const PREMIUM_PLAN = {
   reason: "Valentía Premium",
-  price: 35000,
+  price: 60000,
   currency: "ARS",
   frequency: 1,
   frequencyType: "months",

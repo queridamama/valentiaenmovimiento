@@ -4,12 +4,19 @@ import { Suspense, useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { crearClienteBrowser } from "@/lib/supabase/client";
+import { redirectSeguro } from "@/lib/url";
 import { Titulo, BotonPrimario } from "@/components/ui";
 
 function FormularioLogin() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const supabase = crearClienteBrowser();
+
+  // Validado una sola vez por render: mismo destino para el submit y para
+  // el link "Creá tu cuenta" de abajo, así una persona que llegó desde la
+  // landing Premium (?redirect=/membresia) no lo pierde al pasar por
+  // /registro.
+  const redirectParam = redirectSeguro(searchParams.get("redirect"));
 
   const [email, setEmail] = useState(searchParams.get("email") ?? "");
   const [password, setPassword] = useState("");
@@ -33,8 +40,7 @@ function FormularioLogin() {
       return;
     }
 
-    const destino = searchParams.get("redirect") ?? "/inicio";
-    router.push(destino);
+    router.push(redirectParam ?? "/inicio");
     router.refresh();
   }
 
@@ -71,7 +77,10 @@ function FormularioLogin() {
         </p>
         <p>
           ¿Todavía no tenés cuenta?{" "}
-          <Link href="/registro" className="font-medium text-acento">
+          <Link
+            href={redirectParam ? `/registro?redirect=${encodeURIComponent(redirectParam)}` : "/registro"}
+            className="font-medium text-acento"
+          >
             Creala acá
           </Link>
         </p>

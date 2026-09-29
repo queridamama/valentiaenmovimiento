@@ -1,15 +1,24 @@
 "use client";
 
-import { useState } from "react";
+import { Suspense, useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { crearClienteBrowser } from "@/lib/supabase/client";
-import { urlApp } from "@/lib/url";
+import { urlApp, redirectSeguro } from "@/lib/url";
 import { Titulo, BotonPrimario } from "@/components/ui";
 
-export default function RegistroPage() {
+function FormularioRegistro() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const supabase = crearClienteBrowser();
+
+  // Si se llegó acá desde /login con ?redirect=/membresia (o de cualquier
+  // ruta protegida), ese es el destino real después del alta — no /inicio.
+  // Sin el param (el flujo Gratis normal, sin pasar por /login), destino
+  // queda null y todo el resto de esta función sigue exactamente igual que
+  // antes: cae al "/inicio" por defecto en cada lugar donde se usa.
+  const redirectParam = redirectSeguro(searchParams.get("redirect"));
+  const destino = redirectParam ?? "/inicio";
 
   const [nombre, setNombre] = useState("");
   const [email, setEmail] = useState("");
@@ -27,7 +36,7 @@ export default function RegistroPage() {
       password,
       options: {
         data: { nombre },
-        emailRedirectTo: `${urlApp()}/auth/confirm?next=/inicio`,
+        emailRedirectTo: `${urlApp()}/auth/confirm?next=${encodeURIComponent(destino)}`,
       },
     });
 
@@ -39,7 +48,9 @@ export default function RegistroPage() {
       const yaTieneCuenta =
         errorRegistro.code === "user_already_exists" || /already registered/i.test(errorRegistro.message);
       if (yaTieneCuenta) {
-        router.push(`/registro/ya-existe?email=${encodeURIComponent(email)}`);
+        router.push(
+          `/registro/ya-existe?email=${encodeURIComponent(email)}${redirectParam ? `&redirect=${encodeURIComponent(redirectParam)}` : ""}`
+        );
         setCargando(false);
         return;
       }
@@ -56,13 +67,15 @@ export default function RegistroPage() {
     // respuesta que ya devolvió signUp.
     const yaTieneCuentaConfirmada = data.user && data.user.identities?.length === 0;
     if (yaTieneCuentaConfirmada) {
-      router.push(`/registro/ya-existe?email=${encodeURIComponent(email)}`);
+      router.push(
+        `/registro/ya-existe?email=${encodeURIComponent(email)}${redirectParam ? `&redirect=${encodeURIComponent(redirectParam)}` : ""}`
+      );
       setCargando(false);
       return;
     }
 
     if (data.session) {
-      router.push("/inicio");
+      router.push(destino);
       router.refresh();
     } else {
       router.push("/registro/revisa-tu-email");
@@ -109,10 +122,21 @@ export default function RegistroPage() {
       </form>
       <p className="text-center text-sm text-texto/60">
         ¿Ya tenés cuenta?{" "}
-        <Link href="/login" className="font-medium text-acento">
+        <Link
+          href={redirectParam ? `/login?redirect=${encodeURIComponent(redirectParam)}` : "/login"}
+          className="font-medium text-acento"
+        >
           Iniciá sesión
         </Link>
       </p>
     </main>
+  );
+}
+
+export default function RegistroPage() {
+  return (
+    <Suspense fallback={null}>
+      <FormularioRegistro />
+    </Suspense>
   );
 }

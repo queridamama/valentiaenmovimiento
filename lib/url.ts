@@ -8,3 +8,14 @@ export function urlApp(): string {
   const base = process.env.NEXT_PUBLIC_APP_URL ?? window.location.origin;
   return base.replace(/\/$/, "");
 }
+
+// Valida un destino de redirect post-auth (los query params `redirect` de
+// /login y /registro, y `next` de /auth/confirm): tiene que ser una ruta
+// relativa propia de la app. Rechaza cualquier URL externa y también una
+// ruta "protocol-relative" ("//evil.com"), que el navegador interpretaría
+// como otro host — evita que ese query param se use como open redirect.
+export function redirectSeguro(valor: string | null | undefined): string | null {
+  if (!valor) return null;
+  if (!valor.startsWith("/") || valor.startsWith("//")) return null;
+  return valor;
+}

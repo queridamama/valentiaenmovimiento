@@ -74,7 +74,7 @@ export default async function PerfilPage() {
 
           {premiumPorMercadoPago ? (
             <>
-              <p className="text-[15px] font-semibold">Premium · {formatearPrecio(Number(suscripcion.monto ?? 35000))} / mes</p>
+              <p className="text-[15px] font-semibold">Premium · {formatearPrecio(Number(suscripcion.monto ?? 60000))} / mes</p>
               <p className="text-[13.5px] text-white/80">
                 Estado: {ETIQUETA_ESTADO_SUSCRIPCION[suscripcion.estado] ?? suscripcion.estado}
               </p>
