@@ -55,6 +55,9 @@ export async function guardarExperiencia(experienciaId: string | null, formData:
   const textoIntro = String(formData.get("texto_intro") ?? "").trim() || null;
   const videoUrl = String(formData.get("video_url") ?? "").trim() || null;
   const audioUrl = String(formData.get("audio_url") ?? "").trim() || null;
+  // Path privado dentro de BUCKET_PRIVADO (lo entrega CampoArchivo vía
+  // subirArchivo con destino="archivo") — nunca una URL pública/firmada.
+  const archivoUrl = String(formData.get("archivo_url") ?? "").trim() || null;
   const duracion = String(formData.get("duracion") ?? "").trim() || null;
   const tipo = String(formData.get("tipo") ?? "clase");
   const portadaUrl = String(formData.get("portada_url") ?? "").trim() || null;
@@ -82,6 +85,7 @@ export async function guardarExperiencia(experienciaId: string | null, formData:
     texto_intro: textoIntro,
     video_url: videoUrl,
     audio_url: audioUrl,
+    archivo_url: archivoUrl,
     duracion,
     tipo,
     portada_url: portadaUrl,
@@ -162,6 +166,7 @@ export async function duplicarExperiencia(experienciaId: string) {
       texto_intro: original.texto_intro,
       video_url: original.video_url,
       audio_url: original.audio_url,
+      archivo_url: original.archivo_url,
       duracion: original.duracion,
       tipo: original.tipo,
       portada_url: original.portada_url,

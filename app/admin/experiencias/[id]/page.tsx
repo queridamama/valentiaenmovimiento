@@ -13,7 +13,7 @@ export default async function EditarExperienciaPage({ params }: { params: Promis
     supabase
       .from("experiencias")
       .select(
-        "titulo, descripcion, texto_intro, video_url, audio_url, duracion, tipo, portada_url, etapa_id, modulo_id, nivel_acceso, estado, orden, wp_post_id, etapa_wp, modulo_wp"
+        "titulo, descripcion, texto_intro, video_url, audio_url, archivo_url, duracion, tipo, portada_url, etapa_id, modulo_id, nivel_acceso, estado, orden, wp_post_id, etapa_wp, modulo_wp"
       )
       .eq("id", id)
       .maybeSingle(),
@@ -47,6 +47,7 @@ export default async function EditarExperienciaPage({ params }: { params: Promis
           texto_intro: experiencia.texto_intro ?? "",
           video_url: experiencia.video_url ?? "",
           audio_url: experiencia.audio_url ?? "",
+          archivo_url: experiencia.archivo_url ?? "",
           duracion: experiencia.duracion ?? "",
           tipo: experiencia.tipo,
           portada_url: experiencia.portada_url ?? "",

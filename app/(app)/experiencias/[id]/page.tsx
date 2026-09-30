@@ -2,6 +2,7 @@ import Link from "next/link";
 import { crearClienteServidor } from "@/lib/supabase/server";
 import { obtenerExperienciaConPreguntas, estaCompletada, obtenerSiguienteExperiencia } from "@/lib/datos";
 import { guardarRespuestas, registrarVisitaExperiencia } from "@/lib/acciones/experiencias";
+import { firmarUrlPrivada } from "@/lib/almacenamiento";
 import { Badge, BotonPrimario, Titulo, Subtitulo, Etiqueta } from "@/components/ui";
 import ReproductorVideo from "@/components/ReproductorVideo";
 
@@ -43,6 +44,20 @@ export default async function ExperienciaPage({ params }: { params: Promise<{ id
   const esPremium = experiencia.nivel_acceso === "membresia";
   const guardar = guardarRespuestas.bind(null, experiencia.id);
   const tieneTexto = Boolean((experiencia.texto_intro ?? "").trim());
+
+  // `experiencia` ya pasó por la policy "experiencias_lectura" (RLS) al
+  // leerse arriba — estado='publicado' y nivel_acceso acorde al nivel de
+  // esta usuaria. Firmar acá el PDF (si tiene) es seguro precisamente
+  // porque esa fila ya demostró ser accesible; firmarUrlPrivada en sí no
+  // vuelve a chequear nada (ver su comentario en lib/almacenamiento.ts).
+  // Dos URLs firmadas separadas: una para abrir inline, otra con
+  // `download` para que el navegador la guarde en vez de navegar a ella.
+  const [archivoVerUrl, archivoDescargaUrl] = experiencia.archivo_url
+    ? await Promise.all([
+        firmarUrlPrivada(experiencia.archivo_url, 300),
+        firmarUrlPrivada(experiencia.archivo_url, 300, { descargar: true }),
+      ])
+    : [null, null];
 
   return (
     <main className="mx-auto max-w-md pb-10">
@@ -91,6 +106,31 @@ export default async function ExperienciaPage({ params }: { params: Promise<{ id
 
         {tieneTexto && (
           <div className="contenido-enriquecido" dangerouslySetInnerHTML={{ __html: experiencia.texto_intro ?? "" }} />
+        )}
+
+        {archivoVerUrl && (
+          <div className="space-y-3 rounded-card border border-texto/10 bg-tarjeta p-5">
+            <Etiqueta>Tu guía de esta experiencia</Etiqueta>
+            <p className="text-sm text-texto/60">Un PDF con el material para acompañar este paso.</p>
+            <div className="flex flex-col gap-2.5 sm:flex-row">
+              <a
+                href={archivoVerUrl}
+                target="_blank"
+                rel="noreferrer"
+                className="flex-1 rounded-full bg-marca px-5 py-3 text-center text-[14px] font-semibold text-white"
+              >
+                Abrir PDF
+              </a>
+              {archivoDescargaUrl && (
+                <a
+                  href={archivoDescargaUrl}
+                  className="flex-1 rounded-full border border-texto/15 px-5 py-3 text-center text-[14px] font-semibold text-texto"
+                >
+                  Descargar PDF
+                </a>
+              )}
+            </div>
+          </div>
         )}
 
         {completada && (

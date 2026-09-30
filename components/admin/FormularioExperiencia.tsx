@@ -23,6 +23,7 @@ interface Props {
     texto_intro: string;
     video_url: string;
     audio_url: string;
+    archivo_url: string;
     duracion: string;
     tipo: TipoExperiencia;
     portada_url: string;
@@ -127,6 +128,15 @@ export default function FormularioExperiencia({ accion, etapas, modulos, inicial
         />
 
         <EditorEnriquecido name="texto_intro" label="Texto introductorio" contenidoInicial={inicial?.texto_intro ?? ""} />
+
+        <CampoArchivo
+          label="PDF / Material descargable (opcional)"
+          name="archivo_url"
+          destino="archivo"
+          accept="application/pdf"
+          tipo="archivo"
+          valorInicial={inicial?.archivo_url ?? ""}
+        />
 
         <label className="flex flex-col gap-1">
           <span className="text-sm font-medium text-texto/70">URL de video (YouTube, Vimeo o archivo — opcional)</span>
