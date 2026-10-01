@@ -11,8 +11,14 @@ export const BUCKET_PUBLICO = "medios-publicos";
 // una alumna leyendo una fila a la que RLS ya la dejó llegar). Esta
 // función en sí NO decide quién puede ver qué — por eso no está exportada
 // como Server Action ni es llamable directo desde el cliente.
-export async function firmarUrlPrivada(path: string, segundosValidez = 300): Promise<string | null> {
+export async function firmarUrlPrivada(
+  path: string,
+  segundosValidez = 300,
+  opciones?: { descargar?: boolean | string }
+): Promise<string | null> {
   const servicio = crearClienteServicio();
-  const { data } = await servicio.storage.from(BUCKET_PRIVADO).createSignedUrl(path, segundosValidez);
+  const { data } = await servicio.storage
+    .from(BUCKET_PRIVADO)
+    .createSignedUrl(path, segundosValidez, opciones?.descargar !== undefined ? { download: opciones.descargar } : undefined);
   return data?.signedUrl ?? null;
 }

@@ -97,6 +97,11 @@ export interface Experiencia {
   texto_intro: string | null;
   video_url: string | null;
   audio_url: string | null;
+  // Path privado dentro de BUCKET_PRIVADO (bucket "medios-privados",
+  // carpeta "archivos/") — nunca una URL pública ni firmada. Ver
+  // lib/acciones/almacenamiento.ts (subirArchivo/CampoArchivo) para cómo
+  // se guarda, y firmarUrlPrivada() para cómo se resuelve en la vista.
+  archivo_url: string | null;
   duracion: string | null;
   tipo: TipoExperiencia;
   portada_url: string | null;

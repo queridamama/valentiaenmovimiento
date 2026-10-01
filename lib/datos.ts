@@ -346,7 +346,9 @@ export async function obtenerNovedadActiva(supabase: SupabaseClient) {
 export async function obtenerExperienciaConPreguntas(supabase: SupabaseClient, experienciaId: string, userId: string) {
   const { data: experiencia } = await supabase
     .from("experiencias")
-    .select("id, etapa_id, modulo_id, titulo, descripcion, texto_intro, video_url, audio_url, duracion, tipo, portada_url, nivel_acceso, estado, orden")
+    .select(
+      "id, etapa_id, modulo_id, titulo, descripcion, texto_intro, video_url, audio_url, archivo_url, duracion, tipo, portada_url, nivel_acceso, estado, orden"
+    )
     .eq("id", experienciaId)
     .maybeSingle();
   if (!experiencia) return null;
