@@ -44,6 +44,7 @@ export default async function ExperienciaPage({ params }: { params: Promise<{ id
   const esPremium = experiencia.nivel_acceso === "membresia";
   const guardar = guardarRespuestas.bind(null, experiencia.id);
   const tieneTexto = Boolean((experiencia.texto_intro ?? "").trim());
+  const tieneArchivo = Boolean(experiencia.archivo_url);
 
   // `experiencia` ya pasó por la policy "experiencias_lectura" (RLS) al
   // leerse arriba — estado='publicado' y nivel_acceso acorde al nivel de
@@ -90,28 +91,10 @@ export default async function ExperienciaPage({ params }: { params: Promise<{ id
           {experiencia.descripcion && <Subtitulo>{experiencia.descripcion}</Subtitulo>}
         </div>
 
-        {experiencia.video_url ? (
-          <ReproductorVideo url={experiencia.video_url} />
-        ) : experiencia.audio_url ? (
-          <audio src={experiencia.audio_url} controls className="w-full" />
-        ) : (
-          tieneTexto && (
-            <div className="rounded-card border border-dashed border-texto/15 bg-tarjeta p-5 text-sm text-texto/40">
-              {experiencia.tipo === "meditacion"
-                ? "Todavía no hay audio para esta meditación — podés seguir con el texto."
-                : "Todavía no hay video para esta clase — podés seguir con el texto."}
-            </div>
-          )
-        )}
-
-        {tieneTexto && (
-          <div className="contenido-enriquecido" dangerouslySetInnerHTML={{ __html: experiencia.texto_intro ?? "" }} />
-        )}
-
         {archivoVerUrl && (
           <div className="space-y-3 rounded-card border border-texto/10 bg-tarjeta p-5">
-            <Etiqueta>Tu guía de esta experiencia</Etiqueta>
-            <p className="text-sm text-texto/60">Un PDF con el material para acompañar este paso.</p>
+            <Etiqueta>Recurso PDF</Etiqueta>
+            <p className="text-sm text-texto/60">Este es el material principal de esta experiencia.</p>
             <div className="flex flex-col gap-2.5 sm:flex-row">
               <a
                 href={archivoVerUrl}
@@ -131,6 +114,25 @@ export default async function ExperienciaPage({ params }: { params: Promise<{ id
               )}
             </div>
           </div>
+        )}
+
+        {experiencia.video_url ? (
+          <ReproductorVideo url={experiencia.video_url} />
+        ) : experiencia.audio_url ? (
+          <audio src={experiencia.audio_url} controls className="w-full" />
+        ) : (
+          !tieneArchivo &&
+          tieneTexto && (
+            <div className="rounded-card border border-dashed border-texto/15 bg-tarjeta p-5 text-sm text-texto/40">
+              {experiencia.tipo === "meditacion"
+                ? "Todavía no hay audio para esta meditación — podés seguir con el texto."
+                : "Todavía no hay video para esta clase — podés seguir con el texto."}
+            </div>
+          )
+        )}
+
+        {tieneTexto && (
+          <div className="contenido-enriquecido" dangerouslySetInnerHTML={{ __html: experiencia.texto_intro ?? "" }} />
         )}
 
         {completada && (
