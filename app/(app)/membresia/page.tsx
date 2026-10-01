@@ -4,8 +4,11 @@ import { obtenerAutorizacion } from "@/lib/datos";
 import { Subtitulo, Subrayado, Etiqueta } from "@/components/ui";
 import { IconoPastel } from "@/components/iconos";
 import type { TipoIcono } from "@/components/iconos";
-import { PREMIUM_PLAN, formatearPrecio } from "@/lib/config/premium";
+import { PREMIUM_PLAN, PREMIUM_SEMESTRAL, formatearPrecio } from "@/lib/config/premium";
 import BotonSuscribirseAlojado from "@/components/BotonSuscribirseAlojado";
+
+const LINK_SEMESTRAL = "https://mpago.li/23zuMEm";
+const AHORRO_SEMESTRAL = PREMIUM_PLAN.price * PREMIUM_SEMESTRAL.months - PREMIUM_SEMESTRAL.totalPrice;
 
 const ETAPAS: { nombre: string; texto: string; icono: TipoIcono }[] = [
   { nombre: "DEFINÍ", texto: "Tu sueño, tu para qué y de dónde partís.", icono: "estrella" },
@@ -254,15 +257,54 @@ export default async function MembresiaPage() {
           </section>
 
           <section className="space-y-4">
-            <div className="space-y-1 rounded-[24px] bg-acentoRosa/50 p-6 text-center">
-              <p className="text-3xl font-bold text-marca">{formatearPrecio(PREMIUM_PLAN.price)} ARS</p>
-              <p className="text-sm text-marca/60">por mes</p>
+            <div className="space-y-2 text-center">
+              <h2 className="font-display text-xl font-bold text-marca">Elegí cómo sumarte</h2>
+              <Subtitulo>Las dos opciones te dan acceso a Premium. Elegí la que mejor te quede para empezar.</Subtitulo>
             </div>
-            <Subtitulo className="text-center">
-              Trabajás tu sueño en ciclos de 90 días. Tu membresía se renueva mensualmente y podés cancelarla cuando
-              quieras.
-            </Subtitulo>
-            <BotonSuscribirseAlojado />
+
+            <div className="space-y-4">
+              <div className="space-y-4 rounded-[26px] border border-marca/10 bg-acentoRosa/40 p-6">
+                <div className="space-y-1 text-center">
+                  <Etiqueta>Mensual</Etiqueta>
+                  <p className="text-3xl font-bold text-marca">{formatearPrecio(PREMIUM_PLAN.price)} ARS</p>
+                  <p className="text-sm text-marca/60">por mes</p>
+                </div>
+                <p className="text-center text-sm leading-relaxed text-marca/65">
+                  Se renueva mensualmente y podés cancelarla cuando quieras.
+                </p>
+                <BotonSuscribirseAlojado />
+              </div>
+
+              <div className="relative space-y-4 rounded-[26px] bg-marca p-6 text-white">
+                <span className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-acentoLima px-3 py-1 text-xs font-bold text-marca">
+                  Mejor valor
+                </span>
+                <div className="space-y-1 pt-1 text-center">
+                  <Etiqueta className="!text-white/70">Semestral</Etiqueta>
+                  <p className="text-3xl font-bold">{formatearPrecio(PREMIUM_SEMESTRAL.totalPrice)} ARS</p>
+                  <p className="text-sm text-white/70">
+                    6 meses · equivalente a {formatearPrecio(PREMIUM_SEMESTRAL.monthlyEquivalent)}/mes
+                  </p>
+                </div>
+                <div className="rounded-[18px] bg-white/10 px-4 py-3 text-center">
+                  <p className="text-sm font-semibold">Ahorrás {formatearPrecio(AHORRO_SEMESTRAL)}</p>
+                  <p className="mt-1 text-xs text-white/65">comparado con pagar 6 meses de forma mensual</p>
+                </div>
+                <a
+                  href={LINK_SEMESTRAL}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="block rounded-full bg-white px-6 py-4 text-center text-[15px] font-semibold text-marca"
+                >
+                  Elegir semestral →
+                </a>
+                <p className="text-center text-xs leading-relaxed text-white/60">
+                  El pago se realiza en Mercado Pago. Una vez confirmado, te damos acceso Premium por 6 meses.
+                </p>
+              </div>
+            </div>
+
+            <Subtitulo className="text-center">Trabajás tu sueño en ciclos de 90 días dentro de tu membresía.</Subtitulo>
           </section>
         </div>
       )}
