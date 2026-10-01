@@ -14,6 +14,8 @@ interface ExperienciaRuta {
   descripcion: string | null;
   completada: boolean;
   tipo?: "clase" | "meditacion";
+  video_url?: string | null;
+  audio_url?: string | null;
 }
 
 interface ModuloRuta {
@@ -51,22 +53,33 @@ function Chevron({ abierta }: { abierta: boolean }) {
   );
 }
 
-function ListaExperiencias({ experiencias }: { experiencias: ExperienciaRuta[] }) {
+function ListaExperiencias({ experiencias, esEtapaGratuita }: { experiencias: ExperienciaRuta[]; esEtapaGratuita: boolean }) {
   return (
     <div className="flex flex-col gap-6 pl-2">
-      {experiencias.map((e, i) => (
-        <TarjetaPaso
-          key={e.id}
-          titulo={e.titulo}
-          descripcion={e.descripcion}
-          estado={e.completada ? "hecha" : "ahora"}
-          color={COLORES_PASO[i % COLORES_PASO.length]}
-          icono={ICONOS_PASO[i % ICONOS_PASO.length]}
-          href={`/experiencias/${e.id}`}
-          clicable
-          tipo={e.tipo}
-        />
-      ))}
+      {experiencias.map((e, i) => {
+        const formato = e.video_url
+          ? "video"
+          : e.audio_url || e.tipo === "meditacion"
+            ? "audio"
+            : esEtapaGratuita
+              ? "pdf"
+              : undefined;
+
+        return (
+          <TarjetaPaso
+            key={e.id}
+            titulo={e.titulo}
+            descripcion={e.descripcion}
+            estado={e.completada ? "hecha" : "ahora"}
+            color={COLORES_PASO[i % COLORES_PASO.length]}
+            icono={ICONOS_PASO[i % ICONOS_PASO.length]}
+            href={`/experiencias/${e.id}`}
+            clicable
+            tipo={e.tipo}
+            formato={formato}
+          />
+        );
+      })}
     </div>
   );
 }
@@ -92,7 +105,17 @@ function ResumenModulo({ experiencias }: { experiencias: ExperienciaRuta[] }) {
   );
 }
 
-function Modulo({ modulo, abierto, onToggle }: { modulo: ModuloRuta; abierto: boolean; onToggle: () => void }) {
+function Modulo({
+  modulo,
+  abierto,
+  onToggle,
+  esEtapaGratuita,
+}: {
+  modulo: ModuloRuta;
+  abierto: boolean;
+  onToggle: () => void;
+  esEtapaGratuita: boolean;
+}) {
   if (modulo.experiencias.length === 0) return null;
   return (
     <div className="space-y-3 rounded-[20px] bg-white/60 p-3">
@@ -103,7 +126,7 @@ function Modulo({ modulo, abierto, onToggle }: { modulo: ModuloRuta; abierto: bo
         </div>
         <Chevron abierta={abierto} />
       </button>
-      {abierto && <ListaExperiencias experiencias={modulo.experiencias} />}
+      {abierto && <ListaExperiencias experiencias={modulo.experiencias} esEtapaGratuita={esEtapaGratuita} />}
     </div>
   );
 }
@@ -230,9 +253,12 @@ export default function RutaPremiumAcordeon({
                     modulo={modulo}
                     abierto={modulosAbiertos.has(modulo.id)}
                     onToggle={() => alternarModulo(modulo.id)}
+                    esEtapaGratuita={esEtapaGratuita}
                   />
                 ))}
-                {etapa.experienciasSueltas.length > 0 && <ListaExperiencias experiencias={etapa.experienciasSueltas} />}
+                {etapa.experienciasSueltas.length > 0 && (
+                  <ListaExperiencias experiencias={etapa.experienciasSueltas} esEtapaGratuita={esEtapaGratuita} />
+                )}
               </div>
             )}
           </div>
