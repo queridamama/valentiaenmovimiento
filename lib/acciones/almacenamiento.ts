@@ -76,7 +76,10 @@ export async function obtenerPreviewAdmin(path: string): Promise<{ url: string |
   const { supabase } = await exigirStaff();
   const { data, error } = await supabase.storage.from(BUCKET_PRIVADO).createSignedUrl(path, 300);
   if (error) return { url: null, error: error.message };
-  return { url: data.signedUrl, error: null };
+  // `data` no debería venir null sin `error`, pero si pasara (respuesta
+  // inesperada de Storage) esto evita un TypeError leyendo `.signedUrl` de
+  // null — el formulario ya maneja bien url:null (ver CampoArchivo.tsx).
+  return { url: data?.signedUrl ?? null, error: null };
 }
 
 // Caso distinto: acá quien pide la URL puede ser cualquier alumna
