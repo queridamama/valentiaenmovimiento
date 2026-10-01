@@ -329,8 +329,7 @@ function FormaEsquina() {
   );
 }
 
-// Triángulo de play chico, para el CTA "Ver clase" — nunca "hacé click acá",
-// porque en celular no se hace click.
+// Triángulo de play chico, para CTAs de video.
 function IconoPlayChico() {
   return (
     <svg viewBox="0 0 24 24" width="10" height="10" fill="currentColor" aria-hidden="true">
@@ -339,13 +338,23 @@ function IconoPlayChico() {
   );
 }
 
+function IconoDocumentoChico() {
+  return (
+    <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M6 2h8l4 4v16H6z" />
+      <path d="M14 2v5h5" />
+      <path d="M9 13h6M9 17h6" />
+    </svg>
+  );
+}
+
 const COLORES_PASO = ["rosa", "celeste", "lima", "lila"] as const;
 export type ColorPaso = (typeof COLORES_PASO)[number];
 export { COLORES_PASO };
 
-// Un paso del recorrido (Mi Ruta / Mi Proyecto). El color e ícono los
-// decide la página cicladno por índice — el componente no le asigna
-// significado al título real (es contenido de CMS, no un enum fijo).
+// Un paso del recorrido (Mi Ruta / Mi Proyecto). `tipo` sigue diciendo qué
+// clase de experiencia es; `formato` dice qué recurso real va a encontrar
+// la usuaria al entrar (video, audio o PDF).
 export function TarjetaPaso({
   titulo,
   descripcion,
@@ -355,6 +364,7 @@ export function TarjetaPaso({
   href,
   clicable,
   tipo,
+  formato,
 }: {
   titulo: string;
   descripcion?: string | null;
@@ -363,27 +373,38 @@ export function TarjetaPaso({
   icono: TipoIcono;
   href?: string;
   clicable: boolean;
-  // Solo la Ruta Premium (videos/meditaciones migrados) lo manda — el
-  // recorrido gratis no pasa `tipo` y sigue viéndose exactamente igual
-  // que antes ("Ver clase"/"Volver a ver", sin etiqueta de formato).
   tipo?: "clase" | "meditacion";
+  formato?: "video" | "audio" | "pdf";
 }) {
-  // El estado "pendiente" se distingue con colores mate explícitos, nunca
-  // con opacity sobre toda la tarjeta — eso volvía ilegible el número
-  // dentro de su propio círculo blanco.
   const pendiente = estado === "pendiente";
+  const formatoEfectivo = formato ?? (tipo === "meditacion" ? "audio" : tipo === "clase" ? "video" : undefined);
+
   const textoCta =
-    tipo === "clase"
+    formatoEfectivo === "pdf"
       ? estado === "hecha"
-        ? "Volver a ver"
-        : "Ver video"
-      : tipo === "meditacion"
+        ? "Volver a abrir"
+        : "Abrir PDF"
+      : formatoEfectivo === "audio"
         ? estado === "hecha"
           ? "Volver a escuchar"
           : "Escuchar meditación"
-        : estado === "hecha"
-          ? "Volver a ver"
-          : "Ver clase";
+        : formatoEfectivo === "video"
+          ? estado === "hecha"
+            ? "Volver a ver"
+            : "Ver video"
+          : estado === "hecha"
+            ? "Volver a ver"
+            : "Ver clase";
+
+  const etiquetaFormato =
+    formatoEfectivo === "pdf"
+      ? "RECURSO PDF"
+      : formatoEfectivo === "audio"
+        ? "🎧 MEDITACIÓN"
+        : formatoEfectivo === "video"
+          ? "▶ VIDEO"
+          : null;
+
   const contenido = (
     <div
       className={`relative flex items-start gap-4 rounded-[24px] p-5 ${pendiente ? "bg-texto/6" : FONDOS_BLOQUE[color]}`}
@@ -394,15 +415,12 @@ export function TarjetaPaso({
         }`}
         aria-hidden="true"
       >
-        {/* Estados visuales simples (✓/◐/○), sin gamificación — el número
-            de paso ya no se muestra: con módulos se repite entre uno y
-            otro, y dejaba de significar una posición real. */}
         {estado === "hecha" ? "✓" : estado === "ahora" ? "◐" : "○"}
       </span>
       <div className="min-w-0 flex-1 space-y-1.5">
-        {tipo && (
+        {etiquetaFormato && (
           <p className={`text-[10.5px] font-bold uppercase tracking-wide ${pendiente ? "text-texto/35" : "text-marca/55"}`}>
-            {tipo === "clase" ? "▶ Video" : "🎧 Meditación"}
+            {etiquetaFormato}
           </p>
         )}
         <p className={`text-[16px] font-bold leading-snug ${pendiente ? "text-texto/40" : "text-marca"}`}>{titulo}</p>
@@ -415,12 +433,10 @@ export function TarjetaPaso({
             {descripcion}
           </p>
         )}
-        {/* "Seguí por acá", no "Ahora": indica dónde retomar sin sonar a
-            aviso de atraso — no hay culpa en no haber llegado todavía. */}
         {estado === "ahora" && <Etiqueta className="!text-[10px] text-marca/60">Seguí por acá</Etiqueta>}
         {clicable && (
           <span className="mt-1 inline-flex w-fit items-center gap-1.5 rounded-full bg-white/85 px-3 py-1.5 text-[12px] font-semibold text-marca">
-            <IconoPlayChico />
+            {formatoEfectivo === "pdf" ? <IconoDocumentoChico /> : <IconoPlayChico />}
             {textoCta}
           </span>
         )}
@@ -429,9 +445,6 @@ export function TarjetaPaso({
     </div>
   );
   if (!clicable || !href) return contenido;
-  // `Link` renderiza un <a>, que es inline por default: el margin-top del
-  // gap del padre no hace nada sobre un elemento inline. `block` es lo que
-  // hace que el espacio entre tarjetas exista de verdad.
   return (
     <Link href={href} className="block">
       {contenido}
