@@ -1,31 +1,41 @@
 import { type EmailOtpType } from "@supabase/supabase-js";
-import { redirect } from "next/navigation";
-import { type NextRequest } from "next/server";
+import { NextResponse, type NextRequest } from "next/server";
 import { crearClienteServidor } from "@/lib/supabase/server";
 
-// Patrón oficial de Supabase para Next.js App Router. Con la plantilla
-// estándar ({{ .ConfirmationURL }}, la única editable sin configurar SMTP
-// propio) y el proyecto en flujo PKCE (@supabase/ssr), ese link redirige
-// acá con `?code=` — nunca con el token "crudo" en la URL visible. Se
-// mantiene también `token_hash` + `type` → verifyOtp() como fallback, por
-// si el día de mañana se personalizan las plantillas para usar
-// {{ .TokenHash }} en cambio. Ver: supabase.com/docs/guides/auth/server-side/nextjs
+// Supabase puede consumir el enlace de confirmación antes de regresar a la app.
+// En ese caso la URL de retorno no contiene un código reutilizable: no implica
+// que la cuenta haya fallado o que el enlace esté vencido.
 export async function GET(request: NextRequest) {
-  const { searchParams } = new URL(request.url);
+  const { searchParams } = request.nextUrl;
   const code = searchParams.get("code");
   const token_hash = searchParams.get("token_hash");
   const type = searchParams.get("type") as EmailOtpType | null;
-  const next = searchParams.get("next") ?? "/inicio";
+  const requestedNext = searchParams.get("next") ?? "/inicio";
+  // Evitar redirecciones externas o rutas relativas ambiguas.
+  const next = requestedNext.startsWith("/") && !requestedNext.startsWith("//")
+    ? requestedNext
+    : "/inicio";
+  const supabase = await crearClienteServidor();
 
   if (code || (token_hash && type)) {
-    const supabase = await crearClienteServidor();
     const { error } = code
       ? await supabase.auth.exchangeCodeForSession(code)
       : await supabase.auth.verifyOtp({ type: type!, token_hash: token_hash! });
+
     if (!error) {
-      redirect(next);
+      return NextResponse.redirect(new URL(next, request.url));
     }
   }
 
-  redirect("/auth/error");
+  // Si ya hay sesión, un código consumido no debe impedir entrar a Valentía.
+  const { data: { user } } = await supabase.auth.getUser();
+  if (user?.email_confirmed_at) {
+    return NextResponse.redirect(new URL(next, request.url));
+  }
+
+  // Sin código no podemos concluir que caducó: Supabase puede haberlo
+  // consumido correctamente antes de redirigir al sitio.
+  const result = new URL("/auth/error", request.url);
+  result.searchParams.set("estado", code || token_hash ? "enlace" : "confirmacion");
+  return NextResponse.redirect(result);
 }
