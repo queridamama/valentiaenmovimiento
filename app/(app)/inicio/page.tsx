@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { crearClienteServidor } from "@/lib/supabase/server";
+import { crearClienteServicio } from "@/lib/supabase/servicio";
 import {
   obtenerAutorizacion,
   obtenerSuenoActivo,
@@ -51,9 +52,20 @@ export default async function InicioPage() {
 
   const consultaEncuentroAbierto = supabase
     .from("eventos")
-    .select("id, titulo, descripcion, fecha_hora")
+    .select("id, titulo, descripcion, fecha_hora, portada_url")
     .eq("estado", "publicado")
     .eq("nivel_acceso", "gratis")
+    .gte("fecha_hora", new Date().toISOString())
+    .order("fecha_hora", { ascending: true })
+    .limit(1)
+    .maybeSingle();
+
+  const servicio = crearClienteServicio();
+  const consultaEncuentroPremium = servicio
+    .from("eventos")
+    .select("id, titulo, descripcion, fecha_hora, portada_url")
+    .eq("estado", "publicado")
+    .eq("nivel_acceso", "membresia")
     .gte("fecha_hora", new Date().toISOString())
     .order("fecha_hora", { ascending: true })
     .limit(1)
@@ -68,7 +80,7 @@ export default async function InicioPage() {
     .limit(1)
     .maybeSingle();
 
-  const [sueno, movimiento, semanas, seguimiento, novedad, encuentroAbiertoRes, compraTallerRes, meditacionSemanal] =
+  const [sueno, movimiento, semanas, seguimiento, novedad, encuentroAbiertoRes, encuentroPremiumRes, compraTallerRes, meditacionSemanal] =
     await Promise.all([
       obtenerSuenoActivo(supabase, user.id),
       obtenerMovimientoActual(supabase, user.id),
@@ -76,11 +88,13 @@ export default async function InicioPage() {
       obtenerSeguimientoInicio(supabase, user.id, esPremium),
       obtenerNovedadActiva(supabase),
       consultaEncuentroAbierto,
+      consultaEncuentroPremium,
       consultaCompraTaller,
       esPremium ? obtenerMeditacionSemanal(supabase) : Promise.resolve(null),
     ]);
 
   const encuentroAbierto = encuentroAbiertoRes.data;
+  const encuentroPremium = encuentroPremiumRes.data;
   const tieneTaller = esPremium || Boolean(compraTallerRes.data);
 
   const hoy = new Date().getDay();
@@ -101,7 +115,17 @@ export default async function InicioPage() {
     <main className="mx-auto max-w-md space-y-6 px-5 pb-6 pt-6">
       <div className="space-y-1">
         <p className="text-[15px] font-medium text-texto/60">Hola{nombre ? `, ${nombre}` : ""}</p>
-        <Badge tipo={esPremium ? "membresia" : "gratis"} />
+        <div className="flex items-center gap-2">
+          <Badge tipo={esPremium ? "membresia" : "gratis"} />
+          {!esPremium && (
+            <Link
+              href="/membresia"
+              className="inline-block rounded-full bg-marca px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wider text-white transition active:scale-[0.98]"
+            >
+              Quiero ser Premium
+            </Link>
+          )}
+        </div>
       </div>
 
       <div className="space-y-1">
@@ -152,11 +176,20 @@ export default async function InicioPage() {
       <section className="space-y-3">
         <Etiqueta>Lo que viene</Etiqueta>
 
-        <div className="relative overflow-hidden rounded-[28px] bg-acentoRosa/55 p-5">
+        <div className="relative overflow-hidden rounded-[28px] bg-acentoRosa/55 p-3">
           <div className="absolute -right-8 -top-9 h-28 w-28 rounded-full bg-white/30" />
           <div className="relative space-y-3">
+            {encuentroAbierto?.portada_url && (
+              // eslint-disable-next-line @next/next/no-img-element -- portada administrada desde la app
+              <img
+                src={encuentroAbierto.portada_url}
+                alt={`Portada de ${encuentroAbierto.titulo}`}
+                className="aspect-video w-full rounded-[22px] object-cover"
+              />
+            )}
+            <div className="px-2 pb-2">
             <span className="inline-block rounded-full bg-acentoLima px-3 py-1 text-[10px] font-bold uppercase tracking-[0.12em] text-marca">
-              Encuentro abierto · Gratis
+              Encuentro gratuito
             </span>
             <p className="font-display text-[20px] font-bold leading-snug text-marca">
               {encuentroAbierto?.titulo ?? PROXIMO_ENCUENTRO_ABIERTO.titulo}
@@ -168,26 +201,37 @@ export default async function InicioPage() {
               {encuentroAbierto?.descripcion ?? PROXIMO_ENCUENTRO_ABIERTO.descripcion}
             </p>
             <p className="text-[12.5px] text-marca/55">Reservate la fecha. El link lo compartimos antes del encuentro.</p>
+            </div>
           </div>
         </div>
 
-        <div className="relative overflow-hidden rounded-[28px] bg-marca p-5 text-white">
+        <div className="relative overflow-hidden rounded-[28px] bg-marca p-3 text-white">
           <div className="absolute -right-8 -top-9 h-28 w-28 rounded-full bg-white/10" />
           <div className="relative space-y-3">
+            {encuentroPremium?.portada_url && (
+              // eslint-disable-next-line @next/next/no-img-element -- portada administrada desde la app
+              <img
+                src={encuentroPremium.portada_url}
+                alt={`Portada de ${encuentroPremium.titulo}`}
+                className="aspect-video w-full rounded-[22px] object-cover"
+              />
+            )}
+            <div className="px-2 pb-2">
             <span className="inline-block rounded-full bg-acentoLima px-3 py-1 text-[10px] font-bold uppercase tracking-[0.12em] text-marca">
-              {esPremium ? "Incluido en tu Premium" : tieneTaller ? "Ya tenés tu lugar" : "Encuentro intensivo"}
+              {esPremium ? "Incluido en tu Premium" : tieneTaller ? "Ya tenés tu lugar" : "Encuentro Premium"}
             </span>
-            <p className="font-display text-[20px] font-bold leading-snug">{TALLER_HACERLE_LUGAR.titulo}</p>
+            <p className="font-display text-[20px] font-bold leading-snug">{encuentroPremium?.titulo ?? TALLER_HACERLE_LUGAR.titulo}</p>
             <p className="text-[13.5px] font-semibold text-white/85">
               {TALLER_HACERLE_LUGAR.fechaLabel} · {TALLER_HACERLE_LUGAR.horaLabel}
             </p>
-            <p className="text-[13px] leading-relaxed text-white/70">{TALLER_HACERLE_LUGAR.bajada}</p>
+            <p className="text-[13px] leading-relaxed text-white/70">{encuentroPremium?.descripcion ?? TALLER_HACERLE_LUGAR.bajada}</p>
             <Link
               href={tieneTaller ? TALLER_HACERLE_LUGAR.accesoPath : TALLER_HACERLE_LUGAR.landingPath}
               className="inline-flex rounded-full bg-acentoLima px-5 py-2.5 text-[13px] font-semibold text-marca"
             >
               {tieneTaller ? "Ver mi acceso →" : "Ver encuentro y opciones →"}
             </Link>
+            </div>
           </div>
         </div>
       </section>
