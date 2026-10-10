@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { crearClienteServidor } from "@/lib/supabase/server";
+import { crearClienteServicio } from "@/lib/supabase/servicio";
 import { obtenerAutorizacion } from "@/lib/datos";
 import { PREMIUM_PLAN, formatearPrecio } from "@/lib/config/premium";
 import { TALLER_HACERLE_LUGAR } from "@/lib/config/taller-hacerle-lugar";
@@ -14,6 +15,13 @@ export default async function HacerleLugarPage() {
 
   const autorizacion = user ? await obtenerAutorizacion(supabase, user.id) : null;
   const esPremium = autorizacion?.nivel === "premium";
+
+  const servicio = crearClienteServicio();
+  const { data: evento } = await servicio
+    .from("eventos")
+    .select("titulo, portada_url")
+    .eq("id", TALLER_HACERLE_LUGAR.eventoId)
+    .maybeSingle();
 
   const { data: compra } = user
     ? await supabase
@@ -40,7 +48,18 @@ export default async function HacerleLugarPage() {
             ← Volver a Valentía
           </Link>
 
-          <div className="mt-10 space-y-5 text-center">
+          {evento?.portada_url && (
+            <div className="mx-auto mt-8 max-w-xl overflow-hidden rounded-[30px] shadow-sm">
+              {/* eslint-disable-next-line @next/next/no-img-element -- portada administrada desde la app */}
+              <img
+                src={evento.portada_url}
+                alt={`Portada de ${evento.titulo ?? TALLER_HACERLE_LUGAR.titulo}`}
+                className="aspect-video w-full object-cover"
+              />
+            </div>
+          )}
+
+          <div className="mt-8 space-y-5 text-center">
             <span className="inline-block rounded-full bg-acentoLima px-4 py-2 text-[11px] font-bold uppercase tracking-[0.12em] text-marca">
               Encuentro Premium · {TALLER_HACERLE_LUGAR.fechaLabel} · {TALLER_HACERLE_LUGAR.horaLabel}
             </span>
