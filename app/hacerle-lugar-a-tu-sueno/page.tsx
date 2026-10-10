@@ -36,13 +36,13 @@ export default async function HacerleLugarPage() {
         <div className="pointer-events-none absolute -left-16 top-56 h-48 w-48 rounded-full bg-acentoLima/30 blur-sm" />
 
         <div className="relative mx-auto max-w-2xl">
-          <Link href="/" className="inline-block rounded-full border border-texto/10 bg-white/80 px-4 py-2 text-xs font-semibold text-marca">
-            ← Valentía en Movimiento
+          <Link href={user ? "/inicio" : "/"} className="inline-block rounded-full border border-texto/10 bg-white/80 px-4 py-2 text-xs font-semibold text-marca">
+            ← Volver a Valentía
           </Link>
 
           <div className="mt-10 space-y-5 text-center">
             <span className="inline-block rounded-full bg-acentoLima px-4 py-2 text-[11px] font-bold uppercase tracking-[0.12em] text-marca">
-              Encuentro en vivo · {TALLER_HACERLE_LUGAR.fechaLabel} · {TALLER_HACERLE_LUGAR.horaLabel}
+              Encuentro Premium · {TALLER_HACERLE_LUGAR.fechaLabel} · {TALLER_HACERLE_LUGAR.horaLabel}
             </span>
             <h1 className="font-display text-4xl font-bold leading-[1.04] text-marca sm:text-5xl">
               Hacéle lugar a <Subrayado color="marca">tu sueño</Subrayado>
@@ -129,7 +129,7 @@ export default async function HacerleLugarPage() {
               <p>✓ Comunidad y acompañamiento para seguir trabajando tu proyecto.</p>
             </div>
             <Link href={esPremium ? TALLER_HACERLE_LUGAR.accesoPath : hrefPremium} className="mt-6 block w-full rounded-full bg-acentoLima px-6 py-4 text-center text-[15px] font-semibold text-marca">
-              {esPremium ? "Ya soy Premium · entrar al encuentro" : `Quiero Premium · ${formatearPrecio(PREMIUM_PLAN.price)}/mes`}
+              {esPremium ? "Ya soy Premium · entrar al encuentro" : `Quiero ser Premium · ${formatearPrecio(PREMIUM_PLAN.price)}/mes`}
             </Link>
           </div>
 
