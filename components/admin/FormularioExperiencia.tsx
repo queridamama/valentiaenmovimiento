@@ -20,6 +20,7 @@ interface Props {
   inicial?: {
     titulo: string;
     descripcion: string;
+    slug: string;
     texto_intro: string;
     video_url: string;
     audio_url: string;
@@ -107,6 +108,20 @@ export default function FormularioExperiencia({ accion, etapas, modulos, inicial
             required
             className="rounded-lg border border-texto/15 px-3 py-2"
           />
+        </label>
+
+        <label className="flex flex-col gap-1">
+          <span className="text-sm font-medium text-texto/70">Link compartible</span>
+          <div className="flex items-center overflow-hidden rounded-lg border border-texto/15 bg-white">
+            <span className="shrink-0 border-r border-texto/10 bg-texto/[0.03] px-3 py-2 text-sm text-texto/45">/experiencia/</span>
+            <input
+              name="slug"
+              defaultValue={inicial?.slug}
+              placeholder="defini-tu-sueno"
+              className="min-w-0 flex-1 px-3 py-2 outline-none"
+            />
+          </div>
+          <span className="text-xs text-texto/45">Sin tildes, espacios ni mayúsculas. Si lo dejás vacío, se genera desde el título al crearla.</span>
         </label>
 
         <label className="flex flex-col gap-1">
