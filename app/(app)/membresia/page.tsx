@@ -6,6 +6,7 @@ import { IconoPastel } from "@/components/iconos";
 import type { TipoIcono } from "@/components/iconos";
 import { PREMIUM_PLAN, PREMIUM_SEMESTRAL, formatearPrecio } from "@/lib/config/premium";
 import BotonSuscribirseAlojado from "@/components/BotonSuscribirseAlojado";
+import { TALLER_HACERLE_LUGAR } from "@/lib/config/taller-hacerle-lugar";
 
 const LINK_SEMESTRAL = "https://mpago.li/23zuMEm";
 const AHORRO_SEMESTRAL = PREMIUM_PLAN.price * PREMIUM_SEMESTRAL.months - PREMIUM_SEMESTRAL.totalPrice;
@@ -120,6 +121,14 @@ export default async function MembresiaPage() {
               Tu Proyecto de Valentía y toda la ruta ya están disponibles.
             </p>
           </div>
+          <div className="space-y-3 rounded-[24px] bg-acentoLima/25 p-5">
+            <Etiqueta>Incluido en tu Premium</Etiqueta>
+            <p className="font-display text-xl font-bold text-marca">{TALLER_HACERLE_LUGAR.titulo}</p>
+            <p className="text-sm font-semibold text-marca">{TALLER_HACERLE_LUGAR.fechaLabel} · {TALLER_HACERLE_LUGAR.horaLabel}</p>
+            <Link href={TALLER_HACERLE_LUGAR.accesoPath} className="inline-block text-sm font-semibold text-marca underline decoration-marca/30 underline-offset-4">
+              Ver mi acceso →
+            </Link>
+          </div>
           <div className="space-y-3">
             <Link
               href="/mi-sueno"
@@ -145,6 +154,20 @@ export default async function MembresiaPage() {
               con lo que vos misma respondés.
             </Subtitulo>
             <p className="font-medium italic text-marca">&ldquo;No es más contenido. Es una ruta.&rdquo;</p>
+          </section>
+
+          <section className="space-y-4 rounded-[28px] bg-acentoLima/25 p-6">
+            <Etiqueta>Ahora incluido en Premium</Etiqueta>
+            <div>
+              <h2 className="font-display text-xl font-bold text-marca">{TALLER_HACERLE_LUGAR.titulo}</h2>
+              <p className="mt-1 text-sm font-semibold text-marca">{TALLER_HACERLE_LUGAR.fechaLabel} · {TALLER_HACERLE_LUGAR.horaLabel}</p>
+            </div>
+            <p className="text-[13.5px] leading-relaxed text-marca/70">
+              Si querés venir solamente a este encuentro, cuesta {formatearPrecio(TALLER_HACERLE_LUGAR.precio)} como pago único. Si te sumás a Premium, pagás {formatearPrecio(PREMIUM_PLAN.price)}/mes y el encuentro ya está incluido, junto con todo el proceso de Valentía.
+            </p>
+            <Link href={TALLER_HACERLE_LUGAR.landingPath} className="text-sm font-semibold text-marca underline decoration-marca/30 underline-offset-4">
+              Ver el encuentro →
+            </Link>
           </section>
 
           <section className="space-y-2 rounded-[28px] bg-marca p-7 text-center text-white">
