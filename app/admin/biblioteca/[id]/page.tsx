@@ -102,6 +102,34 @@ export default async function EditarContenidoPage({ params }: { params: Promise<
         </label>
 
         <label className="flex flex-col gap-1">
+          <span className="text-sm font-medium text-texto/70">Link compartible</span>
+          <div className="flex items-center overflow-hidden rounded-lg border border-texto/15 bg-white">
+            <span className="shrink-0 border-r border-texto/10 bg-texto/[0.03] px-3 py-2 text-sm text-texto/45">
+              /encuentros/
+            </span>
+            <input
+              name="slug"
+              defaultValue={contenido.slug ?? ""}
+              placeholder="defini-tu-sueno"
+              className="min-w-0 flex-1 px-3 py-2 outline-none"
+            />
+          </div>
+          <span className="text-xs text-texto/45">
+            Se normaliza automáticamente: sin tildes, espacios ni mayúsculas.
+          </span>
+          {contenido.slug && (
+            <a
+              href={`/encuentros/${contenido.slug}`}
+              target="_blank"
+              rel="noreferrer"
+              className="text-sm font-medium text-acento"
+            >
+              Abrir link compartible →
+            </a>
+          )}
+        </label>
+
+        <label className="flex flex-col gap-1">
           <span className="text-sm font-medium text-texto/70">Descripción corta</span>
           <input
             name="descripcion"
