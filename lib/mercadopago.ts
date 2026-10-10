@@ -357,3 +357,49 @@ export interface PagoMercadoPago {
 export async function buscarPagos(externalReference: string): Promise<{ results: PagoMercadoPago[] }> {
   return mpFetch<{ results: PagoMercadoPago[] }>(`/v1/payments/search?external_reference=${encodeURIComponent(externalReference)}`);
 }
+
+
+export interface PreferenciaPagoUnico {
+  id: string;
+  init_point?: string;
+  sandbox_init_point?: string;
+}
+
+export async function crearPreferenciaPagoUnico(params: {
+  title: string;
+  amount: number;
+  currency: "ARS";
+  payerEmail: string;
+  externalReference: string;
+  successUrl: string;
+  pendingUrl: string;
+  failureUrl: string;
+}): Promise<PreferenciaPagoUnico> {
+  return mpFetch<PreferenciaPagoUnico>("/checkout/preferences", {
+    method: "POST",
+    body: JSON.stringify({
+      items: [
+        {
+          id: params.externalReference.split(":")[0],
+          title: params.title,
+          quantity: 1,
+          currency_id: params.currency,
+          unit_price: params.amount,
+        },
+      ],
+      payer: { email: params.payerEmail },
+      external_reference: params.externalReference,
+      back_urls: {
+        success: params.successUrl,
+        pending: params.pendingUrl,
+        failure: params.failureUrl,
+      },
+      auto_return: "approved",
+      statement_descriptor: "VALENTIA",
+    }),
+  });
+}
+
+export async function obtenerPago(id: string | number): Promise<PagoMercadoPago> {
+  return mpFetch<PagoMercadoPago>(`/v1/payments/${encodeURIComponent(String(id))}`);
+}
