@@ -5,6 +5,17 @@ import { redirect } from "next/navigation";
 import { exigirStaff } from "@/lib/autorizacion";
 import { AREAS_RESPUESTA, ESTADOS_EXPERIENCIA, NIVELES_ACCESO, TIPOS_EXPERIENCIA, type AreaRespuesta } from "@/lib/tipos";
 
+function normalizarSlug(valor: string): string | null {
+  const slug = valor
+    .trim()
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+  return slug || null;
+}
+
 interface PreguntaForm {
   id?: string;
   texto: string;
@@ -52,6 +63,8 @@ export async function guardarExperiencia(experienciaId: string | null, formData:
   const titulo = String(formData.get("titulo") ?? "").trim();
   if (!titulo) throw new Error("El título es obligatorio.");
   const descripcion = String(formData.get("descripcion") ?? "").trim() || null;
+  const slugIngresado = String(formData.get("slug") ?? "").trim();
+  const slug = normalizarSlug(slugIngresado || (experienciaId ? "" : titulo));
   const textoIntro = String(formData.get("texto_intro") ?? "").trim() || null;
   const videoUrl = String(formData.get("video_url") ?? "").trim() || null;
   const audioUrl = String(formData.get("audio_url") ?? "").trim() || null;
@@ -82,6 +95,7 @@ export async function guardarExperiencia(experienciaId: string | null, formData:
   const datosExperiencia = {
     titulo,
     descripcion,
+    slug,
     texto_intro: textoIntro,
     video_url: videoUrl,
     audio_url: audioUrl,
@@ -100,6 +114,9 @@ export async function guardarExperiencia(experienciaId: string | null, formData:
   let id = experienciaId;
   if (id) {
     const { error } = await supabase.from("experiencias").update(datosExperiencia).eq("id", id);
+    if (error?.code === "23505" && error.message.includes("experiencias_slug_unico")) {
+      throw new Error("Ese link compartible ya está siendo usado por otra experiencia.");
+    }
     if (error) throw error;
   } else {
     const { data, error } = await supabase
@@ -107,6 +124,9 @@ export async function guardarExperiencia(experienciaId: string | null, formData:
       .insert({ ...datosExperiencia, creado_por: user.id })
       .select("id")
       .single();
+    if (error?.code === "23505" && error.message.includes("experiencias_slug_unico")) {
+      throw new Error("Ese link compartible ya está siendo usado por otra experiencia.");
+    }
     if (error) throw error;
     id = data.id;
   }
