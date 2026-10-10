@@ -1,6 +1,7 @@
 import { crearClienteServidor } from "@/lib/supabase/server";
 import { guardarExperiencia } from "@/lib/acciones/admin";
 import FormularioExperiencia from "@/components/admin/FormularioExperiencia";
+import EnlaceCompartible from "@/components/admin/EnlaceCompartible";
 import type { AreaRespuesta } from "@/lib/tipos";
 
 export default async function EditarExperienciaPage({ params }: { params: Promise<{ id: string }> }) {
@@ -13,7 +14,7 @@ export default async function EditarExperienciaPage({ params }: { params: Promis
     supabase
       .from("experiencias")
       .select(
-        "titulo, descripcion, texto_intro, video_url, audio_url, archivo_url, duracion, tipo, portada_url, etapa_id, modulo_id, nivel_acceso, estado, orden, wp_post_id, etapa_wp, modulo_wp"
+        "titulo, descripcion, slug, texto_intro, video_url, audio_url, archivo_url, duracion, tipo, portada_url, etapa_id, modulo_id, nivel_acceso, estado, orden, wp_post_id, etapa_wp, modulo_wp"
       )
       .eq("id", id)
       .maybeSingle(),
@@ -37,6 +38,7 @@ export default async function EditarExperienciaPage({ params }: { params: Promis
   return (
     <div className="space-y-6">
       <h1 className="font-display text-2xl font-semibold">Editar experiencia</h1>
+      {experiencia.slug && <EnlaceCompartible path={`/experiencia/${experiencia.slug}`} />}
       <FormularioExperiencia
         accion={accion}
         etapas={etapas ?? []}
@@ -44,6 +46,7 @@ export default async function EditarExperienciaPage({ params }: { params: Promis
         inicial={{
           titulo: experiencia.titulo,
           descripcion: experiencia.descripcion ?? "",
+          slug: experiencia.slug ?? "",
           texto_intro: experiencia.texto_intro ?? "",
           video_url: experiencia.video_url ?? "",
           audio_url: experiencia.audio_url ?? "",
