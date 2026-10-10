@@ -1,8 +1,14 @@
 import Link from "next/link";
+import { redirect } from "next/navigation";
+import { crearClienteServidor } from "@/lib/supabase/server";
 import { PREMIUM_PLAN, formatearPrecio } from "@/lib/config/premium";
 import { TALLER_HACERLE_LUGAR, PROXIMO_ENCUENTRO_ABIERTO } from "@/lib/config/taller-hacerle-lugar";
 
-export default function LandingPage() {
+export default async function LandingPage() {
+  const supabase = await crearClienteServidor();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (user) redirect("/inicio");
+
   return (
     <main className="min-h-screen bg-[#fbfaf7] text-texto">
       <section className="relative overflow-hidden px-6 pb-12 pt-16 text-center">
@@ -48,7 +54,7 @@ export default function LandingPage() {
             <p className="mt-2 text-sm leading-relaxed text-white/70">
               La ruta completa del método, herramientas, meditaciones, comunidad Premium y encuentros incluidos.
             </p>
-            <Link href="/registro?redirect=%2Fmembresia" className="mt-5 inline-block text-sm font-semibold text-acentoLima">Conocer Premium →</Link>
+            <Link href="/registro?redirect=%2Fmembresia" className="mt-5 inline-block text-sm font-semibold text-acentoLima">Quiero ser Premium →</Link>
           </div>
 
           <div className="rounded-[26px] bg-acentoCeleste/45 p-5">
@@ -75,7 +81,7 @@ export default function LandingPage() {
         </div>
 
         <div className="rounded-[30px] bg-acento/20 p-6 md:p-8">
-          <span className="inline-block rounded-full bg-white/80 px-3 py-1.5 text-[10px] font-bold uppercase tracking-[0.12em] text-marca">Encuentro intensivo</span>
+          <span className="inline-block rounded-full bg-white/80 px-3 py-1.5 text-[10px] font-bold uppercase tracking-[0.12em] text-marca">Encuentro Premium</span>
           <h2 className="mt-4 font-display text-2xl font-bold text-marca">{TALLER_HACERLE_LUGAR.titulo}</h2>
           <p className="mt-2 text-sm font-semibold text-marca">{TALLER_HACERLE_LUGAR.fechaLabel} · {TALLER_HACERLE_LUGAR.horaLabel}</p>
           <p className="mt-3 max-w-xl text-sm leading-relaxed text-texto/65">{TALLER_HACERLE_LUGAR.bajada}</p>
