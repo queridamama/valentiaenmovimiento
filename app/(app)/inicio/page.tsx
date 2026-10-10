@@ -7,33 +7,35 @@ import {
   obtenerSemanasEnMovimiento,
   obtenerSeguimientoInicio,
   obtenerNovedadActiva,
-  obtenerProximoEventoPremium,
   obtenerMeditacionSemanal,
 } from "@/lib/datos";
-import { Badge } from "@/components/ui";
+import { Badge, Etiqueta } from "@/components/ui";
 import {
   TarjetaSueno,
   TarjetaCamino,
   TarjetaContinuar,
   TarjetaNovedad,
   TarjetaCompacta,
-  TarjetaProximoEncuentro,
   TarjetaMeditacionSemanal,
 } from "@/components/tarjetas";
 import InstalarPWA from "@/components/pwa/InstalarPWA";
+import { TALLER_HACERLE_LUGAR, PROXIMO_ENCUENTRO_ABIERTO } from "@/lib/config/taller-hacerle-lugar";
 
-// "[fecha] · [hora]" para la tarjeta de Próximo encuentro.
 function formatearFechaHoraEvento(iso: string): { fecha: string; hora: string } {
   const fecha = new Date(iso);
+  const zona = "America/Argentina/Cordoba";
   return {
-    fecha: fecha.toLocaleDateString("es-AR", { day: "numeric", month: "long" }),
-    hora: fecha.toLocaleTimeString("es-AR", { hour: "2-digit", minute: "2-digit" }),
+    fecha: fecha.toLocaleDateString("es-AR", { day: "numeric", month: "long", timeZone: zona }),
+    hora: fecha.toLocaleTimeString("es-AR", { hour: "2-digit", minute: "2-digit", timeZone: zona }),
   };
 }
 
-// "Disponible el XX/XX" para la meditación de la semana todavía bloqueada.
 function formatearFechaCorta(iso: string): string {
-  return new Date(iso).toLocaleDateString("es-AR", { day: "2-digit", month: "2-digit" });
+  return new Date(iso).toLocaleDateString("es-AR", {
+    day: "2-digit",
+    month: "2-digit",
+    timeZone: "America/Argentina/Cordoba",
+  });
 }
 
 export default async function InicioPage() {
@@ -47,22 +49,40 @@ export default async function InicioPage() {
   const autorizacion = await obtenerAutorizacion(supabase, user.id);
   const esPremium = autorizacion.nivel === "premium";
 
-  const [sueno, movimiento, semanas, seguimiento, novedad, proximoEncuentro, meditacionSemanal] = await Promise.all([
-    obtenerSuenoActivo(supabase, user.id),
-    obtenerMovimientoActual(supabase, user.id),
-    obtenerSemanasEnMovimiento(supabase, user.id),
-    obtenerSeguimientoInicio(supabase, user.id, esPremium),
-    obtenerNovedadActiva(supabase),
-    // Solo Premium: ni siquiera se consulta para una cuenta Gratis (RLS
-    // igual lo protegería, ver obtenerProximoEventoPremium, pero así no
-    // se gasta la consulta en la inmensa mayoría de las cuentas).
-    esPremium ? obtenerProximoEventoPremium(supabase) : Promise.resolve(null),
-    esPremium ? obtenerMeditacionSemanal(supabase) : Promise.resolve(null),
-  ]);
+  const consultaEncuentroAbierto = supabase
+    .from("eventos")
+    .select("id, titulo, descripcion, fecha_hora")
+    .eq("estado", "publicado")
+    .eq("nivel_acceso", "gratis")
+    .gte("fecha_hora", new Date().toISOString())
+    .order("fecha_hora", { ascending: true })
+    .limit(1)
+    .maybeSingle();
 
-  // Ritual semanal, adentro de la app (no hay infraestructura de push
-  // todavía — ver NOTIFICACIONES.md). El día de la semana es el del
-  // servidor; es un recordatorio suave, no algo crítico.
+  const consultaCompraTaller = supabase
+    .from("pagos")
+    .select("id")
+    .eq("usuario_id", user.id)
+    .eq("concepto", TALLER_HACERLE_LUGAR.conceptoPago)
+    .eq("estado", "approved")
+    .limit(1)
+    .maybeSingle();
+
+  const [sueno, movimiento, semanas, seguimiento, novedad, encuentroAbiertoRes, compraTallerRes, meditacionSemanal] =
+    await Promise.all([
+      obtenerSuenoActivo(supabase, user.id),
+      obtenerMovimientoActual(supabase, user.id),
+      obtenerSemanasEnMovimiento(supabase, user.id),
+      obtenerSeguimientoInicio(supabase, user.id, esPremium),
+      obtenerNovedadActiva(supabase),
+      consultaEncuentroAbierto,
+      consultaCompraTaller,
+      esPremium ? obtenerMeditacionSemanal(supabase) : Promise.resolve(null),
+    ]);
+
+  const encuentroAbierto = encuentroAbiertoRes.data;
+  const tieneTaller = esPremium || Boolean(compraTallerRes.data);
+
   const hoy = new Date().getDay();
   const necesitaElegirMovimiento = !movimiento || movimiento.estado === "cumplido";
   const esRecordatorioViernes = hoy === 5 && movimiento && movimiento.estado === "planeado";
@@ -73,6 +93,10 @@ export default async function InicioPage() {
         ? "Hoy es viernes: ¿qué pasó con tu movimiento esta semana?"
         : null;
 
+  const fechaAbierto = encuentroAbierto
+    ? formatearFechaHoraEvento(encuentroAbierto.fecha_hora)
+    : { fecha: PROXIMO_ENCUENTRO_ABIERTO.fechaLabel, hora: PROXIMO_ENCUENTRO_ABIERTO.horaLabel };
+
   return (
     <main className="mx-auto max-w-md space-y-6 px-5 pb-6 pt-6">
       <div className="space-y-1">
@@ -80,15 +104,12 @@ export default async function InicioPage() {
         <Badge tipo={esPremium ? "membresia" : "gratis"} />
       </div>
 
-      {/* La explicación que pidió el brief: qué es este espacio, en dos
-          líneas cortas — no un bloque grande. */}
       <div className="space-y-1">
         <p className="text-[14.5px] leading-relaxed text-texto/70">
           Este es tu espacio dentro de Valentía para darle lugar a eso que querés hacer realidad.
         </p>
         <p className="text-[14.5px] leading-relaxed text-texto/70">
-          Acá podés ordenar tu sueño, elegir movimientos concretos, seguir aprendiendo y registrar lo que vas
-          logrando.
+          Acá podés ordenar tu sueño, elegir movimientos concretos, seguir aprendiendo y registrar lo que vas logrando.
         </p>
       </div>
 
@@ -112,12 +133,6 @@ export default async function InicioPage() {
         </div>
       )}
 
-      {/* CTA principal: entra directo a la experiencia exacta, sin pasar
-          por Mi Ruta ni por buscar en qué quedó. Gratis y Premium
-          comparten el mismo bloque y el mismo criterio (ver
-          obtenerSeguimientoInicio en lib/datos.ts). Si ya completó todo
-          lo disponible, no se inventa una siguiente experiencia: el
-          bloque simplemente no aparece. */}
       {seguimiento && (
         <TarjetaContinuar
           contexto={
@@ -132,21 +147,50 @@ export default async function InicioPage() {
         />
       )}
 
-      {novedad && (
-        <TarjetaNovedad titulo={novedad.titulo} descripcion={novedad.descripcion} href={novedad.href} />
-      )}
+      {novedad && <TarjetaNovedad titulo={novedad.titulo} descripcion={novedad.descripcion} href={novedad.href} />}
 
-      {/* El ritmo de Premium: el encuentro en vivo mensual y la
-          meditación de la semana. Si todavía no hay un evento cargado, o
-          ninguna meditación marcada como semanal, no se inventa nada acá
-          — el bloque correspondiente simplemente no aparece. */}
-      {proximoEncuentro && (
-        <TarjetaProximoEncuentro
-          {...formatearFechaHoraEvento(proximoEncuentro.fecha_hora)}
-          titulo={proximoEncuentro.titulo}
-          href={proximoEncuentro.link_externo}
-        />
-      )}
+      <section className="space-y-3">
+        <Etiqueta>Lo que viene</Etiqueta>
+
+        <div className="relative overflow-hidden rounded-[28px] bg-acentoRosa/55 p-5">
+          <div className="absolute -right-8 -top-9 h-28 w-28 rounded-full bg-white/30" />
+          <div className="relative space-y-3">
+            <span className="inline-block rounded-full bg-acentoLima px-3 py-1 text-[10px] font-bold uppercase tracking-[0.12em] text-marca">
+              Encuentro abierto · Gratis
+            </span>
+            <p className="font-display text-[20px] font-bold leading-snug text-marca">
+              {encuentroAbierto?.titulo ?? PROXIMO_ENCUENTRO_ABIERTO.titulo}
+            </p>
+            <p className="text-[13.5px] font-semibold text-marca">
+              {fechaAbierto.fecha} · {fechaAbierto.hora} hs
+            </p>
+            <p className="text-[13px] leading-relaxed text-marca/70">
+              {encuentroAbierto?.descripcion ?? PROXIMO_ENCUENTRO_ABIERTO.descripcion}
+            </p>
+            <p className="text-[12.5px] text-marca/55">Reservate la fecha. El link lo compartimos antes del encuentro.</p>
+          </div>
+        </div>
+
+        <div className="relative overflow-hidden rounded-[28px] bg-marca p-5 text-white">
+          <div className="absolute -right-8 -top-9 h-28 w-28 rounded-full bg-white/10" />
+          <div className="relative space-y-3">
+            <span className="inline-block rounded-full bg-acentoLima px-3 py-1 text-[10px] font-bold uppercase tracking-[0.12em] text-marca">
+              {esPremium ? "Incluido en tu Premium" : tieneTaller ? "Ya tenés tu lugar" : "Encuentro intensivo"}
+            </span>
+            <p className="font-display text-[20px] font-bold leading-snug">{TALLER_HACERLE_LUGAR.titulo}</p>
+            <p className="text-[13.5px] font-semibold text-white/85">
+              {TALLER_HACERLE_LUGAR.fechaLabel} · {TALLER_HACERLE_LUGAR.horaLabel}
+            </p>
+            <p className="text-[13px] leading-relaxed text-white/70">{TALLER_HACERLE_LUGAR.bajada}</p>
+            <Link
+              href={tieneTaller ? TALLER_HACERLE_LUGAR.accesoPath : TALLER_HACERLE_LUGAR.landingPath}
+              className="inline-flex rounded-full bg-acentoLima px-5 py-2.5 text-[13px] font-semibold text-marca"
+            >
+              {tieneTaller ? "Ver mi acceso →" : "Ver encuentro y opciones →"}
+            </Link>
+          </div>
+        </div>
+      </section>
 
       {meditacionSemanal && (
         <TarjetaMeditacionSemanal
