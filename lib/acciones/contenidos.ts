@@ -5,6 +5,17 @@ import { redirect } from "next/navigation";
 import { exigirStaff } from "@/lib/autorizacion";
 import { ESTADOS_CMS, NIVELES_ACCESO, TIPOS_CONTENIDO } from "@/lib/tipos";
 
+function normalizarSlug(valor: string): string | null {
+  const slug = valor
+    .trim()
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+  return slug || null;
+}
+
 // El acceso (Gratis/Premium) de un contenido no vive en el contenido en
 // sí, sino en CADA lugar donde aparece (contenido_ubicaciones) — así lo
 // audita supabase/schema.sql (contenido_accesible()): una etapa siempre es
@@ -26,10 +37,15 @@ export async function guardarContenido(contenidoId: string | null, formData: For
   }
 
   const disponibleDesde = String(formData.get("disponible_desde") ?? "").trim();
+  const slugIngresado = String(formData.get("slug") ?? "").trim();
+  // Al crear contenido nuevo proponemos un slug a partir del título. En edición,
+  // dejarlo vacío lo desactiva a propósito.
+  const slug = normalizarSlug(slugIngresado || (contenidoId ? "" : titulo));
 
   const datos = {
     titulo,
     tipo,
+    slug,
     descripcion: String(formData.get("descripcion") ?? "").trim() || null,
     contenido_html: String(formData.get("contenido_html") ?? "").trim() || null,
     portada_url: String(formData.get("portada_url") ?? "").trim() || null,
@@ -50,6 +66,9 @@ export async function guardarContenido(contenidoId: string | null, formData: For
   let id = contenidoId;
   if (id) {
     const { error } = await supabase.from("contenidos").update(datos).eq("id", id);
+    if (error?.code === "23505" && error.message.includes("contenidos_slug_unico")) {
+      throw new Error("Ese link compartible ya está siendo usado por otro contenido.");
+    }
     if (error) throw error;
   } else {
     const { data, error } = await supabase
@@ -57,6 +76,9 @@ export async function guardarContenido(contenidoId: string | null, formData: For
       .insert({ ...datos, creado_por: user.id })
       .select("id")
       .single();
+    if (error?.code === "23505" && error.message.includes("contenidos_slug_unico")) {
+      throw new Error("Ese link compartible ya está siendo usado por otro contenido.");
+    }
     if (error) throw error;
     id = data.id;
   }
